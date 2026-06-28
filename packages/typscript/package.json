@@ -1,0 +1,7 @@
+{
+  "name": "@pepperextra/tsconfig",
+  "private": true,
+  "files": [
+    "*.json"
+  ]
+}
