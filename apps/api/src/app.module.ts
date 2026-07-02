@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { createAuthInstance } from '@pepperextra/auth';
+import { AuthInstance, createAuthInstance } from '@pepperextra/auth';
 import { PlanetController } from './planet/planet.controller.js';
 import { onError, ORPCError, ORPCModule } from '@orpc/nest';
 import { Request } from 'express';
@@ -34,7 +34,7 @@ declare module '@orpc/nest' {
       useFactory: (
         dbClient: NodePgDatabase<any>,
         configService: ConfigService,
-      ) => {
+      ): { auth: AuthInstance } => {
         // Read any auth-specific environment variables required at runtime
         const secret = configService.get<string>('BETTER_AUTH_SECRET');
         const baseUrl = configService.get<string>('BETTER_AUTH_URL');
@@ -46,9 +46,13 @@ declare module '@orpc/nest' {
           );
         }
 
+        const betterAuthInstance = createAuthInstance(dbClient, {
+          secret,
+          baseUrl,
+        });
         return {
           // 💡 Pass the live database client and runtime variables to your auth builder
-          auth: createAuthInstance(dbClient, { secret, baseUrl }),
+          auth: betterAuthInstance,
         };
       },
     }),
