@@ -1,0 +1,27 @@
+{
+  "name": "@pepperextra/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.33.4",
+  "dependencies": {
+    "@pepperextra/tsconfig": "workspace:*",
+    "@orpc/contract": "^1.14.6",
+    "zod": "^4.4.3"
+  }
+}
