@@ -9,38 +9,166 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlanetsRouteRouteImport } from './routes/planets/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlanetsIndexRouteImport } from './routes/planets/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as PlanetsListRouteImport } from './routes/planets/list'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanetsRouteRoute = PlanetsRouteRouteImport.update({
+  id: '/planets',
+  path: '/planets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanetsIndexRoute = PlanetsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PlanetsRouteRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const PlanetsListRoute = PlanetsListRouteImport.update({
+  id: '/list',
+  path: '/list',
+  getParentRoute: () => PlanetsRouteRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/planets': typeof PlanetsRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/planets/list': typeof PlanetsListRoute
+  '/admin/': typeof AdminIndexRoute
+  '/planets/': typeof PlanetsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/planets/list': typeof PlanetsListRoute
+  '/admin': typeof AdminIndexRoute
+  '/planets': typeof PlanetsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/planets': typeof PlanetsRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/planets/list': typeof PlanetsListRoute
+  '/admin/': typeof AdminIndexRoute
+  '/planets/': typeof PlanetsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/planets'
+    | '/login'
+    | '/signup'
+    | '/admin/users'
+    | '/planets/list'
+    | '/admin/'
+    | '/planets/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/admin/users'
+    | '/planets/list'
+    | '/admin'
+    | '/planets'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/planets'
+    | '/login'
+    | '/signup'
+    | '/admin/users'
+    | '/planets/list'
+    | '/admin/'
+    | '/planets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  PlanetsRouteRoute: typeof PlanetsRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planets': {
+      id: '/planets'
+      path: '/planets'
+      fullPath: '/planets'
+      preLoaderRoute: typeof PlanetsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +176,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/planets/': {
+      id: '/planets/'
+      path: '/'
+      fullPath: '/planets/'
+      preLoaderRoute: typeof PlanetsIndexRouteImport
+      parentRoute: typeof PlanetsRouteRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/planets/list': {
+      id: '/planets/list'
+      path: '/list'
+      fullPath: '/planets/list'
+      preLoaderRoute: typeof PlanetsListRouteImport
+      parentRoute: typeof PlanetsRouteRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
+interface AdminRouteRouteChildren {
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface PlanetsRouteRouteChildren {
+  PlanetsListRoute: typeof PlanetsListRoute
+  PlanetsIndexRoute: typeof PlanetsIndexRoute
+}
+
+const PlanetsRouteRouteChildren: PlanetsRouteRouteChildren = {
+  PlanetsListRoute: PlanetsListRoute,
+  PlanetsIndexRoute: PlanetsIndexRoute,
+}
+
+const PlanetsRouteRouteWithChildren = PlanetsRouteRoute._addFileChildren(
+  PlanetsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  PlanetsRouteRoute: PlanetsRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -9,3 +9,5 @@ export const Post = pgTable("post", (t) => ({
     .timestamp({ mode: "date", withTimezone: true })
     .$onUpdateFn(() => sql`now()`),
 }))
+
+export * from "./auth-schema"

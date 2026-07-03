@@ -72,10 +72,3 @@ export const verification = pgTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 )
-
-export const relations = defineRelations({ user, session, account }, (r) => ({
-  user: {
-    session: r.many.session(),
-    account: r.many.account(),
-  },
-}))
