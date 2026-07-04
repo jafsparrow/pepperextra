@@ -12,7 +12,8 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:3001',
+    credentials: true, // Crucial for Better Auth cookies to pass through
   });
 
   // console.log('nest js proces env', process.env);
