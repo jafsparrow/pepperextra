@@ -1,5 +1,5 @@
 import { createDatabaseClient } from "@pepperextra/db/client"
-import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import * as schema from "@pepperextra/db/schema"
 import { BetterAuthOptions } from "better-auth/minimal"
 

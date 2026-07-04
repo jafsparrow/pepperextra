@@ -22,6 +22,8 @@
   },
   "scripts": {
     "build": "tsc",
+    "db:generate": " dotenv -e ../../.env -- pnpx drizzle-kit generate",
+    "db:push": "dotenv -e ../../.env -- pnpx drizzle-kit push",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
