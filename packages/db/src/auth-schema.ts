@@ -73,27 +73,10 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 )
 
-export const authRelations = defineRelations(
-  { user, session, account },
-  (r) => ({
-    // Relationships for the 'user' table
-    user: {
-      sessions: r.many.session(),
-      accounts: r.many.account(),
-    },
-    // Relationships for the 'session' table
-    session: {
-      user: r.one.user({
-        from: r.session.userId,
-        to: r.user.id,
-      }),
-    },
-    // Relationships for the 'account' table
-    account: {
-      user: r.one.user({
-        from: r.account.userId,
-        to: r.user.id,
-      }),
-    },
-  })
-)
+// note: exporting this way so that better auth cli generate might replace this custom 3
+// code when generating the auth schema.
+// This is a workaround for the better-auth cli generate
+// command which does not support custom code in the auth schema file.
+// better auth cli generates old relation model of drizzle schema, which
+// i have replaced with new code.
+export * from "./schema-relations/auth-relation"
