@@ -1,4 +1,3 @@
-import { defineRelations } from "drizzle-orm"
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core"
 
 export const user = pgTable("user", {
@@ -72,11 +71,3 @@ export const verification = pgTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 )
-
-// note: exporting this way so that better auth cli generate might replace this custom 3
-// code when generating the auth schema.
-// This is a workaround for the better-auth cli generate
-// command which does not support custom code in the auth schema file.
-// better auth cli generates old relation model of drizzle schema, which
-// i have replaced with new code.
-export * from "./schema-relations/auth-relation"

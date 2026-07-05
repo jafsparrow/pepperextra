@@ -11,3 +11,4 @@ export const Post = pgTable("post", (t) => ({
 }))
 
 export * from "./auth-schema"
+export * from "./schema-relations/auth-relation"

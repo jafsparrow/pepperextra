@@ -1,8 +1,13 @@
 import { createDatabaseClient } from "@pepperextra/db/client"
 import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
-
-import * as schema from "@pepperextra/db/schema"
+import * as authschema from "@pepperextra/db/auth-schema"
+import {
+  account,
+  session,
+  user,
+  verification,
+} from "@pepperextra/db/auth-schema"
 import { type NodePgDatabase } from "drizzle-orm/node-postgres"
 // NOTE- This is used by external apps who provides the db client
 // and want to create an instance of BetterAuth with the provided db client..
@@ -22,7 +27,7 @@ export const createAuthInstance = (
   return betterAuth({
     database: drizzleAdapter(dbClient, {
       provider: "pg",
-      schema: schema,
+      schema: authschema,
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
