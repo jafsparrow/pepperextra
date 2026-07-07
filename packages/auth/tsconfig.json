@@ -2,6 +2,9 @@
   "extends": "@pepperextra/tsconfig/compiled-package.json",
 
   "compilerOptions": {
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "declarationMap": false,
     "rootDir": "./src",
     "outDir": "./dist"
   },

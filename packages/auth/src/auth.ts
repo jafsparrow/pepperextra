@@ -9,6 +9,7 @@ import {
   verification,
 } from "@pepperextra/db/auth-schema"
 import { type NodePgDatabase } from "drizzle-orm/node-postgres"
+import { admin, organization } from "better-auth/plugins"
 // NOTE- This is used by external apps who provides the db client
 // and want to create an instance of BetterAuth with the provided db client..
 //  This is useful for apps that want to use BetterAuth with
@@ -31,6 +32,7 @@ export const createAuthInstance = (
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
+    plugins: [organization(), admin()],
     emailAndPassword: {
       enabled: true,
     },
@@ -54,3 +56,15 @@ export type AuthInstance = ReturnType<typeof createAuthInstance>
 
 // export const auth = betterAuth(config)
 // export const Session = typeof auth.$Infer.Session
+
+// [note]: after adding the organisation and admin pugic, typescript has issue because of in
+// the betterAuth instance generates massively nested, inferred internal types. TypeScript tries to generate a .d.ts type declaration
+//  file for your package, but because those internal types (in this case, from zod) aren't directly exported
+//  at the top level of the package boundary, TypeScript panics and complains that the type is "not portable."
+// [FIX]: Turn off declaration emitting (Best if this package isn't a shared library), maily because we are not build  *.d.ts file to be exported.
+// in tsconfig: {
+//   "compilerOptions": {
+//     "declaration": false,
+//     "declarationMap": false
+//   }
+// }

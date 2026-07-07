@@ -1,26 +1,55 @@
 import { defineRelations } from "drizzle-orm"
-import { user, session, account } from "../auth-schema"
+import {
+  account,
+  invitation,
+  member,
+  organization,
+  session,
+  user,
+} from "../auth-schema"
 
 export const authRelations = defineRelations(
-  { user, session, account },
+  { user, session, account, organization, member, invitation },
   (r) => ({
-    // Relationships for the 'user' table
     user: {
       sessions: r.many.session(),
       accounts: r.many.account(),
+      members: r.many.member(),
+      invitations: r.many.invitation(),
     },
-    // Relationships for the 'session' table
     session: {
       user: r.one.user({
         from: r.session.userId,
         to: r.user.id,
       }),
     },
-    // Relationships for the 'account' table
     account: {
       user: r.one.user({
         from: r.account.userId,
         to: r.user.id,
+      }),
+    },
+    organization: {
+      members: r.many.member(),
+      invitations: r.many.invitation(),
+    },
+    member: {
+      organization: r.one.organization({
+        from: r.member.organizationId,
+        to: r.organization.id,
+      }),
+      user: r.one.user({
+        from: r.member.userId,
+        to: r.user.id,
+      }),
+    },
+    invitation: {
+      organization: r.one.organization({
+        from: r.invitation.organizationId,
+        to: r.organization.id,
+      }),
+      user: r.one.user({
+        from: r.invitation.inviterId,
       }),
     },
   })

@@ -2,6 +2,7 @@ import { createDatabaseClient } from "@pepperextra/db/client"
 import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import * as schema from "@pepperextra/db/schema"
 import { BetterAuthOptions } from "better-auth/minimal"
+import { admin, organization } from "better-auth/plugins"
 
 type SchemaType = typeof schema
 interface AuthConfigOptions {
@@ -20,6 +21,7 @@ export const createAuthConfig = (
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
+    plugins: [organization(), admin()],
     emailAndPassword: {
       enabled: true,
     },
