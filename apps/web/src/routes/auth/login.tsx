@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { signIn } from "@pepperextra/auth/client"
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/auth/login")({
   component: RouteComponent,
 })
 
