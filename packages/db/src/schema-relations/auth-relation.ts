@@ -50,6 +50,7 @@ export const authRelations = defineRelations(
       }),
       user: r.one.user({
         from: r.invitation.inviterId,
+        to: r.user.id,
       }),
     },
   })

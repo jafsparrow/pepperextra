@@ -27,7 +27,7 @@
   "scripts": {
     "build": "tsc",
     "db:generate": " dotenv -e ../../.env -- pnpx drizzle-kit generate",
-    "db:push": "dotenv -e ../../.env -- pnpx drizzle-kit push",
+    "db:push": "dotenv -e ../../.env -- drizzle-kit push",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -40,13 +40,13 @@
   "dependencies": {
     "@pepperextra/tsconfig": "workspace:*",
     "dotenv": "^17.4.2",
-    "drizzle-orm": "1.0.0-rc.4",
+    "drizzle-orm": "catalog:",
     "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "dotenv-cli": "^11.0.0",
-    "drizzle-kit": "1.0.0-rc.4",
+    "drizzle-kit": "catalog:",
     "tsx": "^4.22.4"
   }
 }

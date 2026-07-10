@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { signIn } from "@pepperextra/auth/client"
+import { LoginForm } from "@/feature/auth/ui/components/login-form"
 
-export const Route = createFileRoute("/auth/login")({
+export const Route = createFileRoute("/_auth/login")({
   component: RouteComponent,
 })
 
@@ -12,5 +13,5 @@ function RouteComponent() {
       password: "password",
     })
   }
-  return <div>Hello "/login"!</div>
+  return <LoginForm />
 }

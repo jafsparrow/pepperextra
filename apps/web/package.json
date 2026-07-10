@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.6.0",
     "@pepperextra/auth": "workspace:*",
+    "@shadcn/react": "^0.2.1",
     "@tailwindcss/vite": "^4",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-router": "latest",
@@ -21,10 +23,20 @@
     "@tanstack/router-plugin": "latest",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.6.22",
+    "cmdk": "^1.1.1",
+    "date-fns": "^4.4.0",
+    "embla-carousel-react": "^8.6.0",
+    "input-otp": "^1.4.2",
     "lucide-react": "^1.21.0",
+    "next-themes": "^0.4.6",
     "react": "^19.2.6",
+    "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.6",
-    "tailwindcss": "^4"
+    "react-resizable-panels": "^4.12.1",
+    "recharts": "3.8.0",
+    "sonner": "^2.0.7",
+    "tailwindcss": "^4",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@tanstack/devtools-vite": "latest",

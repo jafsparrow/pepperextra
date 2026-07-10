@@ -9,11 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteRouteImport } from './routes/auth/route'
+import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AuthSignupRouteImport } from './routes/auth/signup'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppPlanetsRouteRouteImport } from './routes/_app/planets/route'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppPlanetsIndexRouteImport } from './routes/_app/planets/index'
@@ -22,8 +22,7 @@ import { Route as AppPlanetsListRouteImport } from './routes/_app/planets/list'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRouteRoute = AppRouteRouteImport.update({
@@ -78,21 +77,19 @@ const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
-  '/auth': typeof AuthRouteRouteWithChildren
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/planets': typeof AppPlanetsRouteRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
+  '/login': typeof AuthLoginRoute
+  '/signup': typeof AuthSignupRoute
   '/admin/users': typeof AppAdminUsersRoute
   '/planets/list': typeof AppPlanetsListRoute
   '/admin/': typeof AppAdminIndexRoute
   '/planets/': typeof AppPlanetsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/auth': typeof AuthRouteRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
   '/': typeof AppIndexRoute
+  '/login': typeof AuthLoginRoute
+  '/signup': typeof AuthSignupRoute
   '/admin/users': typeof AppAdminUsersRoute
   '/planets/list': typeof AppPlanetsListRoute
   '/admin': typeof AppAdminIndexRoute
@@ -101,11 +98,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteRouteWithChildren
-  '/auth': typeof AuthRouteRouteWithChildren
+  '/_auth': typeof AuthRouteRouteWithChildren
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
   '/_app/planets': typeof AppPlanetsRouteRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/signup': typeof AuthSignupRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
   '/_app/planets/list': typeof AppPlanetsListRoute
@@ -116,21 +113,19 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/admin'
     | '/planets'
-    | '/auth/login'
-    | '/auth/signup'
+    | '/login'
+    | '/signup'
     | '/admin/users'
     | '/planets/list'
     | '/admin/'
     | '/planets/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/auth'
-    | '/auth/login'
-    | '/auth/signup'
     | '/'
+    | '/login'
+    | '/signup'
     | '/admin/users'
     | '/planets/list'
     | '/admin'
@@ -138,11 +133,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
-    | '/auth'
+    | '/_auth'
     | '/_app/admin'
     | '/_app/planets'
-    | '/auth/login'
-    | '/auth/signup'
+    | '/_auth/login'
+    | '/_auth/signup'
     | '/_app/'
     | '/_app/admin/users'
     | '/_app/planets/list'
@@ -157,10 +152,10 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -178,17 +173,17 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/auth/signup': {
-      id: '/auth/signup'
+    '/_auth/signup': {
+      id: '/_auth/signup'
       path: '/signup'
-      fullPath: '/auth/signup'
+      fullPath: '/signup'
       preLoaderRoute: typeof AuthSignupRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/auth/login': {
-      id: '/auth/login'
+    '/_auth/login': {
+      id: '/_auth/login'
       path: '/login'
-      fullPath: '/auth/login'
+      fullPath: '/login'
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRouteRoute
     }

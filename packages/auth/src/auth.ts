@@ -9,7 +9,12 @@ import {
   verification,
 } from "@pepperextra/db/auth-schema"
 import { type NodePgDatabase } from "drizzle-orm/node-postgres"
-import { admin, organization } from "better-auth/plugins"
+import { admin as adminPlugin, organization } from "better-auth/plugins"
+import {
+  ac,
+  customAdminRole,
+  financeRole,
+} from "./admin-access-control/roles.js"
 // NOTE- This is used by external apps who provides the db client
 // and want to create an instance of BetterAuth with the provided db client..
 //  This is useful for apps that want to use BetterAuth with
@@ -32,7 +37,16 @@ export const createAuthInstance = (
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
-    plugins: [organization(), admin()],
+    plugins: [
+      organization(),
+      adminPlugin({
+        ac: ac,
+        roles: {
+          customAdminRole,
+          financeRole,
+        },
+      }),
+    ],
     emailAndPassword: {
       enabled: true,
     },

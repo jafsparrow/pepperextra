@@ -7,3 +7,7 @@ allowBuilds:
   lightningcss: true
   unrs-resolver: true
   msw: false
+
+catalog:
+  drizzle-orm: 1.0.0-rc.4
+  drizzle-kit: 1.0.0-rc.4

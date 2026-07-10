@@ -7,7 +7,9 @@
     ".": {
       "default": "./src/auth.ts"
     },
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./permissions": "./src/admin-access-control/resource_permissions.ts",
+    "./roles": "./src/admin-access-control/roles.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",

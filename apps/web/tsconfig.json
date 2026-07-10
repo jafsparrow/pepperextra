@@ -4,7 +4,8 @@
     "**/*.tsx",
     "eslint.config.js",
     "prettier.config.js",
-    "vite.config.ts"
+    "vite.config.ts",
+    "../../packages/ui/src/hooks/use-mobile.ts"
   ],
   "compilerOptions": {
     "target": "ES2022",
