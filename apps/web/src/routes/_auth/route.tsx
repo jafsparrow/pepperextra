@@ -16,7 +16,7 @@ function AuthLayout() {
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Command className="h-4 w-4" />
           </div>
-          <span>Acme SaaS Corp.</span>
+          <span>ThirdExtra Private Limited.</span>
         </div>
 
         {/* Center Target Box: Renders /login or /signup forms dynamically */}

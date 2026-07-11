@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_auth/login")({
 
 function RouteComponent() {
   const handleLogin = async () => {
-    const { error } = await signIn.email({
+    const { error, data } = await signIn.email({
       email: "user@example.com",
       password: "password",
     })

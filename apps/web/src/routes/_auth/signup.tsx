@@ -1,3 +1,4 @@
+import { SignupForm } from "@/feature/auth/ui/components/sign-up-form"
 import { signUp } from "@pepperextra/auth/client"
 import { createFileRoute } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
@@ -16,8 +17,7 @@ function RouteComponent() {
   }
   return (
     <div>
-      Hello "/signup"!
-      <Button onClick={handleSignup}> Sign Up</Button>
+      <SignupForm />
     </div>
   )
 }
