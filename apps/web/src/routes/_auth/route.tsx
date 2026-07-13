@@ -9,6 +9,7 @@ function AuthLayout() {
   return (
     // 1. Grid structure: 1 full column on mobile, 2 columns split on desktop screens (lg)
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+      {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-size-[34px_34px] opacity-10" /> */}
       {/* LEFT COLUMN: The Interactive Form Container */}
       <div className="flex flex-col justify-between bg-background p-6 sm:p-10">
         {/* Upper Brand Mark */}
@@ -54,6 +55,10 @@ function AuthLayout() {
             <span className="rounded-full border border-primary/30 bg-primary/20 px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
               v2.0 Active
             </span>
+          </div>
+
+          <div className="mt-auto text-5xl font-bold tracking-tight">
+            PepperExtra Ordering App
           </div>
 
           {/* Testimonial callout block */}
