@@ -1,23 +1,43 @@
 import { SignupForm } from "@/feature/auth/ui/components/sign-up-form"
+
+import type { SignupInputType } from "@/feature/auth/ui/components/sign-up-form"
+
 import { signUp } from "@pepperextra/auth/client"
-import { createFileRoute } from "@tanstack/react-router"
-import { Button } from "@workspace/ui/components/button"
+import { useMutation } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_auth/signup")({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const handleSignup = async () => {
-    const { error } = await signUp.email({
-      email: "user@example.com",
-      name: "jafrose",
-      password: "password",
-    })
-  }
+  const navigate = useNavigate()
+
+  const signUpMutation = useMutation({
+    mutationFn: async ({
+      name,
+      email,
+      password,
+    }: Omit<SignupInputType, "confirmPassword">) => {
+      await signUp.email({
+        email: email,
+        name: name,
+        password: password,
+      })
+    },
+    onSuccess: () => {
+      console.log("logged in succesfully....")
+      navigate({ to: "/planets/list" })
+    },
+    onError: (error) => console.log("erro on sign"),
+  })
   return (
     <div>
-      <SignupForm />
+      <SignupForm
+        onSubmit={({ name, email, password }) =>
+          signUpMutation.mutate({ name, email, password })
+        }
+      />
     </div>
   )
 }
