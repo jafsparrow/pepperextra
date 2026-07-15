@@ -1,5 +1,6 @@
 import { oc, populateContractRouterPaths } from "@orpc/contract"
 import z, { success } from "zod"
+import { listGalxy } from "./galaxies.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -52,5 +53,8 @@ export const contracts = populateContractRouterPaths({
     find: findPlanet,
     create: createPlanet,
     delete: deletePlanet,
+  },
+  galaxy: {
+    list: listGalxy,
   },
 })

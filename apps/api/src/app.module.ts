@@ -12,6 +12,7 @@ import { experimental_RethrowHandlerPlugin as RethrowHandlerPlugin } from '@orpc
 import { DatabaseModule, DRIZZLE_TOKEN } from './db/database.module.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { UserModule } from './user/user.module.js';
 
 declare module '@orpc/nest' {
   interface ORPCGlobalContext {
@@ -26,6 +27,7 @@ declare module '@orpc/nest' {
       envFilePath: ['.env', '.env.local', '../../.env'],
     }),
     DatabaseModule,
+    UserModule,
 
     // 3. Register Auth Module Asynchronously
     AuthModule.forRootAsync({
