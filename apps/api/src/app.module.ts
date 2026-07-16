@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { AuthInstance, createAuthInstance } from '@pepperextra/auth';
 import { PlanetController } from './planet/planet.controller.js';
 import { onError, ORPCError, ORPCModule } from '@orpc/nest';
 import { Request } from 'express';
 import { REQUEST } from '@nestjs/core';
 
+import { AuthInstance, createAuthInstance } from '@pepperextra/auth';
 import { experimental_RethrowHandlerPlugin as RethrowHandlerPlugin } from '@orpc/server/plugins';
 import { DatabaseModule, DRIZZLE_TOKEN } from './db/database.module.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';

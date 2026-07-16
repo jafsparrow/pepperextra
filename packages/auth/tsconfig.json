@@ -2,6 +2,7 @@
   "extends": "@pepperextra/tsconfig/compiled-package.json",
 
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "declaration": false,
     "emitDeclarationOnly": false,
     "declarationMap": false,
