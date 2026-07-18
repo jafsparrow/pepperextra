@@ -5,7 +5,8 @@
     "eslint.config.js",
     "prettier.config.js",
     "vite.config.ts",
-    "../../packages/ui/src/hooks/use-mobile.ts"
+    "../../packages/ui/src/hooks/use-mobile.ts",
+    "../../packages/ui/src/lib/theme-provider.tsx"
   ],
   "compilerOptions": {
     "target": "ES2022",

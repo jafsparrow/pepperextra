@@ -1,3 +1,4 @@
+import { OrgAddModal } from "@/feature/org/ui/components/org-add-modal"
 import { authClient } from "@pepperextra/auth/client"
 import { createFileRoute } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/_app/org/")({
 
 function RouteComponent() {
   const { data } = authClient.useListOrganizations()
-  const {} = authClient.getSession()
+  const { data: userData } = authClient.useSession()
 
   const handleCreateOrganisation = async () => {
     const { data, error } = await authClient.organization.create({
@@ -23,6 +24,10 @@ function RouteComponent() {
       <Button variant={"outline"} onClick={handleCreateOrganisation}>
         add a new org
       </Button>
+      <div className="text-4xl font-bold">{JSON.stringify(userData)}</div>
+      <div>
+        <OrgAddModal />
+      </div>
     </div>
   )
 }

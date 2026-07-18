@@ -7,13 +7,24 @@ import {
   session,
   user,
 } from "../auth-schema"
+import { team, teamMember } from "../auth-schema"
 
 export const authRelations = defineRelations(
-  { user, session, account, organization, member, invitation },
+  {
+    user,
+    session,
+    account,
+    organization,
+    member,
+    invitation,
+    team,
+    teamMember,
+  },
   (r) => ({
     user: {
       sessions: r.many.session(),
       accounts: r.many.account(),
+      teamMembers: r.many.teamMember(),
       members: r.many.member(),
       invitations: r.many.invitation(),
     },
@@ -30,8 +41,26 @@ export const authRelations = defineRelations(
       }),
     },
     organization: {
+      teams: r.many.team(),
       members: r.many.member(),
       invitations: r.many.invitation(),
+    },
+    team: {
+      organization: r.one.organization({
+        from: r.team.organizationId,
+        to: r.organization.id,
+      }),
+      teamMembers: r.many.teamMember(),
+    },
+    teamMember: {
+      team: r.one.team({
+        from: r.teamMember.teamId,
+        to: r.team.id,
+      }),
+      user: r.one.user({
+        from: r.teamMember.userId,
+        to: r.user.id,
+      }),
     },
     member: {
       organization: r.one.organization({

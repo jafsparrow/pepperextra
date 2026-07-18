@@ -11,9 +11,11 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 
 import appCss from "@workspace/ui/globals.css?url"
+import { Toaster } from "@workspace/ui/components/sonner"
 import { seo } from "@/shared/utils/seo"
 import { DefaultCatchBoundary } from "@/shared/components/default-catch-boundary"
 import { NotFound } from "@/shared/components/not-found"
+import { ThemeProvider } from "@workspace/ui/lib/theme-provider"
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -78,14 +80,17 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider defaultTheme="system" storageKey="theme">
+          {children}{" "}
+        </ThemeProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
+        <Toaster />
         <Scripts />
       </body>
     </html>

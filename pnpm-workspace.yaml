@@ -11,3 +11,5 @@ allowBuilds:
 catalog:
   drizzle-orm: 1.0.0-rc.4
   drizzle-kit: 1.0.0-rc.4
+  "@tanstack/react-router": latest
+  sonner: "^2.0.7"
