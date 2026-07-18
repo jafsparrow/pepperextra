@@ -11,6 +11,10 @@
     "./client": {
       "import": "./dist/client.js",
       "types": "./src/client.ts"
+    },
+    "./roles": {
+      "import": "./dist/roles.js",
+      "types": "./src/admin-access-control/roles.ts"
     }
   },
   "scripts": {

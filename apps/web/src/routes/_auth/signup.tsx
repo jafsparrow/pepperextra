@@ -29,7 +29,7 @@ function RouteComponent() {
       console.log("logged in succesfully....")
       navigate({ to: "/planets/list" })
     },
-    onError: (error) => console.log("erro on sign"),
+    onError: (error) => console.log("erro on sign", error),
   })
   return (
     <div>

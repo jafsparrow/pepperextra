@@ -48,6 +48,7 @@ declare module '@orpc/nest' {
           );
         }
 
+        // {NOTE}  we can pass the organisation hook if needed here..
         const betterAuthInstance = createAuthInstance(dbClient, {
           secret,
           baseUrl,

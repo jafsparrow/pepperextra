@@ -15,11 +15,20 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppPlanetsRouteRouteImport } from './routes/_app/planets/route'
+import { Route as AppOrgRouteRouteImport } from './routes/_app/org/route'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppPlanetsIndexRouteImport } from './routes/_app/planets/index'
+import { Route as AppOrgIndexRouteImport } from './routes/_app/org/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppPlanetsListRouteImport } from './routes/_app/planets/list'
+import { Route as AppOrgUsersRouteImport } from './routes/_app/org/users'
+import { Route as AppOrgSettingsRouteImport } from './routes/_app/org/settings'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
+import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin/settings'
+import { Route as AppOrgTeamsIndexRouteImport } from './routes/_app/org/teams/index'
+import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
+import { Route as AppOrgTeamsTeamIdRouteImport } from './routes/_app/org/teams/$teamId'
+import { Route as AppAdminTenantsTenantIdRouteImport } from './routes/_app/admin/tenants/$tenantId'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -49,6 +58,11 @@ const AppPlanetsRouteRoute = AppPlanetsRouteRouteImport.update({
   path: '/planets',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppOrgRouteRoute = AppOrgRouteRouteImport.update({
+  id: '/org',
+  path: '/org',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -58,6 +72,11 @@ const AppPlanetsIndexRoute = AppPlanetsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppPlanetsRouteRoute,
+} as any)
+const AppOrgIndexRoute = AppOrgIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppOrgRouteRoute,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
@@ -69,80 +88,167 @@ const AppPlanetsListRoute = AppPlanetsListRouteImport.update({
   path: '/list',
   getParentRoute: () => AppPlanetsRouteRoute,
 } as any)
+const AppOrgUsersRoute = AppOrgUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppOrgRouteRoute,
+} as any)
+const AppOrgSettingsRoute = AppOrgSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppOrgRouteRoute,
+} as any)
 const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppOrgTeamsIndexRoute = AppOrgTeamsIndexRouteImport.update({
+  id: '/teams/',
+  path: '/teams/',
+  getParentRoute: () => AppOrgRouteRoute,
+} as any)
+const AppAdminTenantsIndexRoute = AppAdminTenantsIndexRouteImport.update({
+  id: '/tenants/',
+  path: '/tenants/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppOrgTeamsTeamIdRoute = AppOrgTeamsTeamIdRouteImport.update({
+  id: '/teams/$teamId',
+  path: '/teams/$teamId',
+  getParentRoute: () => AppOrgRouteRoute,
+} as any)
+const AppAdminTenantsTenantIdRoute = AppAdminTenantsTenantIdRouteImport.update({
+  id: '/tenants/$tenantId',
+  path: '/tenants/$tenantId',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/admin': typeof AppAdminRouteRouteWithChildren
+  '/org': typeof AppOrgRouteRouteWithChildren
   '/planets': typeof AppPlanetsRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
+  '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/org/settings': typeof AppOrgSettingsRoute
+  '/org/users': typeof AppOrgUsersRoute
   '/planets/list': typeof AppPlanetsListRoute
   '/admin/': typeof AppAdminIndexRoute
+  '/org/': typeof AppOrgIndexRoute
   '/planets/': typeof AppPlanetsIndexRoute
+  '/admin/tenants/$tenantId': typeof AppAdminTenantsTenantIdRoute
+  '/org/teams/$teamId': typeof AppOrgTeamsTeamIdRoute
+  '/admin/tenants/': typeof AppAdminTenantsIndexRoute
+  '/org/teams/': typeof AppOrgTeamsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
+  '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/org/settings': typeof AppOrgSettingsRoute
+  '/org/users': typeof AppOrgUsersRoute
   '/planets/list': typeof AppPlanetsListRoute
   '/admin': typeof AppAdminIndexRoute
+  '/org': typeof AppOrgIndexRoute
   '/planets': typeof AppPlanetsIndexRoute
+  '/admin/tenants/$tenantId': typeof AppAdminTenantsTenantIdRoute
+  '/org/teams/$teamId': typeof AppOrgTeamsTeamIdRoute
+  '/admin/tenants': typeof AppAdminTenantsIndexRoute
+  '/org/teams': typeof AppOrgTeamsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteRouteWithChildren
   '/_auth': typeof AuthRouteRouteWithChildren
   '/_app/admin': typeof AppAdminRouteRouteWithChildren
+  '/_app/org': typeof AppOrgRouteRouteWithChildren
   '/_app/planets': typeof AppPlanetsRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/settings': typeof AppAdminSettingsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
+  '/_app/org/settings': typeof AppOrgSettingsRoute
+  '/_app/org/users': typeof AppOrgUsersRoute
   '/_app/planets/list': typeof AppPlanetsListRoute
   '/_app/admin/': typeof AppAdminIndexRoute
+  '/_app/org/': typeof AppOrgIndexRoute
   '/_app/planets/': typeof AppPlanetsIndexRoute
+  '/_app/admin/tenants/$tenantId': typeof AppAdminTenantsTenantIdRoute
+  '/_app/org/teams/$teamId': typeof AppOrgTeamsTeamIdRoute
+  '/_app/admin/tenants/': typeof AppAdminTenantsIndexRoute
+  '/_app/org/teams/': typeof AppOrgTeamsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/org'
     | '/planets'
     | '/login'
     | '/signup'
+    | '/admin/settings'
     | '/admin/users'
+    | '/org/settings'
+    | '/org/users'
     | '/planets/list'
     | '/admin/'
+    | '/org/'
     | '/planets/'
+    | '/admin/tenants/$tenantId'
+    | '/org/teams/$teamId'
+    | '/admin/tenants/'
+    | '/org/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
+    | '/admin/settings'
     | '/admin/users'
+    | '/org/settings'
+    | '/org/users'
     | '/planets/list'
     | '/admin'
+    | '/org'
     | '/planets'
+    | '/admin/tenants/$tenantId'
+    | '/org/teams/$teamId'
+    | '/admin/tenants'
+    | '/org/teams'
   id:
     | '__root__'
     | '/_app'
     | '/_auth'
     | '/_app/admin'
+    | '/_app/org'
     | '/_app/planets'
     | '/_auth/login'
     | '/_auth/signup'
     | '/_app/'
+    | '/_app/admin/settings'
     | '/_app/admin/users'
+    | '/_app/org/settings'
+    | '/_app/org/users'
     | '/_app/planets/list'
     | '/_app/admin/'
+    | '/_app/org/'
     | '/_app/planets/'
+    | '/_app/admin/tenants/$tenantId'
+    | '/_app/org/teams/$teamId'
+    | '/_app/admin/tenants/'
+    | '/_app/org/teams/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -194,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanetsRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/org': {
+      id: '/_app/org'
+      path: '/org'
+      fullPath: '/org'
+      preLoaderRoute: typeof AppOrgRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/admin': {
       id: '/_app/admin'
       path: '/admin'
@@ -207,6 +320,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/planets/'
       preLoaderRoute: typeof AppPlanetsIndexRouteImport
       parentRoute: typeof AppPlanetsRouteRoute
+    }
+    '/_app/org/': {
+      id: '/_app/org/'
+      path: '/'
+      fullPath: '/org/'
+      preLoaderRoute: typeof AppOrgIndexRouteImport
+      parentRoute: typeof AppOrgRouteRoute
     }
     '/_app/admin/': {
       id: '/_app/admin/'
@@ -222,6 +342,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanetsListRouteImport
       parentRoute: typeof AppPlanetsRouteRoute
     }
+    '/_app/org/users': {
+      id: '/_app/org/users'
+      path: '/users'
+      fullPath: '/org/users'
+      preLoaderRoute: typeof AppOrgUsersRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
+    '/_app/org/settings': {
+      id: '/_app/org/settings'
+      path: '/settings'
+      fullPath: '/org/settings'
+      preLoaderRoute: typeof AppOrgSettingsRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
     '/_app/admin/users': {
       id: '/_app/admin/users'
       path: '/users'
@@ -229,21 +363,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsersRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/settings': {
+      id: '/_app/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AppAdminSettingsRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/org/teams/': {
+      id: '/_app/org/teams/'
+      path: '/teams'
+      fullPath: '/org/teams/'
+      preLoaderRoute: typeof AppOrgTeamsIndexRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
+    '/_app/admin/tenants/': {
+      id: '/_app/admin/tenants/'
+      path: '/tenants'
+      fullPath: '/admin/tenants/'
+      preLoaderRoute: typeof AppAdminTenantsIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/org/teams/$teamId': {
+      id: '/_app/org/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/org/teams/$teamId'
+      preLoaderRoute: typeof AppOrgTeamsTeamIdRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
+    '/_app/admin/tenants/$tenantId': {
+      id: '/_app/admin/tenants/$tenantId'
+      path: '/tenants/$tenantId'
+      fullPath: '/admin/tenants/$tenantId'
+      preLoaderRoute: typeof AppAdminTenantsTenantIdRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
   }
 }
 
 interface AppAdminRouteRouteChildren {
+  AppAdminSettingsRoute: typeof AppAdminSettingsRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
+  AppAdminTenantsTenantIdRoute: typeof AppAdminTenantsTenantIdRoute
+  AppAdminTenantsIndexRoute: typeof AppAdminTenantsIndexRoute
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminSettingsRoute: AppAdminSettingsRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
+  AppAdminTenantsTenantIdRoute: AppAdminTenantsTenantIdRoute,
+  AppAdminTenantsIndexRoute: AppAdminTenantsIndexRoute,
 }
 
 const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
   AppAdminRouteRouteChildren,
+)
+
+interface AppOrgRouteRouteChildren {
+  AppOrgSettingsRoute: typeof AppOrgSettingsRoute
+  AppOrgUsersRoute: typeof AppOrgUsersRoute
+  AppOrgIndexRoute: typeof AppOrgIndexRoute
+  AppOrgTeamsTeamIdRoute: typeof AppOrgTeamsTeamIdRoute
+  AppOrgTeamsIndexRoute: typeof AppOrgTeamsIndexRoute
+}
+
+const AppOrgRouteRouteChildren: AppOrgRouteRouteChildren = {
+  AppOrgSettingsRoute: AppOrgSettingsRoute,
+  AppOrgUsersRoute: AppOrgUsersRoute,
+  AppOrgIndexRoute: AppOrgIndexRoute,
+  AppOrgTeamsTeamIdRoute: AppOrgTeamsTeamIdRoute,
+  AppOrgTeamsIndexRoute: AppOrgTeamsIndexRoute,
+}
+
+const AppOrgRouteRouteWithChildren = AppOrgRouteRoute._addFileChildren(
+  AppOrgRouteRouteChildren,
 )
 
 interface AppPlanetsRouteRouteChildren {
@@ -262,12 +457,14 @@ const AppPlanetsRouteRouteWithChildren = AppPlanetsRouteRoute._addFileChildren(
 
 interface AppRouteRouteChildren {
   AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
+  AppOrgRouteRoute: typeof AppOrgRouteRouteWithChildren
   AppPlanetsRouteRoute: typeof AppPlanetsRouteRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
+  AppOrgRouteRoute: AppOrgRouteRouteWithChildren,
   AppPlanetsRouteRoute: AppPlanetsRouteRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
 }

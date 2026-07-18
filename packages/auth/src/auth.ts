@@ -14,11 +14,19 @@ import {
   createAccessControl,
   organization,
 } from "better-auth/plugins"
+
+import type { OrganizationOptions } from "better-auth/plugins"
 import {
   ac,
   customAdminRole,
   financeRole,
 } from "./admin-access-control/roles.js"
+import {
+  orgAccessControl,
+  staff,
+  cashier,
+  manager,
+} from "./org-access-control/org-roles.js"
 
 // NOTE- This is used by external apps who provides the db client
 // and want to create an instance of BetterAuth with the provided db client..
@@ -29,6 +37,7 @@ import {
 interface AuthConfigOptions {
   secret: string
   baseUrl: string
+  organizationHooks?: NonNullable<OrganizationOptions["organizationHooks"]>
 }
 
 export const createAuthInstance = (
@@ -43,7 +52,21 @@ export const createAuthInstance = (
     secret: options.secret,
     baseURL: options.baseUrl,
     plugins: [
-      organization(),
+      organization({
+        ac: orgAccessControl,
+        roles: {
+          staff,
+          cashier,
+          manager,
+        },
+        teams: { enabled: true },
+        allowUserToCreateOrganization: async (user) => {
+          // [note]: this could be used to restrict the org creation.
+          // const subscription = await getSubscription(user.id)
+          return true // subscription.plan === "pro"
+        },
+        organizationHooks: options.organizationHooks ?? {},
+      }),
       adminPlugin({
         ac: ac,
         roles: {

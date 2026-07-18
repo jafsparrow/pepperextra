@@ -15,9 +15,10 @@ import {
 // Navigation items catalog
 const navigationItems = [
   { title: "Overview", to: "/dashboard", icon: LayoutDashboard },
-  { title: "Team Members", to: "/dashboard/team", icon: Users },
+  { title: "Tenants", to: "/admin/tenants", icon: Users },
+  { title: "Org", to: "/org/teams", icon: Users },
   { title: "Billing & Plans", to: "/settings/billing", icon: CreditCard },
-  { title: "Settings", to: "/settings", icon: Settings },
+  { title: "Settings", to: "/admin/settings", icon: Settings },
 ]
 
 export function AppSidebar() {

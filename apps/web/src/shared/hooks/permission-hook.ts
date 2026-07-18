@@ -1,7 +1,7 @@
 // hooks/usePermission.ts
-import { authClient } from "@pepperextra/auth/client"
 import { ALL_ROLES } from "@pepperextra/auth/roles"
 import type { AppRoleName, ResourceStatements } from "@pepperextra/auth/roles"
+import { useAuthorization } from "./authorization-hook"
 
 // Enforce that you can only pass valid resources and valid actions defined in your file
 type GuardConfig = {
@@ -9,13 +9,13 @@ type GuardConfig = {
 }
 
 export function usePermission(requiredPermissions: GuardConfig) {
-  const { data: session, isPending } = authClient.useSession()
+  const { user, isLoading } = useAuthorization()
 
-  if (isPending) return { isAllowed: false, isPending: true }
-  if (!session?.user) return { isAllowed: false, isPending: false }
+  if (isLoading) return { isAllowed: false, isPending: true }
+  if (!user) return { isAllowed: false, isPending: false }
 
   // 1. Get the current user's role from Better Auth (e.g. "customAdminRole")
-  const userRoleName = session.user.role as AppRoleName
+  const userRoleName = user.role as AppRoleName
   const roleObject = ALL_ROLES[userRoleName]
 
   // 2. Handle cases where the user's role doesn't exist in our map

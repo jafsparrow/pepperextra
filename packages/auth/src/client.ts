@@ -1,6 +1,12 @@
 import { createAuthClient } from "better-auth/react"
 import { adminClient, organizationClient } from "better-auth/client/plugins"
 import { ac, customAdminRole, financeRole } from "./admin-access-control/roles"
+import {
+  orgAccessControl,
+  staff,
+  cashier,
+  manager,
+} from "./org-access-control/org-roles"
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
   baseURL: "http://localhost:3000",
@@ -12,7 +18,14 @@ export const authClient = createAuthClient({
         financeRole,
       },
     }),
-    organizationClient(),
+    organizationClient({
+      ac: orgAccessControl,
+      roles: {
+        staff,
+        cashier,
+        manager,
+      },
+    }),
   ],
   advanced: {
     crossOriginCookies: true,
