@@ -10,39 +10,53 @@ import {
   DialogTrigger,
 } from "@workspace/ui/components/dialog"
 import { toast } from "sonner"
-import { OrgAddForm } from "./org-add-form"
-import type { OrganizationFormValues } from "./org-add-form"
 import { useMutation } from "@tanstack/react-query"
+import { TeamAddForm } from "./team-add-form"
+import type { TeamFormValues } from "./team-add-form"
 import { authClient } from "@pepperextra/auth/client"
 
-interface OrgAddModalProps {
+interface TeamAddModalProps {
   children?: ReactNode
-  onSubmit?: (data: OrganizationFormValues) => void | Promise<void>
+  onSubmit?: (data: TeamFormValues) => void | Promise<void>
   onOpenChange?: (open: boolean) => void
   open?: boolean
   defaultButtonLabel?: string
 }
 
-export function OrgAddModal({
+export function TeamAddModal({
   children,
   onSubmit,
   onOpenChange,
   open,
-  defaultButtonLabel = "Add org",
-}: OrgAddModalProps) {
+  defaultButtonLabel = "Add team",
+}: TeamAddModalProps) {
   const [internalOpen, setInternalOpen] = useState(false)
 
   const isOpen = open ?? internalOpen
-  const createOrgMutation = useMutation({
-    mutationFn: async (data: OrganizationFormValues) => {
-      const metadata = { license: "demo", expiresAt: "30/05/88" }
-      await authClient.organization.create({ ...data, metadata })
+  const createTeamMutation = useMutation({
+    mutationFn: async (data: TeamFormValues) => {
+      const { data: newTeam, error } = await authClient.organization.createTeam(
+        {
+          name: data.name,
+        }
+      )
+
+      if (error) {
+        console.log(error)
+        // React Query will handle this as an error
+        throw new Error(error.message)
+      }
+
+      return data
     },
     onSuccess: () => {
-      toast.success("Created Oganisation succesfully..")
+      toast.success("Created team successfully.")
     },
-    onError: () => {},
+    onError: (error) => {
+      toast.error(error.message)
+    },
   })
+
   const handleOpenChange = (nextOpen: boolean) => {
     if (open === undefined) {
       setInternalOpen(nextOpen)
@@ -51,8 +65,8 @@ export function OrgAddModal({
     onOpenChange?.(nextOpen)
   }
 
-  const handleSubmit = async (data: OrganizationFormValues) => {
-    createOrgMutation.mutate({ ...data })
+  const handleSubmit = async (data: TeamFormValues) => {
+    createTeamMutation.mutate({ ...data })
     await onSubmit?.(data)
     handleOpenChange(false)
   }
@@ -69,16 +83,16 @@ export function OrgAddModal({
 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create organization</DialogTitle>
+          <DialogTitle>Create team</DialogTitle>
           <DialogDescription>
-            Add your organization name and a unique slug to get started.
+            Add a team name to organize your workspace.
           </DialogDescription>
         </DialogHeader>
 
-        <OrgAddForm
+        <TeamAddForm
           onSubmit={handleSubmit}
           showHeader={false}
-          isLoading={createOrgMutation.isPending}
+          isLoading={createTeamMutation.isPending}
         />
       </DialogContent>
     </Dialog>

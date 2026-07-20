@@ -26,6 +26,7 @@ import {
   staff,
   cashier,
   manager,
+  systemRoles,
 } from "./org-access-control/org-roles.js"
 
 // NOTE- This is used by external apps who provides the db client
@@ -51,6 +52,15 @@ export const createAuthInstance = (
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
+    user: {
+      additionalFields: {
+        customAccountType: {
+          type: ["owner", "staff"],
+          required: false,
+          defaultValue: "staff",
+        },
+      },
+    },
     plugins: [
       organization({
         ac: orgAccessControl,
@@ -58,6 +68,7 @@ export const createAuthInstance = (
           staff,
           cashier,
           manager,
+          ...systemRoles,
         },
         teams: { enabled: true },
         allowUserToCreateOrganization: async (user) => {

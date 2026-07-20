@@ -19,25 +19,14 @@ import { Input } from "@workspace/ui/components/input"
 import { cn } from "@workspace/ui/lib/utils"
 import * as z from "zod"
 
-const organizationSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Organization name must be at least 2 characters"),
-  slug: z
-    .string()
-    .trim()
-    .min(2, "Slug must be at least 2 characters")
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug can only contain lowercase letters, numbers, and hyphens"
-    ),
+const teamSchema = z.object({
+  name: z.string().trim().min(2, "Team name must be at least 2 characters"),
 })
 
-export type OrganizationFormValues = z.infer<typeof organizationSchema>
+export type TeamFormValues = z.infer<typeof teamSchema>
 
-interface OrgAddFormProps {
-  onSubmit?: (data: OrganizationFormValues) => void | Promise<void>
+interface TeamAddFormProps {
+  onSubmit?: (data: TeamFormValues) => void | Promise<void>
   onPending?: (pending: boolean) => void
   isLoading?: boolean
   className?: string
@@ -46,20 +35,19 @@ interface OrgAddFormProps {
   description?: string
 }
 
-export function OrgAddForm({
+export function TeamAddForm({
   onSubmit,
   onPending,
   isLoading = false,
   className,
   showHeader = true,
-  title = "Create organization",
-  description = "Add the organization name and a unique slug to get started.",
-}: OrgAddFormProps) {
-  const form = useForm<OrganizationFormValues>({
-    resolver: zodResolver(organizationSchema),
+  title = "Create team",
+  description = "Add a clear team name to get started.",
+}: TeamAddFormProps) {
+  const form = useForm<TeamFormValues>({
+    resolver: zodResolver(teamSchema),
     defaultValues: {
       name: "",
-      slug: "",
     },
   })
 
@@ -67,13 +55,13 @@ export function OrgAddForm({
     onPending?.(form.formState.isSubmitting)
   }, [form.formState.isSubmitting, onPending])
 
-  const handleSubmit = async (data: OrganizationFormValues) => {
+  const handleSubmit = async (data: TeamFormValues) => {
     if (onSubmit) {
       await onSubmit(data)
       return
     }
 
-    console.log("Organization data:", data)
+    console.log("Team data:", data)
   }
 
   return (
@@ -96,34 +84,15 @@ export function OrgAddForm({
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Organization name</FieldLabel>
+                    <FieldLabel>Team name</FieldLabel>
                     <Input
                       {...field}
                       type="text"
-                      placeholder="Acme Labs"
+                      placeholder="Product"
                       autoComplete="off"
                     />
                     <FieldDescription>
-                      This is the display name shown to your team.
-                    </FieldDescription>
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="slug"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Slug</FieldLabel>
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="acme-labs"
-                      autoComplete="off"
-                    />
-                    <FieldDescription>
-                      Use lowercase letters, numbers, and hyphens only.
+                      This is the name your members will see in the workspace.
                     </FieldDescription>
                   </Field>
                 )}
@@ -141,7 +110,7 @@ export function OrgAddForm({
             >
               {form.formState.isSubmitting || isLoading
                 ? "Creating..."
-                : "Create organization"}
+                : "Create team"}
             </Button>
           </form>
         </CardContent>

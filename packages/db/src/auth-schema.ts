@@ -22,6 +22,9 @@ export const user = pgTable("user", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  customAccountType: text("custom_account_type", {
+    enum: ["owner", "staff"],
+  }).default("staff"),
 })
 
 export const session = pgTable(

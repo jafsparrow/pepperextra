@@ -3,6 +3,7 @@ import { usePermission } from "@/shared/hooks/permission-hook"
 import { authClient } from "@pepperextra/auth/client"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
+import { TeamAddModal } from "@/feature/org/ui/components/team-add-modal"
 
 export const Route = createFileRoute("/_app/org/teams/")({
   component: RouteComponent,
@@ -11,9 +12,26 @@ export const Route = createFileRoute("/_app/org/teams/")({
 function RouteComponent() {
   const { isAllowed, isPending } = usePermission({ system: ["read"] })
   const { hasRole } = useAuthorization()
+  const { data: activeorg } = authClient.useActiveOrganization()
 
   const isAdmin = hasRole(["admin"])
 
+  const handleActiveOrg = async () => {
+    await authClient.organization.inviteMember({
+      email: "salu@gmail.com",
+      role: "cashier",
+    })
+
+    authClient.organization.setActive({
+      organizationId: "PZskoUOynNZ9H9p0Ljq7ODpWMbCXrPPg",
+    })
+  }
+
+  const handleAcceptInvitation = async () => {
+    authClient.organization.acceptInvitation({
+      invitationId: "w5vlxcbg8iLx7oRcChJvCP0scDzNzBka",
+    })
+  }
   const createOrg = async () => {
     const metadata = { someKey: "someValue" }
 
@@ -38,7 +56,10 @@ function RouteComponent() {
           Dawar
         </Link>
       </div>
-      <Button onClick={createOrg}>Create org</Button>
+      <Button onClick={handleActiveOrg}>Activate org</Button>
+      <div>{JSON.stringify(activeorg)}</div>
+      <TeamAddModal />
+      <Button onClick={handleAcceptInvitation}>Accpt Ivtation</Button>
     </div>
   )
 }

@@ -28,6 +28,15 @@ export const createAuthConfig = (
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
+    user: {
+      additionalFields: {
+        customAccountType: {
+          type: ["owner", "staff"],
+          required: false,
+          defaultValue: "staff",
+        },
+      },
+    },
     plugins: [
       organization({
         ac: orgAccessControl,

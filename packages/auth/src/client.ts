@@ -6,6 +6,7 @@ import {
   staff,
   cashier,
   manager,
+  systemRoles,
 } from "./org-access-control/org-roles"
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
@@ -19,11 +20,13 @@ export const authClient = createAuthClient({
       },
     }),
     organizationClient({
+      teams: { enabled: true },
       ac: orgAccessControl,
       roles: {
         staff,
         cashier,
         manager,
+        ...systemRoles,
       },
     }),
   ],

@@ -2,6 +2,7 @@ import { createAccessControl } from "better-auth/plugins/access"
 import {
   defaultStatements,
   adminAc,
+  defaultRoles,
 } from "better-auth/plugins/organization/access"
 import { orgStatements } from "./org-resource-permissions.js"
 
@@ -24,7 +25,7 @@ export const manager = orgAccessControl.newRole({
   reports: ["read"],
   staff: ["read"],
 })
-
+export const systemRoles = defaultRoles
 export default {
   staff,
   cashier,
