@@ -4,6 +4,10 @@ import { authClient } from "@pepperextra/auth/client"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
 import { TeamAddModal } from "@/feature/org/ui/components/team-add-modal"
+import { useQuery } from "@tanstack/react-query"
+
+import { contracts } from "@pepperextra/contracts"
+import { orpc } from "@/shared/utils/orpc"
 
 export const Route = createFileRoute("/_app/org/teams/")({
   component: RouteComponent,
@@ -13,7 +17,9 @@ function RouteComponent() {
   const { isAllowed, isPending } = usePermission({ system: ["read"] })
   const { hasRole } = useAuthorization()
   const { data: activeorg } = authClient.useActiveOrganization()
-
+  const { data: galaxies } = useQuery(
+    orpc.planet.list.queryOptions({ input: { cursor: 1 } })
+  )
   const isAdmin = hasRole(["admin"])
 
   const handleActiveOrg = async () => {
@@ -60,6 +66,8 @@ function RouteComponent() {
       <div>{JSON.stringify(activeorg)}</div>
       <TeamAddModal />
       <Button onClick={handleAcceptInvitation}>Accpt Ivtation</Button>
+      <hr />
+      <div>{JSON.stringify(galaxies)}</div>
     </div>
   )
 }

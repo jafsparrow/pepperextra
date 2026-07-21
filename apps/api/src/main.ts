@@ -14,6 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: 'http://localhost:3001',
     credentials: true, // Crucial for Better Auth cookies to pass through
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-orpc-*'],
   });
 
   // console.log('nest js proces env', process.env);
