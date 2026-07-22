@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import type { AuthInstance } from '@pepperextra/auth';
+import { AuthService } from '@thallesp/nestjs-better-auth';
 
 export interface User {
   id: string;
@@ -14,6 +16,7 @@ export class UserService {
     { id: '2', name: 'Bob', email: 'bob@example.com', role: 'user' },
   ];
 
+  constructor(private readonly authService: AuthService<AuthInstance>) {}
   findAll(): User[] {
     return this.users;
   }
