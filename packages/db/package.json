@@ -1,16 +1,16 @@
 {
   "name": "@pepperextra/db",
   "version": "0.0.0",
-  "type": "module",
   "private": true,
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "default": "./dist/index.mjs"
     },
     "./client": {
-      "types": "./dist/client.d.ts",
-      "default": "./src/client.ts"
+      "types": "./dist/client.d.ts"
     },
     "./drizzle-cli": {
       "default": "./src/drizzle-cli.ts"
@@ -25,7 +25,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "db:generate": " dotenv -e ../../.env -- pnpx drizzle-kit generate",
     "db:push": "dotenv -e ../../.env -- drizzle-kit push",
     "clean": "git clean -xdf .cache .turbo dist node_modules",

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { createDatabaseClient, DatabaseClient } from '@pepperextra/db/client';
+import { createDatabaseClient, DatabaseClient } from '@pepperextra/db';
 export const DRIZZLE_TOKEN = 'DRIZZLE_CLIENT';
 @Module({
   providers: [

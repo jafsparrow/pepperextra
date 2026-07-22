@@ -1,14 +1,12 @@
 import { drizzle } from "drizzle-orm/node-postgres"
+import { authRelations } from "./schema-relations/auth-relation.js"
 import { Pool } from "pg"
 // console.log("procees env values", process.env)cls
 
 // Export a builder function instead of a global constant instance
 export const createDatabaseClient = (connectionString: string) => {
-  console.log(
-    "creating database client with connection string",
-    connectionString
-  )
-  return drizzle(connectionString)
+  const pool = new Pool({ connectionString })
+  return drizzle({ client: pool, relations: authRelations })
 }
 
 export type DatabaseClient = ReturnType<typeof createDatabaseClient>

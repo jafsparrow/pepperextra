@@ -3,8 +3,8 @@ import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
 import { contracts, Planet } from '@pepperextra/contracts';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
-import type { DatabaseClient } from '@pepperextra/db/client';
-import { user } from '@pepperextra/db/auth-schema';
+import type { DatabaseClient } from '@pepperextra/db';
+import { user, dz } from '@pepperextra/db';
 
 const planets: Planet[] = [
   {
@@ -21,9 +21,12 @@ export class PlanetController {
   ) {}
   @Implement(contracts.planet.list)
   list() {
-    return implement(contracts.planet.list).handler(({ input }) => {
+    return implement(contracts.planet.list).handler(async ({ input }) => {
       const { cursor, limit } = input;
-      this.database.select().from(users);
+
+      const usersResult = await this.database.select().from(user);
+
+      console.log(usersResult);
       return planets;
     });
   }
