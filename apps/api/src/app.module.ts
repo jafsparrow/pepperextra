@@ -13,6 +13,7 @@ import { DatabaseModule, DRIZZLE_TOKEN } from './db/database.module.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { UserModule } from './user/user.module.js';
+import { OrganizationUserModule } from './organization-user/organization-user.module.js';
 
 declare module '@orpc/nest' {
   interface ORPCGlobalContext {
@@ -28,6 +29,7 @@ declare module '@orpc/nest' {
     }),
     DatabaseModule,
     UserModule,
+    OrganizationUserModule,
 
     // 3. Register Auth Module Asynchronously
     AuthModule.forRootAsync({

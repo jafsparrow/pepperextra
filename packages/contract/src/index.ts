@@ -1,6 +1,23 @@
 import { oc, populateContractRouterPaths } from "@orpc/contract"
 import z, { success } from "zod"
 import { listGalxy } from "./galaxies.js"
+import {
+  banOrganizationStaffUser,
+  createOrganizationStaffUser,
+  resetOrganizationStaffUserPassword,
+} from "./users.js"
+
+// [NOTE] :- zod schema should be exported just like that
+// not as export type {}, coz we need whole thing to be available
+export {
+  organizationStaffUserCreateInputSchema,
+  organizationStaffUserSchema,
+} from "./users.js"
+
+export type {
+  CreateOrganizationStaffUserDto,
+  OrganizationStaffUser,
+} from "./users.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -56,5 +73,10 @@ export const contracts = populateContractRouterPaths({
   },
   galaxy: {
     list: listGalxy,
+  },
+  organizationStaffUser: {
+    create: createOrganizationStaffUser,
+    resetPassword: resetOrganizationStaffUserPassword,
+    ban: banOrganizationStaffUser,
   },
 })

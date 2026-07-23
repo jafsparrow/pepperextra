@@ -30,4 +30,12 @@ export class PlanetController {
       return planets;
     });
   }
+
+  @Implement(contracts.galaxy.list)
+  galaxies() {
+    return implement(contracts.galaxy.list).handler(({ input }) => {
+      console.log(input);
+      return { item: 'hlell' };
+    });
+  }
 }
