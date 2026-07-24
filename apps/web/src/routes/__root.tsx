@@ -17,10 +17,19 @@ import { DefaultCatchBoundary } from "@/shared/components/default-catch-boundary
 import { NotFound } from "@/shared/components/not-found"
 import { ThemeProvider } from "@workspace/ui/lib/theme-provider"
 
+import { deploymentModeQueryOptions } from "@/shared/utils/deployment-mode"
+
 interface MyRouterContext {
   queryClient: QueryClient
+  deploymentMode?: "local" | "cloud"
 }
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  beforeLoad: async ({ context: { queryClient } }) => {
+    const mode = await queryClient.ensureQueryData(deploymentModeQueryOptions)
+    return {
+      deploymentMode: mode,
+    }
+  },
   head: () => ({
     meta: [
       {
