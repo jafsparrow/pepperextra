@@ -44,8 +44,7 @@ export class OrganizationUserController {
   resetPassword(@Session() session: UserSession<AuthInstance>) {
     return implement(contracts.organizationStaffUser.resetPassword).handler(
       ({ input }) => {
-        const organizationId =
-          input.organizationId ?? session.session?.activeOrganizationId;
+        const organizationId = session.session?.activeOrganizationId;
 
         if (!organizationId) {
           throw new Error('No active organization selected for this session');

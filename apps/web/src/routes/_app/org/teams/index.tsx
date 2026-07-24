@@ -6,7 +6,6 @@ import { Button } from "@workspace/ui/components/button"
 import { TeamAddModal } from "@/feature/org/ui/components/team-add-modal"
 import { useQuery } from "@tanstack/react-query"
 
-import { contracts } from "@pepperextra/contracts"
 import { orpc } from "@/shared/utils/orpc"
 
 export const Route = createFileRoute("/_app/org/teams/")({
@@ -38,20 +37,7 @@ function RouteComponent() {
       invitationId: "w5vlxcbg8iLx7oRcChJvCP0scDzNzBka",
     })
   }
-  const createOrg = async () => {
-    const metadata = { someKey: "someValue" }
 
-    const { data, error } = await authClient.organization.create({
-      name: "My Organization", // required
-      slug: "my-org", // required
-      logo: "https://example.com/logo.png",
-      metadata,
-      userId: "some_user_id",
-      keepCurrentActiveOrganization: false,
-    })
-
-    console.log(data, error)
-  }
   return (
     <div>
       Tenant list placeholder
@@ -62,12 +48,12 @@ function RouteComponent() {
           Dawar
         </Link>
       </div>
-      <Button onClick={handleActiveOrg}>Activate org</Button>
-      <div>{JSON.stringify(activeorg)}</div>
+      {/* <Button onClick={handleActiveOrg}>Activate org</Button> */}
+      {/* <div>{JSON.stringify(activeorg)}</div> */}
       <TeamAddModal />
       <Button onClick={handleAcceptInvitation}>Accpt Ivtation</Button>
       <hr />
-      <div>{JSON.stringify(galaxies)}</div>
+      {/* <div>{JSON.stringify(galaxies)}</div> */}
     </div>
   )
 }

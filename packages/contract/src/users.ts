@@ -92,12 +92,12 @@ export const resetOrganizationStaffUserPassword = oc
   .input(
     z.object({
       organizationId: z.string().min(1),
-      id: z.string().min(1),
+      userId: z.string().min(1),
     })
   )
   .output(
     z.object({
-      id: z.string(),
+      userId: z.string(),
       organizationId: z.string(),
       temporaryPassword: z.string(),
     })

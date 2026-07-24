@@ -51,15 +51,31 @@ export class OrganizationUserService {
     };
   }
 
-  resetPassword(id: string, organizationId: string): OrganizationStaffUser {
-    const user = this.findById(id, organizationId);
-    if (!user) {
-      throw new Error('Staff user not found for the provided organization');
-    }
+  async resetPassword(
+    userId: string,
+    organizationId: string,
+  ): Promise<{
+    success: boolean;
+    temporaryPassword: string;
+  }> {
+    // [TODO] -this check is required once everything else is done. for usr check
+    // const user = this.findById(id, organizationId);
+    // if (!user) {
+    //   throw new Error('Staff user not found for the provided organization');
+    // }
 
-    const temporaryPassword = this.generateTemporaryPassword();
-    user.temporaryPassword = temporaryPassword;
-    return user;
+    console.log(userId, organizationId);
+    // check if the user belons to the given orgId, otherwise dont reset.
+    const temporaryPassword = 'hellosuper'; // this.generateTemporaryPassword();
+
+    const newUser = await this.authService.api.setUserPassword({
+      body: {
+        newPassword: temporaryPassword,
+        userId,
+      },
+    });
+    // user.temporaryPassword = temporaryPassword;
+    return { success: newUser.status, temporaryPassword };
   }
 
   ban(
