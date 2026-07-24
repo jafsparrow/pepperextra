@@ -11,10 +11,9 @@ import { AuthInstance, createAuthInstance } from '@pepperextra/auth';
 import { experimental_RethrowHandlerPlugin as RethrowHandlerPlugin } from '@orpc/server/plugins';
 import { DatabaseModule, DRIZZLE_TOKEN } from './db/database.module.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { DatabaseClient } from '@pepperextra/db';
 import { UserModule } from './user/user.module.js';
 import { OrganizationUserModule } from './organization-user/organization-user.module.js';
-import { eq } from 'drizzle-orm';
 
 declare module '@orpc/nest' {
   interface ORPCGlobalContext {
@@ -37,7 +36,7 @@ declare module '@orpc/nest' {
       imports: [DatabaseModule], // Brings in the DRIZZLE_TOKEN provider
       inject: [DRIZZLE_TOKEN, ConfigService], // 💡 Inject both dependencies
       useFactory: (
-        dbClient: NodePgDatabase<any>,
+        dbClient: DatabaseClient,
         configService: ConfigService,
       ): { auth: AuthInstance } => {
         // Read any auth-specific environment variables required at runtime
@@ -63,8 +62,17 @@ declare module '@orpc/nest' {
             return typedUser.customAccountType === 'owner';
           },
           organizationHooks: {
-            beforeCreateOrganization: async ({ organization, user }) => {
-              return Promise.resolve({ data: { ...organization } });
+            async beforeCreateOrganization({ organization, user }) {
+              const existingOrgs = await dbClient.query.member.findMany({
+                where: { userId: user.id },
+                limit: 1,
+              });
+
+              if (existingOrgs.length > 0) {
+                throw new Error('User already belongs to an organization');
+              }
+
+              return { data: { ...organization } };
             },
           },
         });

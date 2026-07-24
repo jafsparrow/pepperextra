@@ -113,14 +113,18 @@ src/
 ### Key Pattern: DRIZZLE_TOKEN
 
 ```typescript
-// In any module:
+// In any module, always use DatabaseClient (not NodePgDatabase<any>)
+import { DatabaseClient } from '@pepperextra/db';
+
 @Module({
   imports: [DatabaseModule],
 })
 export class SomeModule {
-  @Inject(DRIZZLE_TOKEN) db: NodePgDatabase<any>;
+  constructor(@Inject(DRIZZLE_TOKEN) private db: DatabaseClient) {}
 }
 ```
+
+⚠️ **Never use `NodePgDatabase<any>`** — it loses the relation types that `createDatabaseClient()` attaches via `relations: authRelations`. Always use `DatabaseClient` from `@pepperextra/db` to preserve `dbClient.query.member`, `dbClient.query.user`, etc.
 
 ---
 
@@ -199,6 +203,40 @@ src/shared/
 - `customAccountType`: `"owner"` | `"staff"` (default: `"staff"`)
 - `passwordResetRequired`: boolean (default: `true`, not user-settable)
 
+### Organization Hooks & Type Inference
+
+**⚠️ Known pitfall:** Better Auth's `organizationHooks` option is generic — `organization()` infers `O` from the options object. Using `?? {}` as a fallback widens the type with `| {}` and breaks inference:
+
+```typescript
+// ❌ Breaks type inference — `| {}` widens O
+organizationHooks: options.organizationHooks ?? {},
+
+// ✅ Correct — pass undefined (plugin handles it)
+organizationHooks: options.organizationHooks,
+```
+
+**Hook callback types:** Better Auth defines hook params as anonymous inline types (not exported). The auth package re-exports them for consumers:
+
+```typescript
+import type {
+  BeforeCreateOrganizationData,
+  AfterAddMemberData,
+  // ... etc
+} from '@pepperextra/auth'
+
+organizationHooks: {
+  async beforeCreateOrganization({ user, organization }: BeforeCreateOrganizationData) {
+    // user and organization are typed
+  }
+}
+```
+
+**Custom fields on user/entity objects:** Better Auth appends `& Record<string, any>` to all entity types in hook params, which makes every property access return `any`. Cast manually:
+
+```typescript
+const typedUser = user as typeof user & { customAccountType?: string };
+```
+
 ---
 
 ## Architecture: Database (`packages/db`)
@@ -238,6 +276,25 @@ Defined in `schema-relations/auth-relation.ts` using `defineRelations()`:
 - user → sessions, accounts, teamMembers, members, invitations
 - organization → teams, members, invitations
 - member → organization, user
+
+### Relational Queries (v1.0.0-rc.4 syntax)
+
+Drizzle ORM 1.0.0-rc.4 uses **object-based** `where` filters, NOT callbacks:
+
+```typescript
+// ✅ Correct — object syntax (v1.0.0-rc.4)
+const members = await db.query.member.findMany({
+  where: { userId: user.id },
+  limit: 1,
+});
+
+// ❌ Wrong — callback syntax (drizzle v0.x, will cause type errors)
+const members = await db.query.member.findMany({
+  where: (fields, ops) => ops.eq(fields.userId, user.id),
+});
+```
+
+The `where` filter accepts an object literal matching the table's `RelationsFilter` type. Column names are the keys, values are the filter values.
 
 ### ⚠️ Drizzle Version Mismatch
 
@@ -307,7 +364,7 @@ import { orpc } from '@/utils/orpc';
 
 ## Known Issues & Workarounds
 
-1. **Drizzle version mismatch** — `@pepperextra/db` and `apps/api` may have incompatible drizzle-orm types. Use `as any` casts or raw SQL when querying auth schema tables directly from the API.
+1. **Drizzle version mismatch** — `@pepperextra/db` and `apps/api` may have incompatible drizzle-orm types. When importing schema tables directly into the API, you may get type incompatibility errors. Workaround: use raw SQL via `(dbClient as any).execute()` or cast through `any`.
 
 2. **UserService is in-memory** — `apps/api/src/user/` uses hardcoded data, not connected to the real DB. It's a dev scaffold.
 
