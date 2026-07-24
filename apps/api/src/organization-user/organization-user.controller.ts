@@ -43,17 +43,22 @@ export class OrganizationUserController {
   @Implement(contracts.organizationStaffUser.resetPassword)
   resetPassword(@Session() session: UserSession<AuthInstance>) {
     return implement(contracts.organizationStaffUser.resetPassword).handler(
-      ({ input }) => {
+      async ({ input }) => {
         const organizationId = session.session?.activeOrganizationId;
 
         if (!organizationId) {
           throw new Error('No active organization selected for this session');
         }
 
-        return this.organizationUserService.resetPassword(
+        const response = await this.organizationUserService.resetPassword(
           input.id,
           organizationId,
         );
+        return {
+          id: input.id,
+          organizationId,
+          temporaryPassword: response.temporaryPassword,
+        };
       },
     );
   }

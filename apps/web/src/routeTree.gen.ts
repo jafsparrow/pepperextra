@@ -26,6 +26,7 @@ import { Route as AppOrgUsersRouteImport } from './routes/_app/org/users'
 import { Route as AppOrgSettingsRouteImport } from './routes/_app/org/settings'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin/settings'
+import { Route as AppOrgDashboardRouteRouteImport } from './routes/_app/org/dashboard/route'
 import { Route as AppOrgTeamsIndexRouteImport } from './routes/_app/org/teams/index'
 import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
 import { Route as AppOrgTeamsTeamIdRouteImport } from './routes/_app/org/teams/$teamId'
@@ -114,6 +115,11 @@ const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppOrgDashboardRouteRoute = AppOrgDashboardRouteRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppOrgRouteRoute,
+} as any)
 const AppOrgTeamsIndexRoute = AppOrgTeamsIndexRouteImport.update({
   id: '/teams/',
   path: '/teams/',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/signup': typeof AuthSignupRoute
+  '/org/dashboard': typeof AppOrgDashboardRouteRoute
   '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/users': typeof AppAdminUsersRoute
   '/org/settings': typeof AppOrgSettingsRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/reset-password': typeof AuthResetPasswordRoute
   '/signup': typeof AuthSignupRoute
+  '/org/dashboard': typeof AppOrgDashboardRouteRoute
   '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/users': typeof AppAdminUsersRoute
   '/org/settings': typeof AppOrgSettingsRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/org/dashboard': typeof AppOrgDashboardRouteRoute
   '/_app/admin/settings': typeof AppAdminSettingsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
   '/_app/org/settings': typeof AppOrgSettingsRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/org/dashboard'
     | '/admin/settings'
     | '/admin/users'
     | '/org/settings'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/org/dashboard'
     | '/admin/settings'
     | '/admin/users'
     | '/org/settings'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/_auth/reset-password'
     | '/_auth/signup'
     | '/_app/'
+    | '/_app/org/dashboard'
     | '/_app/admin/settings'
     | '/_app/admin/users'
     | '/_app/org/settings'
@@ -389,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSettingsRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/org/dashboard': {
+      id: '/_app/org/dashboard'
+      path: '/dashboard'
+      fullPath: '/org/dashboard'
+      preLoaderRoute: typeof AppOrgDashboardRouteRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
     '/_app/org/teams/': {
       id: '/_app/org/teams/'
       path: '/teams'
@@ -441,6 +460,7 @@ const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
 )
 
 interface AppOrgRouteRouteChildren {
+  AppOrgDashboardRouteRoute: typeof AppOrgDashboardRouteRoute
   AppOrgSettingsRoute: typeof AppOrgSettingsRoute
   AppOrgUsersRoute: typeof AppOrgUsersRoute
   AppOrgIndexRoute: typeof AppOrgIndexRoute
@@ -449,6 +469,7 @@ interface AppOrgRouteRouteChildren {
 }
 
 const AppOrgRouteRouteChildren: AppOrgRouteRouteChildren = {
+  AppOrgDashboardRouteRoute: AppOrgDashboardRouteRoute,
   AppOrgSettingsRoute: AppOrgSettingsRoute,
   AppOrgUsersRoute: AppOrgUsersRoute,
   AppOrgIndexRoute: AppOrgIndexRoute,
