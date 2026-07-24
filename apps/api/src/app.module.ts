@@ -14,6 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { UserModule } from './user/user.module.js';
 import { OrganizationUserModule } from './organization-user/organization-user.module.js';
+import { eq } from 'drizzle-orm';
 
 declare module '@orpc/nest' {
   interface ORPCGlobalContext {
@@ -50,11 +51,24 @@ declare module '@orpc/nest' {
           );
         }
 
-        // {NOTE}  we can pass the organisation hook if needed here..
         const betterAuthInstance = createAuthInstance(dbClient, {
           secret,
           baseUrl,
+          allowUserToCreateOrganization(user) {
+            // custome field typing are missing from the object.
+            const typedUser = user as typeof user & {
+              customAccountType?: string;
+            };
+            console.log('user passed is ', JSON.stringify(user));
+            return typedUser.customAccountType === 'owner';
+          },
+          organizationHooks: {
+            beforeCreateOrganization: async ({ organization, user }) => {
+              return Promise.resolve({ data: { ...organization } });
+            },
+          },
         });
+
         return {
           // 💡 Pass the live database client and runtime variables to your auth builder
           auth: betterAuthInstance,

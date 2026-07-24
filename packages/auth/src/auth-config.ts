@@ -44,6 +44,7 @@ export const createAuthConfig = (
     },
     plugins: [
       organization({
+        maxOrganizationsPerUser: 1,
         ac: orgAccessControl,
         roles: {
           staff,
