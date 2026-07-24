@@ -53,10 +53,17 @@ export const createAuthInstance = (
     baseURL: options.baseUrl,
     user: {
       additionalFields: {
+        //this is for detecting the org owner created users.
         customAccountType: {
           type: ["owner", "staff"],
           required: false,
           defaultValue: "staff",
+        },
+        passwordResetRequired: {
+          type: "boolean",
+          required: false,
+          defaultValue: true, // true on creation/admin reset
+          input: false, // staff can't set this themselves via signup/update
         },
       },
     },

@@ -54,7 +54,6 @@ export function OrgStaffForm({
   const form = useForm<OrgStaffFormValues>({
     resolver: zodResolver(organizationStaffUserCreateInputSchema),
     defaultValues: {
-      organizationId: defaultValues?.organizationId ?? "",
       name: defaultValues?.name ?? "",
       email: defaultValues?.email ?? "",
     },
@@ -62,16 +61,10 @@ export function OrgStaffForm({
 
   useEffect(() => {
     form.reset({
-      organizationId: defaultValues?.organizationId ?? "",
       name: defaultValues?.name ?? "",
       email: defaultValues?.email ?? "",
     })
-  }, [
-    defaultValues?.organizationId,
-    defaultValues?.email,
-    defaultValues?.name,
-    form,
-  ])
+  }, [defaultValues?.email, defaultValues?.name, form])
 
   useEffect(() => {
     onPending?.(form.formState.isSubmitting)
@@ -106,26 +99,6 @@ export function OrgStaffForm({
             className="space-y-6"
           >
             <FieldGroup>
-              <Controller
-                name="organizationId"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Organization ID</FieldLabel>
-                    <Input
-                      {...field}
-                      type="text"
-                      placeholder="org_123"
-                      autoComplete="off"
-                    />
-                    <FieldDescription>
-                      This identifies the organization the staff member belongs
-                      to.
-                    </FieldDescription>
-                  </Field>
-                )}
-              />
-
               <Controller
                 name="name"
                 control={form.control}

@@ -1,7 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
+import { AuthInstance } from '@pepperextra/auth';
 import { contracts } from '@pepperextra/contracts';
+import { Session } from '@thallesp/nestjs-better-auth';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { OrganizationUserService } from './organization-user.service.js';
 
 // type ResetPasswordInput = (typeof contracts)['organizationStaffUser']['']['input'];
@@ -17,42 +20,59 @@ export class OrganizationUserController {
   ) {}
 
   @Implement(contracts.organizationStaffUser.create)
-  create() {
+  create(@Session() session: UserSession<AuthInstance>) {
     return implement(contracts.organizationStaffUser.create).handler(
       ({ input }) => {
-        return {
-          email: 'sdf',
-          id: 'LK',
-          name: 'dksdf',
-          organizationId: 'dfd23232323',
-          role: 'staff',
-          status: 'active',
-          banReason: 'lsdjf',
-          temporaryPassword: 'sdf',
-        };
+        const organizationId = session.session?.activeOrganizationId;
+
+        console.log('seesion is ', session);
+        if (!organizationId) {
+          throw new Error('No active organization selected for this session');
+        }
+
+        return this.organizationUserService.create(
+          {
+            ...input,
+          },
+          organizationId,
+        );
       },
     );
   }
 
   @Implement(contracts.organizationStaffUser.resetPassword)
-  resetPassword() {
+  resetPassword(@Session() session: UserSession<AuthInstance>) {
     return implement(contracts.organizationStaffUser.resetPassword).handler(
       ({ input }) => {
+        const organizationId =
+          input.organizationId ?? session.session?.activeOrganizationId;
+
+        if (!organizationId) {
+          throw new Error('No active organization selected for this session');
+        }
+
         return this.organizationUserService.resetPassword(
           input.id,
-          input.organizationId,
+          organizationId,
         );
       },
     );
   }
 
   @Implement(contracts.organizationStaffUser.ban)
-  ban() {
+  ban(@Session() session: UserSession<AuthInstance>) {
     return implement(contracts.organizationStaffUser.ban).handler(
       ({ input }) => {
+        const organizationId =
+          input.organizationId ?? session.session?.activeOrganizationId;
+
+        if (!organizationId) {
+          throw new Error('No active organization selected for this session');
+        }
+
         return this.organizationUserService.ban(
           input.id,
-          input.organizationId,
+          organizationId,
           input.reason,
         );
       },

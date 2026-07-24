@@ -2,7 +2,6 @@ import { oc } from "@orpc/contract"
 import z from "zod"
 
 export const organizationStaffUserCreateInputSchema = z.object({
-  organizationId: z.string().min(1),
   name: z.string().min(1),
   email: z.email(),
 })

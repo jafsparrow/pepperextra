@@ -1,4 +1,3 @@
-import { createDatabaseClient } from "@pepperextra/db/client"
 import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import * as schema from "@pepperextra/db/schema"
 import { BetterAuthOptions } from "better-auth/minimal"
@@ -34,6 +33,12 @@ export const createAuthConfig = (
           type: ["owner", "staff"],
           required: false,
           defaultValue: "staff",
+        },
+        passwordResetRequired: {
+          type: "boolean",
+          required: false,
+          defaultValue: true, // true on creation/admin reset
+          input: false, // staff can't set this themselves via signup/update
         },
       },
     },
