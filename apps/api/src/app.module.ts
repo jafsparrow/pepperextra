@@ -14,6 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseClient } from '@pepperextra/db';
 import { UserModule } from './user/user.module.js';
 import { OrganizationUserModule } from './organization-user/organization-user.module.js';
+import { APIError } from 'better-auth';
 
 declare module '@orpc/nest' {
   interface ORPCGlobalContext {
@@ -69,7 +70,10 @@ declare module '@orpc/nest' {
               });
 
               if (existingOrgs.length > 0) {
-                throw new Error('User already belongs to an organization');
+                // [NOTE] better auth apiError will send formated response, normal error won't send any response.
+                throw new APIError('BAD_REQUEST', {
+                  message: 'User already belongs to an organization',
+                });
               }
 
               return { data: { ...organization } };

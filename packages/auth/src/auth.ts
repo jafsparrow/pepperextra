@@ -4,6 +4,8 @@ import * as authschema from "@pepperextra/db/auth-schema"
 import { admin as adminPlugin, organization } from "better-auth/plugins"
 
 import type { OrganizationOptions } from "better-auth/plugins"
+
+import type { DatabaseClient } from "@pepperextra/db"
 import {
   ac,
   customAdminRole,
@@ -20,36 +22,96 @@ import {
 // Re-export organization hook types for consumers
 type OrgHooks = NonNullable<OrganizationOptions["organizationHooks"]>
 export type OrganizationHooks = OrgHooks
-export type BeforeCreateOrganizationData = Parameters<NonNullable<OrgHooks["beforeCreateOrganization"]>>[0]
-export type AfterCreateOrganizationData = Parameters<NonNullable<OrgHooks["afterCreateOrganization"]>>[0]
-export type BeforeAddMemberData = Parameters<NonNullable<OrgHooks["beforeAddMember"]>>[0]
-export type AfterAddMemberData = Parameters<NonNullable<OrgHooks["afterAddMember"]>>[0]
-export type BeforeRemoveMemberData = Parameters<NonNullable<OrgHooks["beforeRemoveMember"]>>[0]
-export type AfterRemoveMemberData = Parameters<NonNullable<OrgHooks["afterRemoveMember"]>>[0]
-export type BeforeUpdateMemberRoleData = Parameters<NonNullable<OrgHooks["beforeUpdateMemberRole"]>>[0]
-export type AfterUpdateMemberRoleData = Parameters<NonNullable<OrgHooks["afterUpdateMemberRole"]>>[0]
-export type BeforeCreateInvitationData = Parameters<NonNullable<OrgHooks["beforeCreateInvitation"]>>[0]
-export type AfterCreateInvitationData = Parameters<NonNullable<OrgHooks["afterCreateInvitation"]>>[0]
-export type BeforeAcceptInvitationData = Parameters<NonNullable<OrgHooks["beforeAcceptInvitation"]>>[0]
-export type AfterAcceptInvitationData = Parameters<NonNullable<OrgHooks["afterAcceptInvitation"]>>[0]
-export type BeforeRejectInvitationData = Parameters<NonNullable<OrgHooks["beforeRejectInvitation"]>>[0]
-export type AfterRejectInvitationData = Parameters<NonNullable<OrgHooks["afterRejectInvitation"]>>[0]
-export type BeforeCancelInvitationData = Parameters<NonNullable<OrgHooks["beforeCancelInvitation"]>>[0]
-export type AfterCancelInvitationData = Parameters<NonNullable<OrgHooks["afterCancelInvitation"]>>[0]
-export type BeforeDeleteOrganizationData = Parameters<NonNullable<OrgHooks["beforeDeleteOrganization"]>>[0]
-export type AfterDeleteOrganizationData = Parameters<NonNullable<OrgHooks["afterDeleteOrganization"]>>[0]
-export type BeforeUpdateOrganizationData = Parameters<NonNullable<OrgHooks["beforeUpdateOrganization"]>>[0]
-export type AfterUpdateOrganizationData = Parameters<NonNullable<OrgHooks["afterUpdateOrganization"]>>[0]
-export type BeforeCreateTeamData = Parameters<NonNullable<OrgHooks["beforeCreateTeam"]>>[0]
-export type AfterCreateTeamData = Parameters<NonNullable<OrgHooks["afterCreateTeam"]>>[0]
-export type BeforeUpdateTeamData = Parameters<NonNullable<OrgHooks["beforeUpdateTeam"]>>[0]
-export type AfterUpdateTeamData = Parameters<NonNullable<OrgHooks["afterUpdateTeam"]>>[0]
-export type BeforeDeleteTeamData = Parameters<NonNullable<OrgHooks["beforeDeleteTeam"]>>[0]
-export type AfterDeleteTeamData = Parameters<NonNullable<OrgHooks["afterDeleteTeam"]>>[0]
-export type BeforeAddTeamMemberData = Parameters<NonNullable<OrgHooks["beforeAddTeamMember"]>>[0]
-export type AfterAddTeamMemberData = Parameters<NonNullable<OrgHooks["afterAddTeamMember"]>>[0]
-export type BeforeRemoveTeamMemberData = Parameters<NonNullable<OrgHooks["beforeRemoveTeamMember"]>>[0]
-export type AfterRemoveTeamMemberData = Parameters<NonNullable<OrgHooks["afterRemoveTeamMember"]>>[0]
+export type BeforeCreateOrganizationData = Parameters<
+  NonNullable<OrgHooks["beforeCreateOrganization"]>
+>[0]
+export type AfterCreateOrganizationData = Parameters<
+  NonNullable<OrgHooks["afterCreateOrganization"]>
+>[0]
+export type BeforeAddMemberData = Parameters<
+  NonNullable<OrgHooks["beforeAddMember"]>
+>[0]
+export type AfterAddMemberData = Parameters<
+  NonNullable<OrgHooks["afterAddMember"]>
+>[0]
+export type BeforeRemoveMemberData = Parameters<
+  NonNullable<OrgHooks["beforeRemoveMember"]>
+>[0]
+export type AfterRemoveMemberData = Parameters<
+  NonNullable<OrgHooks["afterRemoveMember"]>
+>[0]
+export type BeforeUpdateMemberRoleData = Parameters<
+  NonNullable<OrgHooks["beforeUpdateMemberRole"]>
+>[0]
+export type AfterUpdateMemberRoleData = Parameters<
+  NonNullable<OrgHooks["afterUpdateMemberRole"]>
+>[0]
+export type BeforeCreateInvitationData = Parameters<
+  NonNullable<OrgHooks["beforeCreateInvitation"]>
+>[0]
+export type AfterCreateInvitationData = Parameters<
+  NonNullable<OrgHooks["afterCreateInvitation"]>
+>[0]
+export type BeforeAcceptInvitationData = Parameters<
+  NonNullable<OrgHooks["beforeAcceptInvitation"]>
+>[0]
+export type AfterAcceptInvitationData = Parameters<
+  NonNullable<OrgHooks["afterAcceptInvitation"]>
+>[0]
+export type BeforeRejectInvitationData = Parameters<
+  NonNullable<OrgHooks["beforeRejectInvitation"]>
+>[0]
+export type AfterRejectInvitationData = Parameters<
+  NonNullable<OrgHooks["afterRejectInvitation"]>
+>[0]
+export type BeforeCancelInvitationData = Parameters<
+  NonNullable<OrgHooks["beforeCancelInvitation"]>
+>[0]
+export type AfterCancelInvitationData = Parameters<
+  NonNullable<OrgHooks["afterCancelInvitation"]>
+>[0]
+export type BeforeDeleteOrganizationData = Parameters<
+  NonNullable<OrgHooks["beforeDeleteOrganization"]>
+>[0]
+export type AfterDeleteOrganizationData = Parameters<
+  NonNullable<OrgHooks["afterDeleteOrganization"]>
+>[0]
+export type BeforeUpdateOrganizationData = Parameters<
+  NonNullable<OrgHooks["beforeUpdateOrganization"]>
+>[0]
+export type AfterUpdateOrganizationData = Parameters<
+  NonNullable<OrgHooks["afterUpdateOrganization"]>
+>[0]
+export type BeforeCreateTeamData = Parameters<
+  NonNullable<OrgHooks["beforeCreateTeam"]>
+>[0]
+export type AfterCreateTeamData = Parameters<
+  NonNullable<OrgHooks["afterCreateTeam"]>
+>[0]
+export type BeforeUpdateTeamData = Parameters<
+  NonNullable<OrgHooks["beforeUpdateTeam"]>
+>[0]
+export type AfterUpdateTeamData = Parameters<
+  NonNullable<OrgHooks["afterUpdateTeam"]>
+>[0]
+export type BeforeDeleteTeamData = Parameters<
+  NonNullable<OrgHooks["beforeDeleteTeam"]>
+>[0]
+export type AfterDeleteTeamData = Parameters<
+  NonNullable<OrgHooks["afterDeleteTeam"]>
+>[0]
+export type BeforeAddTeamMemberData = Parameters<
+  NonNullable<OrgHooks["beforeAddTeamMember"]>
+>[0]
+export type AfterAddTeamMemberData = Parameters<
+  NonNullable<OrgHooks["afterAddTeamMember"]>
+>[0]
+export type BeforeRemoveTeamMemberData = Parameters<
+  NonNullable<OrgHooks["beforeRemoveTeamMember"]>
+>[0]
+export type AfterRemoveTeamMemberData = Parameters<
+  NonNullable<OrgHooks["afterRemoveTeamMember"]>
+>[0]
 
 // NOTE- This is used by external apps who provides the db client
 // and want to create an instance of BetterAuth with the provided db client..
@@ -61,11 +123,13 @@ interface AuthConfigOptions {
   secret: string
   baseUrl: string
   organizationHooks?: NonNullable<OrganizationOptions["organizationHooks"]>
-  allowUserToCreateOrganization?:NonNullable<OrganizationOptions["allowUserToCreateOrganization"]>
+  allowUserToCreateOrganization?: NonNullable<
+    OrganizationOptions["allowUserToCreateOrganization"]
+  >
 }
 
 export const createAuthInstance = (
-  dbClient: any,
+  dbClient: DatabaseClient,
   options: AuthConfigOptions
 ) => {
   return betterAuth({
@@ -102,8 +166,7 @@ export const createAuthInstance = (
           ...systemRoles,
         },
         teams: { enabled: true },
-        allowUserToCreateOrganization:
-          options.allowUserToCreateOrganization,
+        allowUserToCreateOrganization: options.allowUserToCreateOrganization,
         organizationHooks: options.organizationHooks,
       }),
       adminPlugin({

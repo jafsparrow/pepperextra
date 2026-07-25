@@ -1,5 +1,9 @@
 import { createAuthClient } from "better-auth/react"
-import { adminClient, organizationClient } from "better-auth/client/plugins"
+import {
+  adminClient,
+  inferAdditionalFields,
+  organizationClient,
+} from "better-auth/client/plugins"
 import { ac, customAdminRole, financeRole } from "./admin-access-control/roles"
 import {
   orgAccessControl,
@@ -12,6 +16,22 @@ export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
   baseURL: "http://localhost:3000",
   plugins: [
+    inferAdditionalFields({
+      user: {
+        customAccountType: {
+          type: ["owner", "staff"],
+          required: false,
+          defaultValue: "staff",
+          input: true,
+        },
+        passwordResetRequired: {
+          type: "boolean",
+          required: false,
+          defaultValue: true,
+          input: false,
+        },
+      },
+    }),
     adminClient({
       ac: ac,
       roles: {
