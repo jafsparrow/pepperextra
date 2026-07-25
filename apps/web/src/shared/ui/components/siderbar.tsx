@@ -16,7 +16,7 @@ import {
 const navigationItems = [
   { title: "Overview", to: "/dashboard", icon: LayoutDashboard },
   { title: "Tenants", to: "/admin/tenants", icon: Users },
-  { title: "Org", to: "/org/teams", icon: Users },
+  { title: "Org", to: "/org", icon: Users },
   { title: "Billing & Plans", to: "/settings/billing", icon: CreditCard },
   { title: "Settings", to: "/admin/settings", icon: Settings },
 ]
