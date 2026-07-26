@@ -14,6 +14,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseClient } from '@pepperextra/db';
 import { UserModule } from './user/user.module.js';
 import { OrganizationUserModule } from './organization-user/organization-user.module.js';
+import { OrganizationSettingsModule } from './organization-settings/organization-settings.module.js';
+import { TeamSettingsModule } from './team-settings/team-settings.module.js';
 import { APIError } from 'better-auth';
 
 declare module '@orpc/nest' {
@@ -31,6 +33,8 @@ declare module '@orpc/nest' {
     DatabaseModule,
     UserModule,
     OrganizationUserModule,
+    OrganizationSettingsModule,
+    TeamSettingsModule,
 
     // 3. Register Auth Module Asynchronously
     AuthModule.forRootAsync({
@@ -77,6 +81,36 @@ declare module '@orpc/nest' {
               }
 
               return { data: { ...organization } };
+            },
+          },
+          teamHooks: {
+            async beforeCreateTeam(data) {
+              const existingOrgs = await dbClient.query.member.findMany({
+                where: { userId: '1' },
+                limit: 1,
+              });
+
+              // Pseudo: look up the organization's license/plan
+              // const license = await dbClient.query.license.findFirst({
+              //   where: { organizationId: organization.id },
+              // });
+
+              // const plan = license?.plan ?? 'basic';
+
+              // if (plan === 'basic') {
+              //   const teamCount = await dbClient.query.team.findMany({
+              //     where: { organizationId: organization.id },
+              //   });
+
+              //   if (teamCount.length >= 1) {
+              //     throw new APIError('BAD_REQUEST', {
+              //       message:
+              //         'Basic plan allows only one team (location). Upgrade to Pro to create more.',
+              //     });
+              //   }
+              // }
+
+              return { data };
             },
           },
         });

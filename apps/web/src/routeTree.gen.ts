@@ -31,6 +31,7 @@ import { Route as AppOrgTeamsIndexRouteImport } from './routes/_app/org/teams/in
 import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
 import { Route as AppOrgTeamsTeamIdRouteImport } from './routes/_app/org/teams/$teamId'
 import { Route as AppAdminTenantsTenantIdRouteImport } from './routes/_app/admin/tenants/$tenantId'
+import { Route as AppOrgTeamsTeamIdSettingsRouteImport } from './routes/_app/org/teams/$teamId_.settings'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -140,6 +141,12 @@ const AppAdminTenantsTenantIdRoute = AppAdminTenantsTenantIdRouteImport.update({
   path: '/tenants/$tenantId',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppOrgTeamsTeamIdSettingsRoute =
+  AppOrgTeamsTeamIdSettingsRouteImport.update({
+    id: '/teams/$teamId_/settings',
+    path: '/teams/$teamId/settings',
+    getParentRoute: () => AppOrgRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/org/teams/$teamId': typeof AppOrgTeamsTeamIdRoute
   '/admin/tenants/': typeof AppAdminTenantsIndexRoute
   '/org/teams/': typeof AppOrgTeamsIndexRoute
+  '/org/teams/$teamId/settings': typeof AppOrgTeamsTeamIdSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
@@ -181,6 +189,7 @@ export interface FileRoutesByTo {
   '/org/teams/$teamId': typeof AppOrgTeamsTeamIdRoute
   '/admin/tenants': typeof AppAdminTenantsIndexRoute
   '/org/teams': typeof AppOrgTeamsIndexRoute
+  '/org/teams/$teamId/settings': typeof AppOrgTeamsTeamIdSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +215,7 @@ export interface FileRoutesById {
   '/_app/org/teams/$teamId': typeof AppOrgTeamsTeamIdRoute
   '/_app/admin/tenants/': typeof AppAdminTenantsIndexRoute
   '/_app/org/teams/': typeof AppOrgTeamsIndexRoute
+  '/_app/org/teams/$teamId_/settings': typeof AppOrgTeamsTeamIdSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/org/teams/$teamId'
     | '/admin/tenants/'
     | '/org/teams/'
+    | '/org/teams/$teamId/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/org/teams/$teamId'
     | '/admin/tenants'
     | '/org/teams'
+    | '/org/teams/$teamId/settings'
   id:
     | '__root__'
     | '/_app'
@@ -273,6 +285,7 @@ export interface FileRouteTypes {
     | '/_app/org/teams/$teamId'
     | '/_app/admin/tenants/'
     | '/_app/org/teams/'
+    | '/_app/org/teams/$teamId_/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminTenantsTenantIdRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/org/teams/$teamId_/settings': {
+      id: '/_app/org/teams/$teamId_/settings'
+      path: '/teams/$teamId/settings'
+      fullPath: '/org/teams/$teamId/settings'
+      preLoaderRoute: typeof AppOrgTeamsTeamIdSettingsRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
   }
 }
 
@@ -466,6 +486,7 @@ interface AppOrgRouteRouteChildren {
   AppOrgIndexRoute: typeof AppOrgIndexRoute
   AppOrgTeamsTeamIdRoute: typeof AppOrgTeamsTeamIdRoute
   AppOrgTeamsIndexRoute: typeof AppOrgTeamsIndexRoute
+  AppOrgTeamsTeamIdSettingsRoute: typeof AppOrgTeamsTeamIdSettingsRoute
 }
 
 const AppOrgRouteRouteChildren: AppOrgRouteRouteChildren = {
@@ -475,6 +496,7 @@ const AppOrgRouteRouteChildren: AppOrgRouteRouteChildren = {
   AppOrgIndexRoute: AppOrgIndexRoute,
   AppOrgTeamsTeamIdRoute: AppOrgTeamsTeamIdRoute,
   AppOrgTeamsIndexRoute: AppOrgTeamsIndexRoute,
+  AppOrgTeamsTeamIdSettingsRoute: AppOrgTeamsTeamIdSettingsRoute,
 }
 
 const AppOrgRouteRouteWithChildren = AppOrgRouteRoute._addFileChildren(

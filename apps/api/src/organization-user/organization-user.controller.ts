@@ -49,13 +49,13 @@ export class OrganizationUserController {
         if (!organizationId) {
           throw new Error('No active organization selected for this session');
         }
-
+        const { userId } = input;
         const response = await this.organizationUserService.resetPassword(
-          input.id,
+          userId,
           organizationId,
         );
         return {
-          id: input.id,
+          userId: userId,
           organizationId,
           temporaryPassword: response.temporaryPassword,
         };

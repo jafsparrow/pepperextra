@@ -4,7 +4,7 @@ import { implement } from '@orpc/server';
 import { contracts, Planet } from '@pepperextra/contracts';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 import type { DatabaseClient } from '@pepperextra/db';
-import { user, dz } from '@pepperextra/db';
+import { user } from '@pepperextra/db';
 
 const planets: Planet[] = [
   {
@@ -26,7 +26,7 @@ export class PlanetController {
 
       const usersResult = await this.database.select().from(user);
 
-      console.log(usersResult);
+      console.log(usersResult, { cursor, limit });
       return planets;
     });
   }

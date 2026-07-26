@@ -1,21 +1,51 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthInstance } from '@pepperextra/auth';
 import type {
   CreateOrganizationStaffUserDto,
   OrganizationStaffUser,
 } from '@pepperextra/contracts';
+import type { DatabaseClient } from '@pepperextra/db';
 import { AuthService } from '@thallesp/nestjs-better-auth';
+import { DRIZZLE_TOKEN } from '../db/database.module.js';
 
 @Injectable()
 export class OrganizationUserService {
   private readonly users: OrganizationStaffUser[] = [];
 
-  constructor(private authService: AuthService<AuthInstance>) {}
+  constructor(
+    private authService: AuthService<AuthInstance>,
+    @Inject(DRIZZLE_TOKEN) private db: DatabaseClient,
+    private configService: ConfigService,
+  ) {}
 
   async create(
     input: CreateOrganizationStaffUserDto,
     organizationId: string,
   ): Promise<OrganizationStaffUser> {
+    // Pseudo: only enforce user limits in cloud deployments
+    // const deploymentMode = this.configService.get<string>('VITE_DEPLOYMENT_MODE');
+    // if (deploymentMode === 'cloud') {
+    //   // Pseudo: look up the organization's license/plan
+    //   // const license = await (this.db as any).execute(
+    //   //   'SELECT plan FROM license WHERE organization_id = $1',
+    //   //   [organizationId],
+    //   // );
+    //   // const plan = license?.rows?.[0]?.plan ?? 'basic';
+    //   // const maxUsers = plan === 'pro' ? 20 : 5;
+    //   //
+    //   // // Count current members in the organization
+    //   // const members = await this.db.query.member.findMany({
+    //   //   where: { organizationId },
+    //   // });
+    //   //
+    //   // if (members.length >= maxUsers) {
+    //   //   throw new APIError('BAD_REQUEST', {
+    //   //     message: `Your ${plan} plan allows a maximum of ${maxUsers} users. Upgrade to add more.`,
+    //   //   });
+    //   // }
+    // }
+
     const temporaryPassword = this.generateTemporaryPassword();
 
     console.log('temporary password is:', temporaryPassword);

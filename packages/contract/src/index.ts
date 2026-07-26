@@ -6,6 +6,22 @@ import {
   createOrganizationStaffUser,
   resetOrganizationStaffUserPassword,
 } from "./users.js"
+import {
+  getOrganizationSettings,
+  updateOrganizationSettings,
+} from "./org-settings.js"
+import {
+  getTeamSettings,
+  updateTeamSettings,
+  listTaxConfigs,
+  createTaxConfig,
+  updateTaxConfig,
+  deleteTaxConfig,
+  listServiceCharges,
+  createServiceCharge,
+  updateServiceCharge,
+  deleteServiceCharge,
+} from "./team-settings.js"
 
 // [NOTE] :- zod schema should be exported just like that
 // not as export type {}, coz we need whole thing to be available
@@ -18,6 +34,30 @@ export type {
   CreateOrganizationStaffUserDto,
   OrganizationStaffUser,
 } from "./users.js"
+
+export {
+  organizationSettingsSchema,
+  organizationSettingsUpdateSchema,
+} from "./org-settings.js"
+
+export type { OrganizationSettings } from "./org-settings.js"
+
+export {
+  teamSettingsSchema,
+  teamSettingsUpdateSchema,
+  taxConfigSchema,
+  taxConfigCreateSchema,
+  taxConfigUpdateSchema,
+  serviceChargeSchema,
+  serviceChargeCreateSchema,
+  serviceChargeUpdateSchema,
+} from "./team-settings.js"
+
+export type {
+  TeamSettings,
+  TaxConfig,
+  ServiceCharge,
+} from "./team-settings.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -78,5 +118,25 @@ export const contracts = populateContractRouterPaths({
     create: createOrganizationStaffUser,
     resetPassword: resetOrganizationStaffUserPassword,
     ban: banOrganizationStaffUser,
+  },
+  organizationSettings: {
+    get: getOrganizationSettings,
+    update: updateOrganizationSettings,
+  },
+  teamSettings: {
+    get: getTeamSettings,
+    update: updateTeamSettings,
+  },
+  taxConfig: {
+    list: listTaxConfigs,
+    create: createTaxConfig,
+    update: updateTaxConfig,
+    delete: deleteTaxConfig,
+  },
+  serviceCharge: {
+    list: listServiceCharges,
+    create: createServiceCharge,
+    update: updateServiceCharge,
+    delete: deleteServiceCharge,
   },
 })

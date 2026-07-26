@@ -119,10 +119,26 @@ export type AfterRemoveTeamMemberData = Parameters<
 // their own database client,
 // instead of using the default one provided by BetterAuth. Usually because
 // of .env variables provided by the external app.
+
+type TeamHooks = Pick<
+  NonNullable<OrganizationOptions["organizationHooks"]>,
+  | "beforeCreateTeam"
+  | "afterCreateTeam"
+  | "beforeUpdateTeam"
+  | "afterUpdateTeam"
+  | "beforeDeleteTeam"
+  | "afterDeleteTeam"
+  | "beforeAddTeamMember"
+  | "afterAddTeamMember"
+  | "beforeRemoveTeamMember"
+  | "afterRemoveTeamMember"
+>
+
 interface AuthConfigOptions {
   secret: string
   baseUrl: string
   organizationHooks?: NonNullable<OrganizationOptions["organizationHooks"]>
+  teamHooks?: Partial<TeamHooks>
   allowUserToCreateOrganization?: NonNullable<
     OrganizationOptions["allowUserToCreateOrganization"]
   >
@@ -167,7 +183,10 @@ export const createAuthInstance = (
         },
         teams: { enabled: true },
         allowUserToCreateOrganization: options.allowUserToCreateOrganization,
-        organizationHooks: options.organizationHooks,
+        organizationHooks: {
+          ...options.organizationHooks,
+          ...options.teamHooks,
+        } as NonNullable<OrganizationOptions["organizationHooks"]>,
       }),
       adminPlugin({
         ac: ac,
