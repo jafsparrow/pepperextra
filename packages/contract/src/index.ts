@@ -22,6 +22,10 @@ import {
   updateServiceCharge,
   deleteServiceCharge,
 } from "./team-settings.js"
+import {
+  getBranchProfile,
+  updateBranchProfile,
+} from "./branch.js"
 
 // [NOTE] :- zod schema should be exported just like that
 // not as export type {}, coz we need whole thing to be available
@@ -58,6 +62,13 @@ export type {
   TaxConfig,
   ServiceCharge,
 } from "./team-settings.js"
+
+export {
+  branchProfileSchema,
+  branchProfileUpdateSchema,
+} from "./branch.js"
+
+export type { BranchProfile } from "./branch.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -138,5 +149,9 @@ export const contracts = populateContractRouterPaths({
     create: createServiceCharge,
     update: updateServiceCharge,
     delete: deleteServiceCharge,
+  },
+  branchProfile: {
+    get: getBranchProfile,
+    update: updateBranchProfile,
   },
 })

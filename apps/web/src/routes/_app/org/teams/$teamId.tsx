@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
+import { BranchDetails } from "@/feature/branch/ui/components/branch-details"
 
 export const Route = createFileRoute("/_app/org/teams/$teamId")({
   component: RouteComponent,
@@ -7,5 +8,5 @@ export const Route = createFileRoute("/_app/org/teams/$teamId")({
 function RouteComponent() {
   const { teamId } = Route.useParams()
 
-  return <div>Tenant details {teamId}</div>
+  return <BranchDetails teamId={teamId} />
 }

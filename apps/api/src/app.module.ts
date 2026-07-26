@@ -16,6 +16,7 @@ import { UserModule } from './user/user.module.js';
 import { OrganizationUserModule } from './organization-user/organization-user.module.js';
 import { OrganizationSettingsModule } from './organization-settings/organization-settings.module.js';
 import { TeamSettingsModule } from './team-settings/team-settings.module.js';
+import { BranchModule } from './branch/branch.module.js';
 import { APIError } from 'better-auth';
 
 declare module '@orpc/nest' {
@@ -35,6 +36,7 @@ declare module '@orpc/nest' {
     OrganizationUserModule,
     OrganizationSettingsModule,
     TeamSettingsModule,
+    BranchModule,
 
     // 3. Register Auth Module Asynchronously
     AuthModule.forRootAsync({
