@@ -7,6 +7,7 @@ import { MapPin, Plus, Store, ChevronDown, ChevronUp } from "lucide-react"
 import { authClient } from "@pepperextra/auth/client"
 import { BRANCH_QUERY_KEYS } from "../../constants"
 import { BranchAddModal } from "./branch-add-modal"
+import { Link } from "@tanstack/react-router"
 
 interface BranchListProps {
   orgId: string | undefined
@@ -89,8 +90,8 @@ export function BranchList({ orgId }: BranchListProps) {
                   <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs px-2 py-0">
                     Active
                   </Badge>
-                  <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold px-3 text-muted-foreground hover:text-foreground">
-                    Manage
+                  <Button asChild variant="ghost" size="sm" className="h-8 text-xs font-semibold px-3 text-muted-foreground hover:text-foreground">
+                    <Link to="/org/teams/$teamId" params={{teamId: branch.id}}>Manage</Link>
                   </Button>
                 </div>
               </div>
