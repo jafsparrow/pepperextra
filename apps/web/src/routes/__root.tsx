@@ -5,6 +5,7 @@ import {
   Scripts,
   createRootRoute,
   createRootRouteWithContext,
+  redirect,
 } from "@tanstack/react-router"
 
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
@@ -18,14 +19,23 @@ import { NotFound } from "@/shared/components/not-found"
 import { ThemeProvider } from "@workspace/ui/lib/theme-provider"
 
 import { deploymentModeQueryOptions } from "@/shared/utils/deployment-mode"
+import { authClient } from "@pepperextra/auth/client"
 
 interface MyRouterContext {
   queryClient: QueryClient
   deploymentMode?: "local" | "cloud"
 }
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  beforeLoad: async ({ context: { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient }, location }) => {
     const mode = await queryClient.ensureQueryData(deploymentModeQueryOptions)
+
+    if (location.pathname !== "/reset-password") {
+      const { data } = await authClient.getSession()
+      if (data?.user?.passwordResetRequired) {
+        throw redirect({ to: "/reset-password" })
+      }
+    }
+
     return {
       deploymentMode: mode,
     }

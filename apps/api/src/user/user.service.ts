@@ -36,4 +36,51 @@ export class UserService {
     this.users.push(newUser);
     return newUser;
   }
+
+  async resetPassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ success: boolean }> {
+    const ctx = await this.authService.instance.$context;
+
+    const accounts = await ctx.internalAdapter.findAccountByUserId(userId);
+    const emailAccount = accounts?.find(
+      (account) => account.providerId === 'email',
+    );
+    if (!emailAccount?.password) {
+      throw new Error('No password account found for this user');
+    }
+
+    const isValid = await ctx.password.verify({
+      password: currentPassword,
+      hash: emailAccount.password,
+    });
+    if (!isValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const hash = await ctx.password.hash(newPassword);
+    await ctx.internalAdapter.updatePassword(userId, hash);
+    await ctx.internalAdapter.updateUser(userId, {
+      passwordResetRequired: false,
+    });
+
+    return { success: true };
+  }
+  async changeOwnPassword(
+    currentPassword: string,
+    newPassword: string,
+    headers: Headers, // the request's actual headers — real session, not fabricated
+  ): Promise<{ success: boolean }> {
+    await this.authService.api.changePassword({
+      body: {
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true, // kills other sessions on password change
+      },
+      headers,
+    });
+    return { success: true };
+  }
 }

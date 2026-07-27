@@ -5,6 +5,7 @@ import {
   banOrganizationStaffUser,
   createOrganizationStaffUser,
   resetOrganizationStaffUserPassword,
+  resetUserPassword,
 } from "./users.js"
 import {
   getOrganizationSettings,
@@ -153,5 +154,8 @@ export const contracts = populateContractRouterPaths({
   branchProfile: {
     get: getBranchProfile,
     update: updateBranchProfile,
+  },
+  user: {
+    resetPassword: resetUserPassword,
   },
 })
