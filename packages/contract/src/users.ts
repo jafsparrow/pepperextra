@@ -103,6 +103,19 @@ export const resetOrganizationStaffUserPassword = oc
     })
   )
 
+export const changeOwnPassword = oc
+  .route({
+    method: "POST",
+    path: "/auth/change-password",
+  })
+  .input(
+    z.object({
+      currentPassword: z.string().min(1),
+      newPassword: z.string().min(6),
+    })
+  )
+  .output(z.object({ success: z.boolean() }))
+
 export const resetUserPassword = oc
   .route({
     method: "POST",

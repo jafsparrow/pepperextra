@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AuthInstance } from '@pepperextra/auth';
+import { AppUser, AuthInstance } from '@pepperextra/auth';
 import type {
   CreateOrganizationStaffUserDto,
   OrganizationStaffUser,
@@ -105,6 +105,9 @@ export class OrganizationUserService {
     const ctx = await this.authService.instance.$context;
     const hash = await ctx.password.hash(temporaryPassword);
     await ctx.internalAdapter.updatePassword(userId, hash);
+    await ctx.internalAdapter.updateUser(userId, {
+      passwordResetRequired: true,
+    } satisfies Partial<AppUser>);
 
     // const newUser = await this.authService.api.setUserPassword({
     //   body: {

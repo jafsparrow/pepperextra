@@ -11,7 +11,7 @@ function RouteComponent() {
   const navigate = useNavigate()
 
   const resetMutation = useMutation(
-    orpc.user.resetPassword.mutationOptions({
+    orpc.user.changeOwnPassword.mutationOptions({
       onSuccess: () => {
         navigate({ to: "/" })
       },

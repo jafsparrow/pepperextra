@@ -36,12 +36,20 @@ export function OrgAddModal({
   const createOrgMutation = useMutation({
     mutationFn: async (data: OrganizationFormValues) => {
       const metadata = { license: "demo", expiresAt: "30/05/88" }
-      await authClient.organization.create({ ...data, metadata })
+      const { error } = await authClient.organization.create({
+        ...data,
+        metadata,
+      })
+      if (error) {
+        throw new Error(error.message)
+      }
     },
     onSuccess: () => {
       toast.success("Created Oganisation succesfully..")
     },
-    onError: () => {},
+    onError: (error) => {
+      toast.error(error.message)
+    },
   })
   const handleOpenChange = (nextOpen: boolean) => {
     if (open === undefined) {

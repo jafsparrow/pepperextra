@@ -23,6 +23,7 @@ function RouteComponent() {
         email: email,
         name: name,
         password: password,
+        customAccountType: "owner",
       })
     },
     onSuccess: () => {

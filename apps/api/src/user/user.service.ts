@@ -71,7 +71,6 @@ export class UserService {
   async changeOwnPassword(
     currentPassword: string,
     newPassword: string,
-    headers: Headers, // the request's actual headers — real session, not fabricated
   ): Promise<{ success: boolean }> {
     await this.authService.api.changePassword({
       body: {
@@ -79,7 +78,6 @@ export class UserService {
         newPassword,
         revokeOtherSessions: true, // kills other sessions on password change
       },
-      headers,
     });
     return { success: true };
   }

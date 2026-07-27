@@ -25,6 +25,7 @@ export const user = pgTable("user", {
   customAccountType: text("custom_account_type", {
     enum: ["owner", "staff"],
   }).default("staff"),
+  passwordResetRequired: boolean("password_reset_required").default(true),
 })
 
 export const session = pgTable(

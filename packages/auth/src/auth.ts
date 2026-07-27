@@ -204,7 +204,7 @@ export const createAuthInstance = (
 }
 
 export type AuthInstance = ReturnType<typeof createAuthInstance>
-
+export type AppUser = AuthInstance["$Infer"]["Session"]["user"]
 // export const config = {
 //   database: drizzleAdapter(
 //     createDatabaseClient(process.env.PEPPER_DATABASE_URL!),

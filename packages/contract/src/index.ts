@@ -3,6 +3,7 @@ import z, { success } from "zod"
 import { listGalxy } from "./galaxies.js"
 import {
   banOrganizationStaffUser,
+  changeOwnPassword,
   createOrganizationStaffUser,
   resetOrganizationStaffUserPassword,
   resetUserPassword,
@@ -157,5 +158,6 @@ export const contracts = populateContractRouterPaths({
   },
   user: {
     resetPassword: resetUserPassword,
+    changeOwnPassword: changeOwnPassword,
   },
 })

@@ -42,4 +42,14 @@ export class UserController {
       },
     );
   }
+
+  @Implement(contracts.user.changeOwnPassword)
+  changeOwnPassword() {
+    return implement(contracts.user.changeOwnPassword).handler(
+      async ({ input }) => {
+        const { currentPassword, newPassword } = input;
+        return this.userService.changeOwnPassword(currentPassword, newPassword);
+      },
+    );
+  }
 }

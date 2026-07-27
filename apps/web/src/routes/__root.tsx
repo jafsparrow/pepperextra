@@ -31,9 +31,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
     if (location.pathname !== "/reset-password") {
       const { data } = await authClient.getSession()
-      if (data?.user?.passwordResetRequired) {
-        throw redirect({ to: "/reset-password" })
-      }
+      // if (data?.user?.passwordResetRequired ?? true) {
+      //   throw redirect({ to: "/reset-password" })
+      // }
     }
 
     return {
