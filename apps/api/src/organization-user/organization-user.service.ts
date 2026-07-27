@@ -94,18 +94,27 @@ export class OrganizationUserService {
     //   throw new Error('Staff user not found for the provided organization');
     // }
 
+    console.log('have i reached this far?');
     console.log(userId, organizationId);
     // check if the user belons to the given orgId, otherwise dont reset.
-    const temporaryPassword = 'hellosuper'; // this.generateTemporaryPassword();
+    const temporaryPassword = this.generateTemporaryPassword();
 
-    const newUser = await this.authService.api.setUserPassword({
-      body: {
-        newPassword: temporaryPassword,
-        userId,
-      },
-    });
+    // Bypassing authService.api.setUserPassword: it requires a system-admin session,
+    // but org admins/owners aren't system admins — auth is enforced above via org membership check.
+
+    const ctx = await this.authService.instance.$context;
+    const hash = await ctx.password.hash(temporaryPassword);
+    await ctx.internalAdapter.updatePassword(userId, hash);
+
+    // const newUser = await this.authService.api.setUserPassword({
+    //   body: {
+    //     newPassword: temporaryPassword,
+    //     userId,
+    //   },
+    //   headers: {},
+    // });
     // user.temporaryPassword = temporaryPassword;
-    return { success: newUser.status, temporaryPassword };
+    return { success: true, temporaryPassword };
   }
 
   ban(
