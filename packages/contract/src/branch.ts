@@ -26,6 +26,13 @@ export const branchProfileUpdateSchema = z.object({
   email: z.string().nullable().optional(),
 })
 
+export const branchInfoUpdateSchema = z.object({
+  name: z.string().min(1, "Branch name is required"),
+  tagline: z.string().nullable().optional(),
+})
+
+export type BranchInfoUpdate = z.infer<typeof branchInfoUpdateSchema>
+
 export const getBranchProfile = oc
   .route({ method: "GET", path: "/teams/${teamId}/profile" })
   .input(z.object({ teamId: z.string() }))
@@ -34,4 +41,9 @@ export const getBranchProfile = oc
 export const updateBranchProfile = oc
   .route({ method: "PUT", path: "/teams/${teamId}/profile" })
   .input(branchProfileUpdateSchema.extend({ teamId: z.string() }))
+  .output(branchProfileSchema)
+
+export const updateBranchInfo = oc
+  .route({ method: "PUT", path: "/teams/${teamId}/info" })
+  .input(branchInfoUpdateSchema.extend({ teamId: z.string() }))
   .output(branchProfileSchema)

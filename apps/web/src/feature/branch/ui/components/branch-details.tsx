@@ -1,3 +1,4 @@
+import { useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { authClient } from "@pepperextra/auth/client"
 import { Button } from "@workspace/ui/components/button"
@@ -13,15 +14,25 @@ import {
   Store,
   Globe,
   Navigation,
+  Upload,
 } from "lucide-react"
 import { Link } from "@tanstack/react-router"
+import { toast } from "sonner"
 import { orpc } from "@/shared/utils/orpc"
+import { EditBranchInfoDialog } from "./edit-branch-info-dialog"
+import { EditAddressDialog } from "./edit-address-dialog"
+import { EditContactDialog } from "./edit-contact-dialog"
 
 interface BranchDetailsProps {
   teamId: string
+  deploymentMode?: string
 }
 
-export function BranchDetails({ teamId }: BranchDetailsProps) {
+export function BranchDetails({ teamId, deploymentMode = "local" }: BranchDetailsProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false)
+  const [contactDialogOpen, setContactDialogOpen] = useState(false)
+
   const { data: teamsRes, isLoading: teamLoading } = useQuery({
     queryKey: ["team-name", teamId],
     queryFn: async () => {
@@ -40,6 +51,45 @@ export function BranchDetails({ teamId }: BranchDetailsProps) {
   const branch = profile
 
   const isLoading = teamLoading || profileLoading
+
+  const handleLogoClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleLogoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (deploymentMode === "local") {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      try {
+        const res = await fetch(`http://localhost:3000/teams/${teamId}/emblem`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        })
+        const data = await res.json()
+        if (res.ok && data.url) {
+          toast.success("Logo uploaded")
+          // Invalidate to refresh the profile
+          // queryClient.invalidateQueries(...)
+        } else {
+          toast.error("Upload failed")
+        }
+      } catch {
+        toast.error("Upload failed")
+      }
+    } else {
+      // Pseudo: client-side S3 upload
+      console.log(`[S3 Upload Placeholder] Uploading ${file.name} for team ${teamId}`)
+      toast.success("Logo upload simulated for cloud mode")
+    }
+
+    // Reset input so the same file can be re-selected
+    e.target.value = ""
+  }
 
   if (isLoading) {
     return (
@@ -62,10 +112,20 @@ export function BranchDetails({ teamId }: BranchDetailsProps) {
             <Store className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{teamName}</h1>
-            <p className="text-sm text-muted-foreground">
-              {branch?.tagline ?? "Restaurant branch"}
-            </p>
+            <EditBranchInfoDialog
+              teamId={teamId}
+              defaultName={teamName}
+              defaultTagline={branch?.tagline}
+            >
+              <button type="button" className="text-left group cursor-pointer">
+                <h1 className="text-2xl font-bold tracking-tight group-hover:underline">
+                  {teamName}
+                </h1>
+                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  {branch?.tagline ?? "Restaurant branch"}
+                </p>
+              </button>
+            </EditBranchInfoDialog>
           </div>
         </div>
         <Button asChild variant="outline" size="sm" className="gap-2">
@@ -82,7 +142,10 @@ export function BranchDetails({ teamId }: BranchDetailsProps) {
           <CardContent className="p-6">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-4 ring-border/50">
+                <div
+                  className="w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-4 ring-border/50 cursor-pointer"
+                  onClick={handleLogoClick}
+                >
                   {branch?.emblemImage ? (
                     <img
                       src={branch.emblemImage}
@@ -93,9 +156,19 @@ export function BranchDetails({ teamId }: BranchDetailsProps) {
                     <Store className="h-14 w-14 text-muted-foreground/40" />
                   )}
                 </div>
-                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <Pencil className="h-6 w-6 text-white" />
+                <div
+                  className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={handleLogoClick}
+                >
+                  <Upload className="h-6 w-6 text-white" />
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoFileSelect}
+                />
               </div>
               <div className="text-center">
                 <h3 className="font-semibold text-lg">{teamName}</h3>
@@ -117,9 +190,17 @@ export function BranchDetails({ teamId }: BranchDetailsProps) {
                   <MapPin className="h-4 w-4 text-primary" />
                   Address & Location
                 </h3>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Pencil className="h-4 w-4 text-muted-foreground" />
-                </Button>
+                <EditAddressDialog
+                  teamId={teamId}
+                  defaultAddress={branch?.address}
+                  defaultLocation={branch?.location}
+                  open={addressDialogOpen}
+                  onOpenChange={setAddressDialogOpen}
+                >
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </EditAddressDialog>
               </div>
               <Separator />
               <div className="space-y-3 text-sm">
@@ -157,9 +238,17 @@ export function BranchDetails({ teamId }: BranchDetailsProps) {
                   <Globe className="h-4 w-4 text-primary" />
                   Contact
                 </h3>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Pencil className="h-4 w-4 text-muted-foreground" />
-                </Button>
+                <EditContactDialog
+                  teamId={teamId}
+                  defaultPhone={branch?.phone}
+                  defaultEmail={branch?.email}
+                  open={contactDialogOpen}
+                  onOpenChange={setContactDialogOpen}
+                >
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </EditContactDialog>
               </div>
               <Separator />
               <div className="space-y-3 text-sm">

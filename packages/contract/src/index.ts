@@ -27,6 +27,7 @@ import {
 import {
   getBranchProfile,
   updateBranchProfile,
+  updateBranchInfo,
 } from "./branch.js"
 
 // [NOTE] :- zod schema should be exported just like that
@@ -68,9 +69,10 @@ export type {
 export {
   branchProfileSchema,
   branchProfileUpdateSchema,
+  branchInfoUpdateSchema,
 } from "./branch.js"
 
-export type { BranchProfile } from "./branch.js"
+export type { BranchProfile, BranchInfoUpdate } from "./branch.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -155,6 +157,7 @@ export const contracts = populateContractRouterPaths({
   branchProfile: {
     get: getBranchProfile,
     update: updateBranchProfile,
+    updateInfo: updateBranchInfo,
   },
   user: {
     resetPassword: resetUserPassword,
