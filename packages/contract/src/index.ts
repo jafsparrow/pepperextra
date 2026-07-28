@@ -96,7 +96,7 @@ const listPlanets = oc
   .output(z.array(planetSchema))
 
 const findPlanet = oc
-  .route({ method: "GET", path: "/planets/${id}" })
+  .route({ method: "GET", path: "/planets/{id}" })
   .input(
     z.object({
       id: z.coerce.number().int().min(1),
@@ -115,7 +115,7 @@ const createPlanet = oc
   .output(planetSchema)
 
 const deletePlanet = oc
-  .route({ method: "DELETE", path: "/planets/${id}" })
+  .route({ method: "DELETE", path: "/planets/{id}" })
   .input(z.object({ id: z.coerce.number().int().min(1) }))
   .output(z.object({ success: z.boolean() }))
 

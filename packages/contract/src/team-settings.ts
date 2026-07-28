@@ -24,7 +24,7 @@ export const teamSettingsUpdateSchema = z.object({
 export const getTeamSettings = oc
   .route({
     method: "GET",
-    path: "/teams/${teamId}/settings",
+    path: "/teams/{teamId}/settings",
   })
   .input(z.object({ teamId: z.string() }))
   .output(teamSettingsSchema)
@@ -32,7 +32,7 @@ export const getTeamSettings = oc
 export const updateTeamSettings = oc
   .route({
     method: "PUT",
-    path: "/teams/${teamId}/settings",
+    path: "/teams/{teamId}/settings",
   })
   .input(teamSettingsUpdateSchema.extend({ teamId: z.string() }))
   .output(teamSettingsSchema)
@@ -65,7 +65,7 @@ export const taxConfigUpdateSchema = taxConfigCreateSchema.partial()
 export const listTaxConfigs = oc
   .route({
     method: "GET",
-    path: "/teams/${teamId}/taxes",
+    path: "/teams/{teamId}/taxes",
   })
   .input(z.object({ teamId: z.string() }))
   .output(z.array(taxConfigSchema))
@@ -73,7 +73,7 @@ export const listTaxConfigs = oc
 export const createTaxConfig = oc
   .route({
     method: "POST",
-    path: "/teams/${teamId}/taxes",
+    path: "/teams/{teamId}/taxes",
   })
   .input(taxConfigCreateSchema.extend({ teamId: z.string(), organizationId: z.string() }))
   .output(taxConfigSchema)
@@ -81,7 +81,7 @@ export const createTaxConfig = oc
 export const updateTaxConfig = oc
   .route({
     method: "PUT",
-    path: "/teams/${teamId}/taxes/${id}",
+    path: "/teams/{teamId}/taxes/{id}",
   })
   .input(taxConfigUpdateSchema.extend({ teamId: z.string(), id: z.string() }))
   .output(taxConfigSchema)
@@ -89,7 +89,7 @@ export const updateTaxConfig = oc
 export const deleteTaxConfig = oc
   .route({
     method: "DELETE",
-    path: "/teams/${teamId}/taxes/${id}",
+    path: "/teams/{teamId}/taxes/{id}",
   })
   .input(z.object({ teamId: z.string(), id: z.string() }))
   .output(z.object({ success: z.boolean() }))
@@ -122,7 +122,7 @@ export const serviceChargeUpdateSchema = serviceChargeCreateSchema.partial()
 export const listServiceCharges = oc
   .route({
     method: "GET",
-    path: "/teams/${teamId}/service-charges",
+    path: "/teams/{teamId}/service-charges",
   })
   .input(z.object({ teamId: z.string() }))
   .output(z.array(serviceChargeSchema))
@@ -130,7 +130,7 @@ export const listServiceCharges = oc
 export const createServiceCharge = oc
   .route({
     method: "POST",
-    path: "/teams/${teamId}/service-charges",
+    path: "/teams/{teamId}/service-charges",
   })
   .input(serviceChargeCreateSchema.extend({ teamId: z.string(), organizationId: z.string() }))
   .output(serviceChargeSchema)
@@ -138,7 +138,7 @@ export const createServiceCharge = oc
 export const updateServiceCharge = oc
   .route({
     method: "PUT",
-    path: "/teams/${teamId}/service-charges/${id}",
+    path: "/teams/{teamId}/service-charges/{id}",
   })
   .input(serviceChargeUpdateSchema.extend({ teamId: z.string(), id: z.string() }))
   .output(serviceChargeSchema)
@@ -146,7 +146,7 @@ export const updateServiceCharge = oc
 export const deleteServiceCharge = oc
   .route({
     method: "DELETE",
-    path: "/teams/${teamId}/service-charges/${id}",
+    path: "/teams/{teamId}/service-charges/{id}",
   })
   .input(z.object({ teamId: z.string(), id: z.string() }))
   .output(z.object({ success: z.boolean() }))

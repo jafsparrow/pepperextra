@@ -53,7 +53,7 @@ export const passwordReset = oc
 export const userUpdate = oc
   .route({
     method: "PUT",
-    path: "/users/:id",
+    path: "/users/{id}",
   })
   .input(
     z.object({
@@ -66,7 +66,7 @@ export const userUpdate = oc
 export const userBan = oc
   .route({
     method: "POST",
-    path: "/users/:id/ban",
+    path: "/users/{id}/ban",
   })
   .input(
     z.object({
@@ -79,7 +79,7 @@ export const userBan = oc
 export const createOrganizationStaffUser = oc
   .route({
     method: "POST",
-    path: "/organizations/:organizationId/staff-users",
+    path: "/organizations/{organizationId}/staff-users",
   })
   .input(organizationStaffUserCreateInputSchema)
   .output(organizationStaffUserSchema)
@@ -87,7 +87,7 @@ export const createOrganizationStaffUser = oc
 export const resetOrganizationStaffUserPassword = oc
   .route({
     method: "POST",
-    path: "/organizations/:organizationId/staff-users/:id/reset-password",
+    path: "/organizations/{organizationId}/staff-users/{id}/reset-password",
   })
   .input(
     z.object({
@@ -132,7 +132,7 @@ export const resetUserPassword = oc
 export const banOrganizationStaffUser = oc
   .route({
     method: "POST",
-    path: "/organizations/:organizationId/staff-users/:id/ban",
+    path: "/organizations/{organizationId}/staff-users/{id}/ban",
   })
   .input(
     z.object({

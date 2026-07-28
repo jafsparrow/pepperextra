@@ -1,4 +1,10 @@
-import { Controller, Post, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
 import { FileInterceptor } from '@nestjs/platform-express';

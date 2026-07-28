@@ -34,16 +34,16 @@ export const branchInfoUpdateSchema = z.object({
 export type BranchInfoUpdate = z.infer<typeof branchInfoUpdateSchema>
 
 export const getBranchProfile = oc
-  .route({ method: "GET", path: "/teams/${teamId}/profile" })
+  .route({ method: "GET", path: "/teams/{teamId}/profile" })
   .input(z.object({ teamId: z.string() }))
   .output(branchProfileSchema)
 
 export const updateBranchProfile = oc
-  .route({ method: "PUT", path: "/teams/${teamId}/profile" })
+  .route({ method: "PUT", path: "/teams/{teamId}/profile" })
   .input(branchProfileUpdateSchema.extend({ teamId: z.string() }))
   .output(branchProfileSchema)
 
 export const updateBranchInfo = oc
-  .route({ method: "PUT", path: "/teams/${teamId}/info" })
+  .route({ method: "PUT", path: "/teams/{teamId}/info" })
   .input(branchInfoUpdateSchema.extend({ teamId: z.string() }))
   .output(branchProfileSchema)
