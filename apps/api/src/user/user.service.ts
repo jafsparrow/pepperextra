@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AuthInstance } from '@pepperextra/auth';
+import type { AuthInstance } from '@repo/auth';
 import { AuthService } from '@thallesp/nestjs-better-auth';
 
 export interface User {

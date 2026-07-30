@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 import { orpc } from "@/shared/utils/orpc"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"

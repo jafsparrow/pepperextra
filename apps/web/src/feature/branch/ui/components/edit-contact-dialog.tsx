@@ -18,7 +18,7 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { branchProfileUpdateSchema } from "@pepperextra/contracts"
+import { branchProfileUpdateSchema } from "@repo/contracts"
 import { orpc } from "@/shared/utils/orpc"
 
 const contactFormSchema = branchProfileUpdateSchema.pick({

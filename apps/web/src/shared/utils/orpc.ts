@@ -2,7 +2,7 @@
 import { createORPCClient } from "@orpc/client"
 import type { ContractRouterClient } from "@orpc/contract"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
-import { contracts } from "@pepperextra/contracts" // Type-only import
+import { contracts } from "@repo/contracts" // Type-only import
 import { OpenAPILink } from "@orpc/openapi-client/fetch"
 import type { JsonifiedClient } from "@orpc/openapi-client"
 

@@ -19,8 +19,8 @@ import { Input } from "@workspace/ui/components/input"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { branchInfoUpdateSchema } from "@pepperextra/contracts"
-import type { BranchInfoUpdate } from "@pepperextra/contracts"
+import { branchInfoUpdateSchema } from "@repo/contracts"
+import type { BranchInfoUpdate } from "@repo/contracts"
 import { orpc } from "@/shared/utils/orpc"
 
 interface EditBranchInfoDialogProps {

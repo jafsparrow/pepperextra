@@ -1,11 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
-import type { DatabaseClient } from '@pepperextra/db';
-import type {
-  TeamSettings,
-  TaxConfig,
-  ServiceCharge,
-} from '@pepperextra/contracts';
+import type { DatabaseClient } from '@repo/db';
+import type { TeamSettings, TaxConfig, ServiceCharge } from '@repo/contracts';
 
 const uuid = () => crypto.randomUUID();
 

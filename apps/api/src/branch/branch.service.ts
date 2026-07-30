@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '@thallesp/nestjs-better-auth';
-import type { AuthInstance } from '@pepperextra/auth';
-import type { BranchInfoUpdate, BranchProfile } from '@pepperextra/contracts';
+import type { AuthInstance } from '@repo/auth';
+import type { BranchInfoUpdate, BranchProfile } from '@repo/contracts';
 
 interface UploadedFile {
   buffer: Buffer;

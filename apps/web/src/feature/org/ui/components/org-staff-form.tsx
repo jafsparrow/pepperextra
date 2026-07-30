@@ -17,8 +17,8 @@ import {
 } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { cn } from "@workspace/ui/lib/utils"
-import { organizationStaffUserCreateInputSchema } from "@pepperextra/contracts"
-import type { CreateOrganizationStaffUserDto } from "@pepperextra/contracts"
+import { organizationStaffUserCreateInputSchema } from "@repo/contracts"
+import type { CreateOrganizationStaffUserDto } from "@repo/contracts"
 
 export type OrgStaffFormValues = CreateOrganizationStaffUserDto
 

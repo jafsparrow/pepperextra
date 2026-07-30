@@ -1,6 +1,6 @@
 // components/PermissionGuard.tsx
 import { usePermission } from "@/shared/hooks/permission-hook"
-import type { ResourceStatements } from "@pepperextra/auth/roles"
+import type { ResourceStatements } from "@repo/auth/roles"
 import type { ReactNode } from "react"
 
 interface GuardProps {

@@ -12,11 +12,11 @@ This repo exposes several internal packages under `packages/` used across the ap
   - [packages/db/src/index.ts](packages/db/src/index.ts#L1)
   - [packages/contract/src/index.ts](packages/contract/src/index.ts#L1)
   - [packages/ui/src/components/button.tsx](packages/ui/src/components/button.tsx#L1)
-- `@pepperextra/contracts` (packages/contract)
+- `@repo/contracts` (packages/contract)
   - Purpose: Shared orpc/zod contracts used by API and client.
   - Important scripts: `build` (tsup), `check-types`.
 
-- `@pepperextra/db` (packages/db)
+- `@repo/db` (packages/db)
   - Purpose: Drizzle schema, db client helpers, drizzle-cli utilities.
   - Important scripts: `db:generate`, `db:push`, `studio`, `with-env` helper.
 
@@ -24,7 +24,7 @@ This repo exposes several internal packages under `packages/` used across the ap
   - Purpose: Shared React UI primitives, components, and styles used by `apps/web`.
   - Important scripts: `lint`, `format`, `typecheck`.
 
-- `@pepperextra/tsconfig` (packages/typscript)
+- `@repo/tsconfig` (packages/typscript)
   - Purpose: central TypeScript configuration base used via `workspace:*` references.
 
 Notes for agents

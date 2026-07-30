@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { signIn } from "@pepperextra/auth/client"
+import { signIn } from "@repo/auth/client"
 import { LoginForm } from "@/feature/auth/ui/components/login-form"
 import { useMutation } from "@tanstack/react-query"
 

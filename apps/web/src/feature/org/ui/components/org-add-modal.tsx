@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { OrgAddForm } from "./org-add-form"
 import type { OrganizationFormValues } from "./org-add-form"
 import { useMutation } from "@tanstack/react-query"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 
 interface OrgAddModalProps {
   children?: ReactNode

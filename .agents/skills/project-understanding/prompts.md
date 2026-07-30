@@ -10,7 +10,7 @@ When an agent needs to act in this repository, prefer the following sequence:
 Useful prompts for the agent
 
 - "How do I run the api locally?" → consult `apps.md` and show `pnpm --filter api dev`.
-- "Where is auth implemented?" → consult `packages.md` to find `@pepperextra/auth` and its exports.
+- "Where is auth implemented?" → consult `packages.md` to find `@repo/auth` and its exports.
 - "Which env variables are required to run the backend?" → consult `configs.md`.
 
 When generating code, include minimal runnable changes, update package `build` scripts if adding a build step, and add tests for visible behavior changes.

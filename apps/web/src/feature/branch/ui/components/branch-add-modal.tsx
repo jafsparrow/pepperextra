@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { BranchAddForm } from "./branch-add-form"
 import type { BranchFormValues } from "../../schema"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 import { BRANCH_QUERY_KEYS } from "../../constants"
 
 interface BranchAddModalProps {

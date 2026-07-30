@@ -1,6 +1,6 @@
 // hooks/usePermission.ts
-import { ALL_ROLES } from "@pepperextra/auth/roles"
-import type { AppRoleName, ResourceStatements } from "@pepperextra/auth/roles"
+import { ALL_ROLES } from "@repo/auth/roles"
+import type { AppRoleName, ResourceStatements } from "@repo/auth/roles"
 import { useAuthorization } from "./authorization-hook"
 
 // Enforce that you can only pass valid resources and valid actions defined in your file

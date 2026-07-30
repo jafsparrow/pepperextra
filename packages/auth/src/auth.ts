@@ -1,11 +1,11 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import * as authschema from "@pepperextra/db/auth-schema"
+import * as authschema from "@repo/db/auth-schema"
 import { admin as adminPlugin, organization } from "better-auth/plugins"
 
 import type { OrganizationOptions } from "better-auth/plugins"
 
-import type { DatabaseClient } from "@pepperextra/db"
+import type { DatabaseClient } from "@repo/db"
 import {
   ac,
   customAdminRole,

@@ -1,5 +1,5 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter"
-import * as schema from "@pepperextra/db/schema"
+import * as schema from "@repo/db/schema"
 import { BetterAuthOptions } from "better-auth/minimal"
 import { admin, organization } from "better-auth/plugins"
 import {

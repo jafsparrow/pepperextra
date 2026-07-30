@@ -1,6 +1,6 @@
 import { useAuthorization } from "@/shared/hooks/authorization-hook"
 import { usePermission } from "@/shared/hooks/permission-hook"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
 

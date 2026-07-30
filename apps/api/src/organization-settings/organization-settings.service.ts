@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { OrganizationSettings } from '@pepperextra/contracts';
+import type { OrganizationSettings } from '@repo/contracts';
 
 @Injectable()
 export class OrganizationSettingsService {

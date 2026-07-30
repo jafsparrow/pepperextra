@@ -2,7 +2,7 @@ import { SignupForm } from "@/feature/auth/ui/components/sign-up-form"
 
 import type { SignupInputType } from "@/feature/auth/ui/components/sign-up-form"
 
-import { signUp } from "@pepperextra/auth/client"
+import { signUp } from "@repo/auth/client"
 import { useMutation } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 

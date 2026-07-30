@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
-import { AuthInstance } from '@pepperextra/auth';
-import { contracts } from '@pepperextra/contracts';
+import { AuthInstance } from '@repo/auth';
+import { contracts } from '@repo/contracts';
 import { Session } from '@thallesp/nestjs-better-auth';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { OrganizationUserService } from './organization-user.service.js';

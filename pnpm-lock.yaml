@@ -71,13 +71,13 @@ importers:
       '@orpc/zod':
         specifier: ^1.14.6
         version: 1.14.6(@orpc/contract@1.14.6)(@orpc/server@1.14.6(crossws@0.4.5(srvx@0.11.16))(ws@8.21.0))(crossws@0.4.5(srvx@0.11.16))(ws@8.21.0)(zod@4.4.3)
-      '@pepperextra/auth':
+      '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@pepperextra/contracts':
+      '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contract
-      '@pepperextra/db':
+      '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
       '@thallesp/nestjs-better-auth':
@@ -201,10 +201,10 @@ importers:
       '@orpc/tanstack-query':
         specifier: ^1.14.8
         version: 1.14.8(@orpc/client@1.14.8)(@tanstack/query-core@5.101.2)
-      '@pepperextra/auth':
+      '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@pepperextra/contracts':
+      '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contract
       '@shadcn/react':
@@ -328,10 +328,10 @@ importers:
       '@better-auth/drizzle-adapter':
         specifier: ^1.6.23
         version: 1.6.23(@better-auth/core@1.6.22(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.4.0))(@better-auth/utils@0.4.2)(drizzle-orm@1.0.0-rc.4(@sinclair/typebox@0.34.49)(@types/pg@8.20.0)(pg@8.22.0)(zod@4.4.3))
-      '@pepperextra/db':
+      '@repo/db':
         specifier: workspace:*
         version: link:../db
-      '@pepperextra/tsconfig':
+      '@repo/tsconfig':
         specifier: workspace:*
         version: link:../typscript
       better-auth:
@@ -350,7 +350,7 @@ importers:
       '@orpc/contract':
         specifier: ^1.14.6
         version: 1.14.6
-      '@pepperextra/tsconfig':
+      '@repo/tsconfig':
         specifier: workspace:*
         version: link:../typscript
       zod:
@@ -359,7 +359,7 @@ importers:
 
   packages/db:
     dependencies:
-      '@pepperextra/tsconfig':
+      '@repo/tsconfig':
         specifier: workspace:*
         version: link:../typscript
       dotenv:

@@ -19,7 +19,7 @@ import { NotFound } from "@/shared/components/not-found"
 import { ThemeProvider } from "@workspace/ui/lib/theme-provider"
 
 import { deploymentModeQueryOptions } from "@/shared/utils/deployment-mode"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 
 interface MyRouterContext {
   queryClient: QueryClient

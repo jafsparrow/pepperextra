@@ -1,10 +1,10 @@
 import { Controller, Inject } from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
-import { contracts, Planet } from '@pepperextra/contracts';
+import { contracts, Planet } from '@repo/contracts';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
-import type { DatabaseClient } from '@pepperextra/db';
-import { user } from '@pepperextra/db';
+import type { DatabaseClient } from '@repo/db';
+import { user } from '@repo/db';
 
 const planets: Planet[] = [
   {

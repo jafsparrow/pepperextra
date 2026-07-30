@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { OpenAPIGenerator } from '@orpc/openapi';
 import { ZodToJsonSchemaConverter } from '@orpc/zod';
-import { contracts } from '@pepperextra/contracts';
+import { contracts } from '@repo/contracts';
 import swaggerUi from 'swagger-ui-express';
 
 async function bootstrap() {

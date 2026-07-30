@@ -1,5 +1,5 @@
 {
-  "name": "@pepperextra/auth",
+  "name": "@repo/auth",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -29,8 +29,8 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.23",
-    "@pepperextra/db": "workspace:*",
-    "@pepperextra/tsconfig": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
     "better-auth": "^1.6.22",
     "drizzle-orm": "1.0.0-rc.4"
   },

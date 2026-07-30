@@ -7,7 +7,7 @@ Overview
 Apps found (quick reference):
 
 - `apps/web` — Frontend application (React + Vite + Tailwind + `@workspace/ui`).
-  - Purpose: Public/admin web UI. Uses `@pepperextra/auth` and `@pepperextra/contracts`.
+  - Purpose: Public/admin web UI. Uses `@repo/auth` and `@repo/contracts`.
   - Main scripts:
     - `pnpm --filter web dev` or `pnpm --filter web start` (local via `vite dev --port 3001`)
     - `pnpm --filter web build`
@@ -26,7 +26,7 @@ Apps found (quick reference):
     - `pnpm --filter api dev` (runs `nest start --watch`)
     - `pnpm --filter api build` (produces `dist` via `nest build`)
     - `pnpm --filter api start:prod` to run built code.
-  - Notes: Depends on `@pepperextra/auth`, `@pepperextra/db`, uses `better-auth` and Drizzle ORM.
+  - Notes: Depends on `@repo/auth`, `@repo/db`, uses `better-auth` and Drizzle ORM.
 
   - Key files:
     - [apps/api/package.json](apps/api/package.json#L1)

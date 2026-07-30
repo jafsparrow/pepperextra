@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
 import { TeamAddForm } from "./team-add-form"
 import type { TeamFormValues } from "./team-add-form"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 
 interface TeamAddModalProps {
   children?: ReactNode

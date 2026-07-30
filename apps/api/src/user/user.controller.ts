@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
-import type { AuthInstance } from '@pepperextra/auth';
-import { contracts } from '@pepperextra/contracts';
+import type { AuthInstance } from '@repo/auth';
+import { contracts } from '@repo/contracts';
 import { Session } from '@thallesp/nestjs-better-auth';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { UserService, type User } from './user.service.js';

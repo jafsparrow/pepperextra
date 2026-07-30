@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,

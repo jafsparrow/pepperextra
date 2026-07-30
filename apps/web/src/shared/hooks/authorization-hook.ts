@@ -1,4 +1,4 @@
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 
 type AuthorizationUser =
   | {

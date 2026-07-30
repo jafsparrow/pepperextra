@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
-import { contracts } from '@pepperextra/contracts';
+import { contracts } from '@repo/contracts';
 import { OrganizationSettingsService } from './organization-settings.service.js';
 
 @Controller()

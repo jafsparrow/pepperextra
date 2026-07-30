@@ -8,7 +8,7 @@ import {
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { contracts } from '@pepperextra/contracts';
+import { contracts } from '@repo/contracts';
 import { BranchService } from './branch.service.js';
 
 interface UploadedFile {

@@ -7,11 +7,11 @@ import { onError, ORPCError, ORPCModule } from '@orpc/nest';
 import { Request } from 'express';
 import { REQUEST } from '@nestjs/core';
 
-import { AuthInstance, createAuthInstance } from '@pepperextra/auth';
+import { AuthInstance, createAuthInstance } from '@repo/auth';
 import { experimental_RethrowHandlerPlugin as RethrowHandlerPlugin } from '@orpc/server/plugins';
 import { DatabaseModule, DRIZZLE_TOKEN } from './db/database.module.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { DatabaseClient } from '@pepperextra/db';
+import { DatabaseClient } from '@repo/db';
 import { UserModule } from './user/user.module.js';
 import { OrganizationUserModule } from './organization-user/organization-user.module.js';
 import { OrganizationSettingsModule } from './organization-settings/organization-settings.module.js';

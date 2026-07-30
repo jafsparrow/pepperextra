@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 import { TeamSettings } from "@/feature/org/ui/components/team-settings"
 
 export const Route = createFileRoute("/_app/org/teams/$teamId_/settings")({

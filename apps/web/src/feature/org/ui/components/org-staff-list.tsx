@@ -47,7 +47,7 @@ import {
   Ban,
   Copy,
 } from "lucide-react"
-import { authClient } from "@pepperextra/auth/client"
+import { authClient } from "@repo/auth/client"
 import { OrgStaffModal } from "./org-staff-modal"
 import { orpc } from "@/shared/utils/orpc"
 import { toast } from "sonner"

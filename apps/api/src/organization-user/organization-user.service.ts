@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AppUser, AuthInstance } from '@pepperextra/auth';
+import { AppUser, AuthInstance } from '@repo/auth';
 import type {
   CreateOrganizationStaffUserDto,
   OrganizationStaffUser,
-} from '@pepperextra/contracts';
-import type { DatabaseClient } from '@pepperextra/db';
+} from '@repo/contracts';
+import type { DatabaseClient } from '@repo/db';
 import { AuthService } from '@thallesp/nestjs-better-auth';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 
