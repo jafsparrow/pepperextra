@@ -6,32 +6,29 @@ Overview
 
 Apps found (quick reference):
 
-- `apps/web` — Frontend application (React + Vite + Tailwind + `@workspace/ui`).
-  - Purpose: Public/admin web UI. Uses `@repo/auth` and `@repo/contracts`.
-  - Main scripts:
-    - `pnpm --filter web dev` or `pnpm --filter web start` (local via `vite dev --port 3001`)
-    - `pnpm --filter web build`
-    - `pnpm --filter web preview`
-  - Notes: Uses React 19, TanStack Router, TanStack Query, and better-auth client packages.
-
-  - Key files:
-    - [apps/web/package.json](apps/web/package.json#L1)
-    - [apps/web/src/router.tsx](apps/web/src/router.tsx#L1)
-    - [apps/web/src/routes/\_\_root.tsx](apps/web/src/routes/__root.tsx#L1)
-    - [apps/web/src/feature/auth/ui/components/login-form.tsx](apps/web/src/feature/auth/ui/components/login-form.tsx#L1)
-
-- `apps/api` — Backend API (NestJS).
-  - Purpose: Server-side API and orpc endpoints.
+- `apps/api` — Backend API (NestJS v11, Express).
+  - Purpose: Business logic, multi-tenant data, auth, price resolution, PDF generation, WhatsApp integration.
   - Main scripts:
     - `pnpm --filter api dev` (runs `nest start --watch`)
     - `pnpm --filter api build` (produces `dist` via `nest build`)
     - `pnpm --filter api start:prod` to run built code.
-  - Notes: Depends on `@repo/auth`, `@repo/db`, uses `better-auth` and Drizzle ORM.
+  - Notes: Depends on `@repo/auth`, `@repo/db`, uses Better Auth RBAC and Drizzle ORM.
+  - Runs on port 3000.
 
-  - Key files:
-    - [apps/api/package.json](apps/api/package.json#L1)
-    - [apps/api/src/main.ts](apps/api/src/main.ts#L1)
-    - [apps/api/src/organization-user/organization-user.controller.ts](apps/api/src/organization-user/organization-user.controller.ts#L1)
+- `apps/web` — Web Admin Panel (TanStack Start / React 19 / Vite 8).
+  - Purpose: Tenant onboarding, catalog management, staff admin, reports, **customer portal**, warranty management.
+  - Main scripts:
+    - `pnpm --filter web dev` (Vite dev server on port 3001)
+    - `pnpm --filter web build`
+    - `pnpm --filter web preview`
+  - Notes: Uses `@repo/auth` client, `@repo/contracts` for type-safe API calls, `@workspace/ui` components, TanStack Router + Query.
+
+- `apps/mobile` — Mobile App (React Native Expo).
+  - Purpose: Shop floor quotation flow, QR scanning, fulfilment station screen, offline catalog sync, WhatsApp PDF sharing.
+  - Main scripts:
+    - `pnpm --filter mobile dev` (Expo start)
+    - `pnpm --filter mobile build`
+  - Notes: Uses Expo SQLite for local catalog cache, expo-camera for QR/barcode scanning, expo-print for PDF generation.
 
 How to run the full workspace in development
 
@@ -45,8 +42,9 @@ pnpm dev
 Or run a single app:
 
 ```bash
-pnpm --filter web dev
 pnpm --filter api dev
+pnpm --filter web dev
+pnpm --filter mobile dev
 ```
 
 When debugging agent decisions, prefer running only the relevant app.

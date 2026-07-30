@@ -66,28 +66,80 @@ const products = await db.products.findMany({
 
 ```typescript
 // WRONG — auto-updating cost price on purchase receipt
-await db.products.update({ active_cost_price: receipt.unit_cost });
+await db.products.update({ activeCostPriceMinor: receipt.unitCostMinor });
 
 // CORRECT — suggest only, require human approval
-await db.cost_suggestions.upsert({
-  product_id: receipt.product_id,
-  suggested_cost: await getHighestRecentCost(productId, orgId),
+await db.costSuggestions.upsert({
+  productId: receipt.productId,
+  suggestedCostMinor: await getHighestRecentCostMinor(productId, orgId),
   status: 'pending'
 });
 // Notify owner to review
 ```
 
-### 2.4 VAT Calculation
+### 2.4 Tax Calculation (Multi-Country, Configurable)
 
 ```typescript
-// VAT rate: always 5% for Oman
-const VAT_RATE = 0.05;
+// Tax rates come from tax_types table (per country) + org_tax_config overrides
+// Rates stored as basis points (1/100 of 1%) — 500 = 5.00%
+// VAT, service charge, delivery fee, tourism levy — all handled uniformly
 
-// Calculate per line — never on total
-const lineVat = Math.round(lineTotal * VAT_RATE * 1000) / 1000; // 3 decimal places
+// Get active tax types for org's country (with org overrides)
+async function getActiveTaxTypesForOrg(orgId: string): Promise<TaxType[]> {
+  const org = await db.query.orgMetadata.findFirst({ where: { orgId } })
+  const countryId = org.countryId
+  return db.query.taxTypes.findMany({
+    where: { countryId, isActive: true },
+    with: { orgConfigs: { where: { orgId } } }
+  })
+}
 
-// Grand total = sum of line totals + sum of line VATs
-// Never calculate grand total VAT as a percentage of subtotal
+// Calculate taxes for a line total (in minor units)
+function calculateLineTaxes(lineTotalMinor: bigint, taxTypes: TaxType[], orgTaxConfig: OrgTaxConfig[]) {
+  return taxTypes.map(taxType => {
+    const config = orgTaxConfig.find(c => c.taxTypeId === taxType.id)
+    const rateBps = config?.overrideRateBasisPoints ?? taxType.rateBasisPoints
+    const amountMinor = (lineTotalMinor * BigInt(rateBps)) / 10000n
+    return { taxTypeId: taxType.id, rateBps, amountMinor }
+  })
+}
+
+// Grand total = sum of line totals + sum of ALL tax amounts (per-line, per-tax)
+// NEVER calculate tax on subtotal — always sum per-line per-tax amounts
+// This prevents rounding drift and matches OTA/GCC tax authority requirements
+```
+
+### 2.5 Currency Handling (Integer Minor Units in DB)
+
+```typescript
+// DB stores ALL monetary values as INTEGER minor units (baisa, fils, halala)
+// Conversion happens at API boundary using currency config from org_metadata
+
+// UI → API (major → minor)
+function toMinorUnits(major: string | number, decimalPlaces: number): bigint {
+  const d = new Decimal(major)
+  return d.mul(new Decimal(10).pow(decimalPlaces)).toBigInt()
+}
+
+// API → UI (minor → major)
+function fromMinorUnits(minor: bigint, decimalPlaces: number): string {
+  const d = new Decimal(minor.toString())
+  return d.div(new Decimal(10).pow(decimalPlaces)).toFixed(decimalPlaces)
+}
+
+// Format for display with symbol
+function formatCurrency(minor: bigint, currency: Currency): string {
+  const major = fromMinorUnits(minor, currency.decimalPlaces)
+  return `${currency.symbol} ${major}`
+}
+
+// Currency config from org_metadata join
+interface Currency {
+  code: string           // "OMR", "AED", "SAR"
+  symbol: string         // "ر.ع.", "د.إ", "ر.س"
+  decimalPlaces: number  // 3 for OMR/BHD/KWD, 2 for AED/SAR/QAR
+  minorUnitPerMajor: number // 1000 or 100
+}
 ```
 
 ### 2.5 Soft Deletes Only
@@ -276,16 +328,16 @@ async processReturn(invoiceId: string, dto: ProcessReturnDto, ctx: OrgCtx) {
 ### 4.5 Cost Price Suggestion Logic
 
 ```typescript
-async suggestCostPrice(productId: string, orgId: string): Promise<number> {
+async suggestCostPriceMinor(productId: string, orgId: string): Promise<bigint | null> {
   // Get last 5 deliveries across ALL suppliers for this SKU
-  const recentDeliveries = await db.purchase_receipts.findMany({
-    where: { product_id: productId, org_id: orgId },
-    orderBy: { delivery_date: 'desc' },
+  const recentDeliveries = await db.purchaseReceipts.findMany({
+    where: { productId, orgId },
+    orderBy: { deliveryDate: 'desc' },
     take: 5,
   });
   if (recentDeliveries.length === 0) return null;
-  // Return HIGHEST cost (conservative — protects margin)
-  return Math.max(...recentDeliveries.map(r => r.unit_cost));
+  // Return HIGHEST cost in minor units (conservative — protects margin)
+  return recentDeliveries.reduce((max, r) => r.unitCostMinor > max ? r.unitCostMinor : max, 0n);
 }
 ```
 
@@ -569,14 +621,16 @@ async function syncCatalog(orgId: string, teamId: string) {
 // Protect all admin routes with middleware checking Better Auth session
 ```
 
-### 7.2 Contractor Portal
+### 7.2 Customer Portal
 
 ```typescript
-// Contractor portal at /portal/* routes
+// Customer portal at /portal/* routes
 // Separate login from admin login
 // Auth via Better Auth but separate session scope
+// Supports customer types: "account" (view-only) and "contractor" (full multi-site)
 // Price visibility enforced server-side — never trust client to hide prices
-// All portal data filtered by contractor_id from session — never expose other contractor data
+// All portal data filtered by customer_id from session — never expose other customer data
+// Contractor users see consolidated balance across sites + site filter
 ```
 
 ---
@@ -668,7 +722,7 @@ Before shipping any API endpoint, verify:
 
 ```bash
 # Database
-DATABASE_URL=postgresql://...
+BUILDMATE_DATABASE_URL=postgresql://...
 
 # Better Auth
 BETTER_AUTH_SECRET=
@@ -676,7 +730,6 @@ BETTER_AUTH_URL=
 
 # App
 SINGLE_TENANT_MODE=false
-VAT_RATE=0.05
 DEFAULT_MARGIN_FLOOR=2.00
 QR_POINTS_PER_SCAN=10
 

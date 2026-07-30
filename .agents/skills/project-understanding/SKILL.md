@@ -1,4 +1,4 @@
-Project Understanding — pepperextra
+Project Understanding — BuildMate
 
 This skill documents the repository layout, apps, packages, and workspace configuration so AI agents can quickly understand how to build, run, and modify the project.
 

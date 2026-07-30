@@ -9,7 +9,7 @@
 
 ## What Is BuildMate
 
-Mobile-first SaaS platform for building material shops. Quotation engine with live alternative brand pricing, counter fulfilment stations, tradesperson loyalty via QR codes, contractor self-service portal, and warranty management.
+Mobile-first SaaS platform for building material shops. Quotation engine with live alternative brand pricing, counter fulfilment stations, tradesperson loyalty via QR codes, **unified customer model** (retail/account/contractor) with customer self-service portal, and warranty management.
 
 ---
 
@@ -23,10 +23,10 @@ buildmate/
 │   ├── api/              # NestJS v11 backend (Express)
 │   └── web/              # TanStack Start frontend (React 19, Vite 8)
 ├── packages/
-│   ├── auth/             # @buildmate/auth — Better Auth config + client
-│   ├── contract/         # @buildmate/contracts — oRPC contract definitions
-│   ├── db/               # @buildmate/db — Drizzle ORM schema + client
-│   ├── typescript/       # @buildmate/tsconfig — shared TS configs
+│   ├── auth/             # @repo/auth — Better Auth config + client
+│   ├── contract/         # @repo/contracts — oRPC contract definitions
+│   ├── db/               # @repo/db — Drizzle ORM schema + client
+│   ├── typescript/       # @repo/tsconfig — shared TS configs
 │   └── ui/               # @workspace/ui — shadcn/ui component library
 ├── .agents/              # Agent skill files and project requirements
 │   ├── AGENTS.md         # This file
@@ -102,9 +102,10 @@ pnpm studio         # Drizzle Studio
 | `VITE_API_URL` | Web | API server URL |
 | `VITE_DEPLOYMENT_MODE` | Web | `"cloud"` or `"local"` |
 | `SINGLE_TENANT_MODE` | API | `"true"` for local installation |
-| `VAT_RATE` | API | `"0.05"` (Oman VAT) |
 | `DEFAULT_MARGIN_FLOOR` | API | `"2.00"` percent |
 | `QR_POINTS_PER_SCAN` | API | `"10"` (configurable per org later) |
+
+> **Note:** VAT rate and currency are no longer env vars — they are configured per-tenant via `org_metadata.countryId` → `countries` table → `currencies` + `tax_types`. Seed data provides GCC defaults.
 
 ---
 
@@ -116,5 +117,5 @@ pnpm studio         # Drizzle Studio
 4. **Cost price never auto-updates** — suggest highest recent delivery cost, require human approval
 5. **QR codes once redeemed stay redeemed** — status never reverses
 6. **Soft deletes only** — set `deleted_at`, never hard delete
-7. **VAT calculated per line** at 5% — never on total, always 3 decimal places
-8. **All monetary values** use `decimal.js` — never JS floating point
+7. **Tax calculated per line, per tax type** — rates from `tax_types` + `org_tax_config`, summed — never on subtotal
+8. **All monetary values stored as integer minor units** (baisa/fils/halala) in DB — use `decimal.js` for conversion, never JS floating point

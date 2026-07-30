@@ -23,16 +23,21 @@
 - Row-level security (RLS) at database layer
 - Single-tenant mode config flag (`SINGLE_TENANT_MODE=true`)
 - Middleware injects tenant context into every request
+- **Country/Currency/Tax configuration** — seed countries, currencies, tax types; org selects country on onboarding
 
-**Tables:** `tenants`, `locations`
+**Tables:** `countries`, `currencies`, `tax_types`, `org_tax_config`, `org_metadata`, `team_metadata`
 
 **API Routes:**
 ```
 POST   /auth/register                → create account + tenant + first location
 POST   /tenants/:id/locations        → add location
 GET    /tenants/:id/locations        → list locations
-PATCH  /tenants/:id                  → update tenant settings
+PATCH  /tenants/:id                  → update tenant settings (country, currency, tax overrides)
 PATCH  /locations/:id                → update location settings
+GET    /countries                    → list active countries (for onboarding)
+GET    /currencies                   → list active currencies
+GET    /tax-types?country_id=:id     → tax types for country
+PATCH  /org/tax-config               → update org tax type overrides
 ```
 
 **Implementation Notes:**
@@ -40,6 +45,7 @@ PATCH  /locations/:id                → update location settings
 - Every NestJS guard validates `org_id` from JWT
 - Cross-tenant data access must be impossible at every layer
 - All queries must include `WHERE org_id = $orgId`
+- Onboarding wizard step: select country → auto-sets currency + default tax types
 
 ---
 
@@ -525,27 +531,40 @@ Escape hatch:
 
 ---
 
-### MODULE 14 — Accounts Receivable & Contractor Credit
+### MODULE 14 — Accounts Receivable & Customer Credit
 **Priority:** `[CORE]` · **Tags:** `[nestjs]` `[db]` `[web]` `[expo]`
 
-**Tables:** `contractors`, `sites`
+**Tables:** `customers`, `customer_contacts`, `customer_sites`
 
 **API Routes:**
 ```
-POST   /contractors                  → create contractor profile
-PATCH  /contractors/:id              → update (credit limit, payment terms)
-GET    /contractors                  → list with outstanding balance
-GET    /contractors/:id/balance      → balance, aging, payment history
-GET    /contractors/:id/invoices     → invoice history with status
-GET    /contractors/credit-alerts    → contractors near or over credit limit
-POST   /sites                        → create site
-POST   /contractors/:id/sites        → link site to contractor
-GET    /contractors/:id/sites        → list contractor's sites
+POST   /customers                    → create customer (retail|account|contractor)
+PATCH  /customers/:id                → update (type, credit limit, payment terms, portal access)
+GET    /customers                    → list with outstanding balance, filter by type
+GET    /customers/:id                → customer detail with contacts & sites
+GET    /customers/:id/balance        → balance, aging, payment history
+GET    /customers/:id/invoices       → invoice history with status
+GET    /customers/credit-alerts      → customers near or over credit limit
+POST   /customers/:id/contacts       → add contact person (site manager, purchaser, etc.)
+PATCH  /customers/:id/contacts/:cid  → update contact
+POST   /customers/:id/sites          → create site for contractor
+PATCH  /customers/:id/sites/:sid     → update site (address, contact)
+GET    /customers/:id/sites          → list sites for contractor
+GET    /customers/:id/consolidated-balance → contractor total across all sites
+POST   /invoices                     → create invoice with customer_id + optional site_id
 ```
 
 **UI Screens:**
 ```
-[web]  Contractor management — list, create, edit, set credit limit
+[web]  Customer management — list, create, edit (type selector: retail/account/contractor)
+[web]  Customer detail — contacts, sites, credit settings, aging
+[web]  Receivables aging dashboard — filter by type, site
+[expo] Credit limit warning shown before confirming new quotation for account/contractor
+[expo] Site selector on invoice creation (dropdown: sites + "Company HQ")
+[web]  Contractor consolidated balance view (sum across all sites)
+```
+
+---
 [web]  Receivables aging dashboard
 [expo] Credit limit warning shown before confirming new quotation for contractor
 ```
@@ -802,32 +821,44 @@ Already partially covered in MODULE 09. This module activates:
 
 ---
 
-### MODULE 22 — Contractor Self-Service Portal
+## Phase 6 — Customer Retention & Portal
+
+---
+
+### MODULE 22 — Customer Self-Service Portal
 **Priority:** `[RETENTION]` · **Tags:** `[nestjs]` `[web]` `[pdf]`
 
 **Scope:**
-- Contractor login to web portal (separate from staff admin)
-- Purchase history across assigned sites
+- Customer login to web portal (separate from staff admin) — for `account` and `contractor` type customers
+- Purchase history across all sites (for contractors) or simple history (for account customers)
 - Pending vs paid invoices with aging and credit notes
 - PDF download of any document
-- Price visibility feature flag (default: hidden)
+- Price visibility feature flag (default: hidden) — per customer
 - "Request quotation" button → creates lead for salesperson
+- Site-specific view for contractors with multiple sites
 
 **API Routes:**
 ```
-POST   /portal/auth/login            → contractor login
-GET    /portal/sites                 → contractor's linked sites
+POST   /portal/auth/login            → customer login (account/contractor types)
+GET    /portal/sites                 → customer's linked sites (contractors only)
 GET    /portal/invoices              → all invoices across sites (prices hidden if flag off)
 GET    /portal/invoices/:id          → invoice detail + PDF
 GET    /portal/sites/:id/history     → purchase history for site
-GET    /portal/credit-notes          → credit notes for contractor
+GET    /portal/credit-notes          → credit notes for customer
 POST   /portal/quotation-requests    → submit quotation request
-PATCH  /tenants/:id/price-visibility → toggle price visibility flag (owner only)
+PATCH  /customers/:id/price-visibility → toggle price visibility flag (owner only)
 ```
 
 **UI Screens:**
 ```
-[web]  Contractor portal login (separate from admin login)
+[web]  Customer portal login (separate from admin login)
+[web]  Customer dashboard — sites, balances, recent invoices
+[web]  Invoice list + detail + PDF download
+[web]  Site purchase history + product search (for contractors)
+[web]  Request quotation form
+[web]  Admin — customer management, site linking
+[web]  Admin — price visibility toggle per customer
+```
 [web]  Contractor dashboard — sites, balances, recent invoices
 [web]  Invoice list + detail + PDF download
 [web]  Site purchase history + product search
@@ -890,25 +921,25 @@ PHASE 2 — Shop Floor Operations
   10  Fulfilment Station System         [MUST-HAVE]
 
 PHASE 3 — Financial Visibility
-  11  VAT-Compliant Invoicing           [CORE]
-  12  Payments                          [CORE]
-  13  Returns & Credit Notes            [CORE]
-  14  Accounts Receivable               [CORE]
-  15  Supplier Management & Payables    [CORE]
-  16  Conservative Cost Price Mgmt      [CORE]
-  17  Business Reports & VAT Summary    [CORE]
+   11  Configurable Tax Invoicing          [CORE]
+   12  Payments                            [CORE]
+   13  Returns & Credit Notes              [CORE]
+   14  Customer Credit & Receivables       [CORE]
+   15  Supplier Management & Payables      [CORE]
+   16  Conservative Cost Price Mgmt        [CORE]
+   17  Business Reports & Tax Summary      [CORE]
 
 PHASE 4 — Warranty
-  18  Warranty Management               [CORE]
+   18  Warranty Management                 [CORE]
 
 PHASE 5 — Growth
-  19  Tradesperson Loyalty & QR         [GROWTH]
-  20  Catalog Quality                   [GROWTH]
-  21  Dual Stock Tracking Mode          [GROWTH]
+   19  Tradesperson Loyalty & QR           [GROWTH]
+   20  Catalog Quality                     [GROWTH]
+   21  Dual Stock Tracking Mode            [GROWTH]
 
 PHASE 6 — Retention
-  22  Contractor Self-Service Portal    [RETENTION]
+   22  Customer Self-Service Portal        [RETENTION]
 
 PHASE 7 — Differentiation
-  23  Camera Product Search             [SMART]
+   23  Camera Product Search               [SMART]
 ```

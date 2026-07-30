@@ -80,7 +80,9 @@ BuildMate is a mobile-first SaaS platform designed specifically for building mat
 | **Salesperson** | Shop floor, mobile device | Create quotations fast, show alternatives, discuss margin discreetly |
 | **Cashier** | Counter, mobile or tablet | Convert quotations to invoices, record payments, issue receipts, process returns |
 | **Station Staff** | Warehouse / go-down / section, mobile | See only their station's items, mark items ready |
-| **Contractor** | Web portal, any device | View site purchase history, check invoices, request quotations |
+| **Customer (Retail)** | At counter, no portal | Quick purchase, no account needed, phone for loyalty |
+| **Customer (Account)** | Web portal, any device | View purchase history, invoices, credit limit, request quotations |
+| **Customer (Contractor)** | Web portal, any device | Consolidated view across **all sites**, site-level history, site manager contacts, request quotations per site |
 | **Tradesperson** | At counter, no app | Earn points by returning product QR codes, redeem quarterly |
 
 ---
@@ -112,9 +114,9 @@ The same codebase supports two deployment modes controlled by a config flag:
 | Layer | Technology | Notes |
 |---|---|---|
 | **Backend API** | NestJS | Multi-tenant logic, price resolution, QR generation, billing, auth guards |
-| **Web Admin Panel** | TanStack Start *(preferred)* / Next.js *(fallback — decision open)* | Tenant onboarding, catalog, staff, reports, contractor portal |
+| **Web Admin Panel** | TanStack Start *(preferred)* / Next.js *(fallback — decision open)* | Tenant onboarding, catalog, staff, reports, customer portal |
 | **Mobile App** | React Native Expo | Quotation flow, QR scanning, camera search, local catalog sync, WhatsApp PDF |
-| **Contractor Portal** | Same web app as admin, separate route | Purchase history, invoices, site management, quotation requests |
+| **Customer Portal** | Same web app as admin, separate route | Purchase history, invoices, site management, quotation requests |
 | **AI / Vision** | Cloud Vision API | Object detection for camera-based product search (Phase 6) |
 
 ### 5.4 Authentication — Better Auth
@@ -130,10 +132,29 @@ The same codebase supports two deployment modes controlled by a config flag:
 BuildMate owns the full transaction loop:
 
 ```
-Quotation → Confirmed Order → Invoice → Payment → Credit Note → Warranty → Contractor Portal
+Quotation → Confirmed Order → Invoice → Payment → Credit Note → Warranty → Customer Portal
 ```
 
 No integration with Tally, QuickBooks, or any external ERP. Deliberate design decision.
+
+### 5.6 Localization, Currency & Tax Configuration
+
+**Multi-country ready from Day 1.** Each tenant belongs to a country (via `org_metadata.countryId`) which determines:
+
+| Setting | Source | Examples |
+|---|---|---|
+| **Currency** | `countries.currencyId` → `currencies` | OMR (3 decimals), AED/SAR/QAR (2 decimals), BHD/KWD (3 decimals) |
+| **Default VAT rate** | `countries.defaultVatRate` (basis points) | Oman 500 (5%), UAE 500 (5%), KSA 1500 (15%), Qatar 0, Bahrain 1000 (10%) |
+| **Additional tax/charge types** | `tax_types` per country | VAT, Service Charge, Delivery Fee, Tourism Levy |
+
+**Per-tenant overrides** via `org_tax_config`:
+- Override VAT rate (e.g., VAT-exempt org)
+- Enable/disable optional charges (service charge, delivery fee)
+- Custom fixed amounts for delivery fees
+
+**Storage:** All monetary values stored as **integer minor units** (baisa, fils, halala) in `bigint` columns. Conversion happens at API boundary using currency config. Never floating point.
+
+**Tax calculation:** Per-line, per-tax-type. Grand total = Σ line totals + Σ all tax amounts. Never calculate tax on subtotal — prevents rounding drift and matches GCC tax authority requirements.
 
 ---
 
@@ -292,13 +313,22 @@ Each product group has a configurable `stock_tracking_mode`:
 - Print all station slips simultaneously or individually.
 - **Reprint available at any time** on demand per station.
 
-### 8.7 VAT-Compliant Tax Invoicing
+### 8.7 Configurable Tax & Charge Invoicing
 
-- Oman VAT at **5%**, fully managed inside BuildMate.
-- Tax invoices include: VAT registration number, line-item VAT amounts, subtotal, VAT total, grand total.
-- Compliant with Oman Tax Authority (OTA) requirements.
-- VAT returns filed quarterly — BuildMate generates the summary report.
-- All VAT records retained indefinitely (OTA requires 10 years minimum).
+- **Multi-country tax engine** — not hardcoded to Oman VAT.
+- Each tenant belongs to a **country** (Oman, UAE, Saudi, Qatar, Bahrain, Kuwait) which defines default tax types and rates.
+- **Tax types** are configurable per country: VAT, Service Charge, Delivery Fee, Tourism Levy, etc.
+- Each tax type has:
+  - Rate (basis points: 500 = 5.00%, 1500 = 15.00%)
+  - Percentage vs fixed amount
+  - Applies to: line items / invoice total / shipping
+  - Mandatory vs optional
+- **Org-level overrides** — tenant can adjust rates (e.g., VAT-exempt org sets 0%, custom service charge %)
+- **Calculation**: per-line, per-tax-type, summed — never on subtotal. Prevents rounding drift.
+- **Invoice PDF** shows: line subtotal, each tax type with rate + amount, tax total, grand total.
+- **VAT returns** (Oman/UAE/KSA): BuildMate generates summary report; filing done manually on authority portal.
+- **Records retained indefinitely** (GCC tax authorities require 5–10 years minimum).
+- Default seed data: Oman 5% VAT, UAE 5% VAT, Saudi 15% VAT, Qatar 0%, Bahrain 10%, Kuwait 0%.
 
 ### 8.8 Invoice Lifecycle & States
 
@@ -376,12 +406,23 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 - Tracks: supplier, original purchase receipt, serial number, claim status, resolution
 - Owner sees all pending supplier claims from the payables dashboard
 
-### 8.11 Accounts Receivable & Contractor Credit
+### 8.11 Accounts Receivable & Customer Credit
 
-- Outstanding invoices per contractor with aging buckets: **30, 60, 90 days**.
-- Credit limit and payment terms configured per contractor profile.
-- App flags when contractor approaches credit limit before salesperson confirms new quotation.
-- Total paid vs pending visible per contractor.
+**Unified Customer Model** — three types under one `customers` table:
+
+| Type | Description | Credit Features |
+|---|---|---|
+| **Retail** | Walk-in, one-off buyers. Identified by phone (non-unique — family members may share a number). | No credit. Cash/on-spot payment only. |
+| **Account** | Registered trade buyers with credit terms. Has credit limit, payment terms. | Credit limit, payment terms, aging buckets (30/60/90 days). |
+| **Contractor** | Company buyers with multiple sites & site managers. Has portal access. | All account features + multi-site aggregation, portal access, site-level contacts. |
+
+**Core AR Features:**
+- Outstanding invoices per customer with aging buckets: **30, 60, 90 days**.
+- Credit limit and payment terms configured per customer (account/contractor types).
+- App flags when customer approaches credit limit before salesperson confirms new quotation.
+- Total paid vs pending visible per customer.
+- **Contractor aggregation**: Select a contractor → see consolidated balance across all their sites.
+- Site-level billing: when creating invoice, pick site (or "Company HQ" for direct billing).
 
 ### 8.12 Supplier Management & Accounts Payable
 
@@ -435,15 +476,47 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 - **Quarterly redemption** — store credit or gift voucher.
 - No separate app for tradespeople — all scanning done by staff at station.
 
-### 8.16 Contractor Self-Service Portal
+### 8.16 Customer Types, Contacts & Sites
 
-- Web portal — accessible on any device with contractor login.
-- Staff links **sites** (building projects) to contractor profiles with point-of-contact number.
-- Contractor sees: purchase history across all sites, pending vs paid invoices, credit notes, PDF download, quotation request button.
-- **Price visibility feature flag** — admin toggle hides unit prices. Default: hidden. Protects negotiation position.
-- Retention mechanic: contractor with 6+ months of history has strong reason not to switch suppliers.
+**Three customer types** (all in single `customers` table):
 
-### 8.17 Camera-Based Product Search
+| Type | Description | Credit | Portal | Multi-Site | Phone Unique |
+|------|-------------|--------|--------|------------|--------------|
+| **Retail** | Walk-in, one-time buyers | No | No | No | No (family sharing) |
+| **Account** | Regular buyers with credit terms | Yes | View-only | No | Optional |
+| **Contractor** | Construction companies, project-based | Yes | Full | Yes | Optional |
+
+- **Customer → Contacts**: Multiple contacts per customer (purchasing, accounts, site managers).
+- **Contractor → Sites**: Multiple sites/projects per contractor.
+- **Site → Contacts**: Site-specific contacts (project manager, site engineer, foreman).
+- **Invoice billing**: Can bill to **Customer** (company-level) or **Site** (project-level). Site invoices show site name + company name.
+- **Phone numbers**: Not unique across customers (same phone can belong to multiple retail accounts — e.g., family sharing).
+
+### 8.17 Customer Self-Service Portal
+
+- Web portal — accessible on any device with customer login (for `account` and `contractor` type customers).
+- Staff links **sites** (building projects) to contractor-type customers with point-of-contact numbers.
+- Contractor sees: purchase history across **all sites** (consolidated) or filtered by site, pending vs paid invoices, credit notes, PDF download, quotation request button.
+- Account customers see: their own purchase history, pending invoices, credit notes (no multi-site).
+- **Site selection**: When creating a quotation request, contractor picks site (or "Company HQ" for direct billing to company).
+- **Price visibility feature flag** — admin toggle hides unit prices per customer. Default: hidden. Protects negotiation position.
+- Retention mechanic: customer with 6+ months of history has strong reason not to switch suppliers.
+
+### 8.17 Customer Types & Structure
+
+| Type | Description | Credit | Portal | Multi-Site | Typical Use Case |
+|------|-------------|--------|--------|------------|------------------|
+| **Retail** | Walk-in, one-time buyers | No | No | No | Cash/phone pay, no account |
+| **Account** | Regular buyers, credit terms | Yes | Yes (history only) | No | Trade accounts, small builders |
+| **Contractor** | Construction companies, project-based | Yes | Yes (full) | Yes | Project sites, site managers |
+
+- **Customer → Contacts**: Multiple contacts per customer (purchasing, accounts, site managers).
+- **Contractor → Sites**: Multiple sites/projects per contractor.
+- **Site → Contacts**: Site-specific contacts (project manager, site engineer, foreman).
+- **Invoice billing**: Can bill to **Customer** (company-level) or **Site** (project-level). When billing to site, invoice shows site name + company name.
+- **Phone numbers**: Not unique across customers (same phone can belong to multiple retail accounts — e.g., family sharing).
+
+### 8.18 Camera-Based Product Search
 
 > Phase 6. Staff-facing only.
 
@@ -463,7 +536,7 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 | **3** | **Financial Visibility** | Invoice lifecycle, returns & credit notes, payments, AR aging, contractor credit, supplier management, AP, conservative cost price, reports, VAT summary |
 | **4** | **Warranty Management** | Warranty catalog, invoice warranty lines, serial numbers, claim intake, service job tracking, supplier warranty recovery |
 | **5** | **Growth & Catalogue Quality** | Tradesperson profiles, QR batch generation, sequential registration, points scanning, quarterly redemption, catalog requests, product aliases, cross-location stock, dual stock tracking mode |
-| **6** | **Contractor Retention** | Contractor & site profiles, purchase history portal, invoice portal, price visibility flag, quotation request, tenant onboarding flow |
+| **6** | **Customer Retention** | Customer types (retail/account/contractor), site profiles, purchase history portal, invoice portal, price visibility flag, quotation request, tenant onboarding flow |
 | **7** | **Camera Product Search** | Vision AI, local catalog sync, top 3 results, manual fallback |
 
 ---
@@ -473,6 +546,7 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 - Annual subscription per tenant, tiered by number of locations.
 - Monthly option available at a higher rate — positioned so annual is the obvious choice.
 - All features included — no feature-level paywalls.
+- **Multi-currency ready** — each tenant operates in their country's currency (OMR, AED, SAR, QAR, BHD, KWD). Prices stored as integer minor units in DB, converted at UI layer.
 - Target market: VAT-registered SME building material shops in Oman and the Gulf region.
 - Sales pitch: zero hardware cost, works on phones they already own, operational from day one.
 
