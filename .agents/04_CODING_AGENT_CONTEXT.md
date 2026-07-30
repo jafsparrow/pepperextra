@@ -645,12 +645,31 @@ export const products = pgTable("products", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   orgId: text("org_id").notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
-  // ... fields
+  productGroupId: text("product_group_id")
+    .references(() => productGroups.id),
+  name: text("name").notNull(),
+  skuCode: text("sku_code"),
+  specCode: text("spec_code"),  // e.g. "PP32UP" for 3/4" PVC Pipe — searchable spec code across brands
+  brandTag: text("brand_tag"),  // e.g. "brand_a", "brand_b"
+  basePriceMinor: bigint("base_price_minor", { mode: "bigint" }).default(0).notNull(),
+  activeCostPriceMinor: bigint("active_cost_price_minor", { mode: "bigint" }).default(0).notNull(),
+  costLastUpdated: timestamp("cost_last_updated"),
+  unit: text("unit"),
+  stationOverrideId: text("station_override_id")
+    .references(() => fulfillmentStations.id),
+  defaultWarrantyId: text("default_warranty_id")
+    .references(() => warrantyItems.id),
+  eligibleForLoyalty: boolean("eligible_for_loyalty").default(false).notNull(),
+  reorderThreshold: integer("reorder_threshold"),
+  aliases: text("aliases").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at"),  // soft delete
+  deletedAt: timestamp("deleted_at"),
 }, (t) => [
   index("products_org_id_idx").on(t.orgId),
+  index("products_org_group_idx").on(t.orgId, t.productGroupId),
+  index("products_org_brand_idx").on(t.orgId, t.brandTag),
+  index("products_org_spec_code_idx").on(t.orgId, t.specCode),
 ])
 ```
 

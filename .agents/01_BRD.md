@@ -271,10 +271,12 @@ Step 8 → Go live — staff log in and start quoting
 - Shared catalog per tenant. Per-location stock and optional per-location price overrides.
 - **Product groups** (spec-based) — alternatives drawn from the same group.
 - **Brand tags** on each product. Admin sets brand priority per group.
+- **Spec code** on each product (e.g. "PP32UP" for 3/4" PVC Pipe) — searchable spec-level code that enables filtering products by specification across brands (e.g. find all 1" pipes regardless of brand).
 - **Named price lists** override base price per SKU. Unmatched SKUs fall back to base price automatically.
 - **Product aliases and synonyms** — prevent duplicate entries when same product has different names at different branches.
 - **Catalog requests** — staff submit description + photo instead of creating duplicates. Admin maps or approves.
 - **Warranty link** — product can be linked to a default warranty item (auto-populates on invoice).
+- **CSV import** — bulk import products and product groups from formatted CSV. Downloadable template with column guide. Two-step process: upload → preview validation errors → confirm commit. Supports create and update (match by sku_code or spec_code + brand_tag). Handles product group creation if group doesn't exist.
 
 ### 8.5 Stock Tracking — Dual Mode
 

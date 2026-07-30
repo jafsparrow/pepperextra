@@ -206,6 +206,7 @@ export const products = pgTable("products", {
     .references(() => productGroups.id),
   name: text("name").notNull(),
   skuCode: text("sku_code"),
+  specCode: text("spec_code"),  // e.g. "PP32UP" for 3/4" PVC Pipe — searchable spec code across brands
   brandTag: text("brand_tag"),  // e.g. "brand_a", "brand_b"
   basePriceMinor: bigint("base_price_minor", { mode: "bigint" }).default(0).notNull(),
   activeCostPriceMinor: bigint("active_cost_price_minor", { mode: "bigint" }).default(0).notNull(),
@@ -225,6 +226,7 @@ export const products = pgTable("products", {
   index("products_org_id_idx").on(t.orgId),
   index("products_org_group_idx").on(t.orgId, t.productGroupId),
   index("products_org_brand_idx").on(t.orgId, t.brandTag),
+  index("products_org_spec_code_idx").on(t.orgId, t.specCode),  // index for spec-based filtering
 ])
 // Note: GIN index on aliases added via raw migration for full-text search
 ```

@@ -131,11 +131,13 @@ Step 7 → Go live
 **Scope:**
 - Product groups (spec-based — drives alternative pricing logic)
 - Individual SKUs with brand tags
+- **Spec code** (e.g. "PP32UP" for 3/4" PVC Pipe) — searchable spec-level code for cross-brand filtering
 - Brand priority order per group
 - Base price on every SKU
 - Product aliases and synonyms (searchable)
 - Local device catalog sync for offline search
 - Link product to default warranty item (auto-populates on invoice)
+- **CSV import** — upload formatted CSV to bulk create/update products and product groups; downloadable template with column mapping guide
 
 **Tables:** `product_groups`, `products`, `product_location_overrides`, `catalog_requests`
 
@@ -148,11 +150,15 @@ PATCH  /catalog/groups/:id           → update group or brand priority order
 POST   /catalog/products             → create SKU
 PATCH  /catalog/products/:id         → update SKU
 DELETE /catalog/products/:id         → soft delete
-GET    /catalog/products/search      → search by name, alias, sku_code
+GET    /catalog/products/search      → search by name, alias, sku_code, spec_code
+GET    /catalog/products/spec/:specCode → filter products by spec code (cross-brand)
 GET    /catalog/groups/:id/alternatives → all SKUs in group ordered by brand priority
 POST   /catalog/requests             → staff submits catalog request
 GET    /catalog/requests             → admin views pending requests
 PATCH  /catalog/requests/:id         → admin maps or approves
+POST   /catalog/import/template      → download CSV import template
+POST   /catalog/import/preview       → upload CSV, returns validation preview (errors + valid rows)
+POST   /catalog/import/commit        → commit validated import
 ```
 
 **UI Screens:**
@@ -161,8 +167,10 @@ PATCH  /catalog/requests/:id         → admin maps or approves
 [web]  Product list per group + create/edit
 [web]  Brand priority drag-and-drop per group
 [web]  Catalog request review queue
+[web]  CSV import — download template, upload, preview validation errors, confirm commit
 [expo] Product search (local cache first, API fallback)
 [expo] Catalog request submission (photo + description)
+[expo] Spec code filter — filter products by spec code across all brands
 ```
 
 ---
