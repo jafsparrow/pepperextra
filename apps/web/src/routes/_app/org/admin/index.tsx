@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useAdminContext } from "./route"
+import { useAdminContext } from "@/shared/org/admin-context"
 import {
   Package,
   Layers,

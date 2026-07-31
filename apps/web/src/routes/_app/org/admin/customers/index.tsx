@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { CustomerList } from "@/feature/customer/ui/components/customer-list"
-import { useAdminContext } from "../route"
+import { useAdminContext } from "@/shared/org/admin-context"
 
 export const Route = createFileRoute("/_app/org/admin/customers/")({
   component: CustomersPage,

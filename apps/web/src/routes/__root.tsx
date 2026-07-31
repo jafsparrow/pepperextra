@@ -19,6 +19,7 @@ import { NotFound } from "@/shared/components/not-found"
 import { ThemeProvider } from "@workspace/ui/lib/theme-provider"
 
 import { deploymentModeQueryOptions } from "@/shared/utils/deployment-mode"
+import { AdminContextProvider } from "@/shared/org/admin-context"
 import { authClient } from "@repo/auth/client"
 
 interface MyRouterContext {
@@ -105,7 +106,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="theme">
-          {children}{" "}
+          <AdminContextProvider>
+            {children}{" "}
+          </AdminContextProvider>
         </ThemeProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
