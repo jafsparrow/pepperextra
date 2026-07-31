@@ -54,6 +54,7 @@ import {
   updateCustomer,
   deleteCustomer,
 } from "./customer.js"
+import { listCountries } from "./localization.js"
 
 // [NOTE] :- zod schema should be exported just like that
 // not as export type {}, coz we need whole thing to be available
@@ -132,6 +133,10 @@ export {
 } from "./customer.js"
 
 export type { Customer } from "./customer.js"
+
+export { countrySchema } from "./localization.js"
+
+export type { Country } from "./localization.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -246,5 +251,8 @@ export const contracts = populateContractRouterPaths({
     create: createCustomer,
     update: updateCustomer,
     delete: deleteCustomer,
+  },
+  countries: {
+    list: listCountries,
   },
 })

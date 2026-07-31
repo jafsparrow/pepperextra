@@ -28,6 +28,7 @@
     "build": "tsup",
     "db:generate": " dotenv -e ../../.env -- pnpx drizzle-kit generate",
     "db:push": "dotenv -e ../../.env -- drizzle-kit push",
+    "db:seed": "pnpm with-env tsx src/seed.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",

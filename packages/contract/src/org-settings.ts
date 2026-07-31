@@ -14,6 +14,7 @@ export const organizationSettingsSchema = z.object({
   website: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
   dateFormat: z.string().nullable().optional(),
+  onboardingCompleted: z.boolean(),
 })
 
 export type OrganizationSettings = z.infer<typeof organizationSettingsSchema>
@@ -30,6 +31,7 @@ export const organizationSettingsUpdateSchema = z.object({
   website: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
   dateFormat: z.string().nullable().optional(),
+  onboardingCompleted: z.boolean().optional(),
 })
 
 export const getOrganizationSettings = oc

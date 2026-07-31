@@ -19,6 +19,7 @@ import {
 } from "@workspace/ui/components/breadcrumb"
 import { LogOut } from "lucide-react"
 import { getServerSession } from "@/shared/utils/auth-session"
+import { OnboardingRedirect } from "@/shared/org/onboarding-redirect"
 
 // Notice the route matching path string matches the pathless folder name
 export const Route = createFileRoute("/_app")({
@@ -81,6 +82,7 @@ function AuthenticatedLayout() {
 
         {/* 3. The workspace panel where child components are injected */}
         <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0">
+          <OnboardingRedirect />
           {/* This renders dashboard.tsx, settings.tsx, etc. */}
           <Outlet />
         </main>

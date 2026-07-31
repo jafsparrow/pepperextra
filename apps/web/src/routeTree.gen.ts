@@ -24,6 +24,7 @@ import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
 import { Route as AppPlanetsListRouteImport } from './routes/_app/planets/list'
 import { Route as AppOrgUsersRouteImport } from './routes/_app/org/users'
 import { Route as AppOrgSettingsRouteImport } from './routes/_app/org/settings'
+import { Route as AppOrgOnboardingRouteImport } from './routes/_app/org/onboarding'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 import { Route as AppAdminSettingsRouteImport } from './routes/_app/admin/settings'
 import { Route as AppOrgDashboardRouteRouteImport } from './routes/_app/org/dashboard/route'
@@ -110,6 +111,11 @@ const AppOrgUsersRoute = AppOrgUsersRouteImport.update({
 const AppOrgSettingsRoute = AppOrgSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppOrgRouteRoute,
+} as any)
+const AppOrgOnboardingRoute = AppOrgOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => AppOrgRouteRoute,
 } as any)
 const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/org/dashboard': typeof AppOrgDashboardRouteRoute
   '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/org/onboarding': typeof AppOrgOnboardingRoute
   '/org/settings': typeof AppOrgSettingsRoute
   '/org/users': typeof AppOrgUsersRoute
   '/planets/list': typeof AppPlanetsListRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/org/dashboard': typeof AppOrgDashboardRouteRoute
   '/admin/settings': typeof AppAdminSettingsRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/org/onboarding': typeof AppOrgOnboardingRoute
   '/org/settings': typeof AppOrgSettingsRoute
   '/org/users': typeof AppOrgUsersRoute
   '/planets/list': typeof AppPlanetsListRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/_app/org/dashboard': typeof AppOrgDashboardRouteRoute
   '/_app/admin/settings': typeof AppAdminSettingsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
+  '/_app/org/onboarding': typeof AppOrgOnboardingRoute
   '/_app/org/settings': typeof AppOrgSettingsRoute
   '/_app/org/users': typeof AppOrgUsersRoute
   '/_app/planets/list': typeof AppPlanetsListRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/admin/settings'
     | '/admin/users'
+    | '/org/onboarding'
     | '/org/settings'
     | '/org/users'
     | '/planets/list'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/admin/settings'
     | '/admin/users'
+    | '/org/onboarding'
     | '/org/settings'
     | '/org/users'
     | '/planets/list'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/_app/org/dashboard'
     | '/_app/admin/settings'
     | '/_app/admin/users'
+    | '/_app/org/onboarding'
     | '/_app/org/settings'
     | '/_app/org/users'
     | '/_app/planets/list'
@@ -472,6 +484,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/org/settings'
       preLoaderRoute: typeof AppOrgSettingsRouteImport
+      parentRoute: typeof AppOrgRouteRoute
+    }
+    '/_app/org/onboarding': {
+      id: '/_app/org/onboarding'
+      path: '/onboarding'
+      fullPath: '/org/onboarding'
+      preLoaderRoute: typeof AppOrgOnboardingRouteImport
       parentRoute: typeof AppOrgRouteRoute
     }
     '/_app/admin/users': {
@@ -617,6 +636,7 @@ const AppOrgAdminRouteRouteWithChildren =
 interface AppOrgRouteRouteChildren {
   AppOrgAdminRouteRoute: typeof AppOrgAdminRouteRouteWithChildren
   AppOrgDashboardRouteRoute: typeof AppOrgDashboardRouteRoute
+  AppOrgOnboardingRoute: typeof AppOrgOnboardingRoute
   AppOrgSettingsRoute: typeof AppOrgSettingsRoute
   AppOrgUsersRoute: typeof AppOrgUsersRoute
   AppOrgIndexRoute: typeof AppOrgIndexRoute
@@ -628,6 +648,7 @@ interface AppOrgRouteRouteChildren {
 const AppOrgRouteRouteChildren: AppOrgRouteRouteChildren = {
   AppOrgAdminRouteRoute: AppOrgAdminRouteRouteWithChildren,
   AppOrgDashboardRouteRoute: AppOrgDashboardRouteRoute,
+  AppOrgOnboardingRoute: AppOrgOnboardingRoute,
   AppOrgSettingsRoute: AppOrgSettingsRoute,
   AppOrgUsersRoute: AppOrgUsersRoute,
   AppOrgIndexRoute: AppOrgIndexRoute,

@@ -14,6 +14,7 @@ import { OrgAddForm } from "./org-add-form"
 import type { OrganizationFormValues } from "./org-add-form"
 import { useMutation } from "@tanstack/react-query"
 import { authClient } from "@repo/auth/client"
+import { useNavigate } from "@tanstack/react-router"
 
 interface OrgAddModalProps {
   children?: ReactNode
@@ -31,6 +32,7 @@ export function OrgAddModal({
   defaultButtonLabel = "Add org",
 }: OrgAddModalProps) {
   const [internalOpen, setInternalOpen] = useState(false)
+  const navigate = useNavigate()
 
   const isOpen = open ?? internalOpen
   const createOrgMutation = useMutation({
@@ -46,6 +48,7 @@ export function OrgAddModal({
     },
     onSuccess: () => {
       toast.success("Created Oganisation succesfully..")
+      navigate({ to: "/org/onboarding" })
     },
     onError: (error) => {
       toast.error(error.message)

@@ -36,6 +36,7 @@ export const orgMetadata = pgTable(
     subscriptionTier: text("subscription_tier").default("trial").notNull(),
     singleTenantMode: boolean("single_tenant_mode").default(false).notNull(),
     priceVisibility: boolean("price_visibility").default(false).notNull(),
+    onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),

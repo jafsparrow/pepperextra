@@ -55,6 +55,7 @@ export class OrganizationSettingsService {
         website: null,
         timezone: 'UTC',
         dateFormat: 'DD/MM/YYYY',
+        onboardingCompleted: false,
       };
     }
 
@@ -71,6 +72,7 @@ export class OrganizationSettingsService {
       website: row.website ?? null,
       timezone: row.timezone ?? 'UTC',
       dateFormat: row.dateFormat ?? 'DD/MM/YYYY',
+      onboardingCompleted: row.onboardingCompleted ?? false,
     };
   }
 
@@ -78,44 +80,53 @@ export class OrganizationSettingsService {
     organizationId: string,
     data: Partial<Omit<OrganizationSettings, 'organizationId'>>,
   ): Promise<OrganizationSettings> {
-    const country = data.country ? await this.resolveCountry(data.country) : undefined;
-    const countryId = country?.id;
-    const currencyId = data.currency
-      ? await this.resolveCurrencyId(data.currency)
-      : country?.currencyId;
+    const updates: Partial<typeof orgMetadata.$inferInsert> = {};
+    if (data.country) {
+      const country = await this.resolveCountry(data.country);
+      updates.countryId = country.id;
+      if (!data.currency) {
+        updates.currencyId = country.currencyId;
+      }
+    }
+    if (data.currency) {
+      updates.currencyId = await this.resolveCurrencyId(data.currency);
+    }
+    if (data.taxNumber !== undefined) updates.vatNumber = data.taxNumber;
+    if (data.tagline !== undefined) updates.tagline = data.tagline;
+    if (data.address !== undefined) updates.address = data.address;
+    if (data.phone !== undefined) updates.phone = data.phone;
+    if (data.whatsapp !== undefined) updates.whatsapp = data.whatsapp;
+    if (data.email !== undefined) updates.email = data.email;
+    if (data.website !== undefined) updates.website = data.website;
+    if (data.timezone !== undefined) updates.timezone = data.timezone;
+    if (data.dateFormat !== undefined) updates.dateFormat = data.dateFormat;
+    if (data.onboardingCompleted !== undefined) {
+      updates.onboardingCompleted = data.onboardingCompleted;
+    }
 
-    await this.db
-      .insert(orgMetadata)
-      .values({
+    if (Object.keys(updates).length === 0) {
+      return this.get(organizationId);
+    }
+
+    const existing = await this.db.query.orgMetadata.findFirst({
+      where: { orgId: organizationId },
+      columns: { orgId: true },
+    });
+
+    if (existing) {
+      await this.db
+        .update(orgMetadata)
+        .set(updates)
+        .where(eq(orgMetadata.orgId, organizationId));
+    } else {
+      const defaults = await resolveDefaultCountry(this.db);
+      await this.db.insert(orgMetadata).values({
         orgId: organizationId,
-        countryId,
-        currencyId,
-        vatNumber: data.taxNumber ?? undefined,
-        tagline: data.tagline ?? undefined,
-        address: data.address ?? undefined,
-        phone: data.phone ?? undefined,
-        whatsapp: data.whatsapp ?? undefined,
-        email: data.email ?? undefined,
-        website: data.website ?? undefined,
-        timezone: data.timezone ?? undefined,
-        dateFormat: data.dateFormat ?? undefined,
-      })
-      .onConflictDoUpdate({
-        target: orgMetadata.orgId,
-        set: {
-          countryId: countryId ?? undefined,
-          currencyId: currencyId ?? undefined,
-          vatNumber: data.taxNumber ?? undefined,
-          tagline: data.tagline ?? undefined,
-          address: data.address ?? undefined,
-          phone: data.phone ?? undefined,
-          whatsapp: data.whatsapp ?? undefined,
-          email: data.email ?? undefined,
-          website: data.website ?? undefined,
-          timezone: data.timezone ?? undefined,
-          dateFormat: data.dateFormat ?? undefined,
-        },
+        countryId: defaults.id,
+        currencyId: defaults.currencyId,
+        ...updates,
       });
+    }
 
     return this.get(organizationId);
   }
@@ -131,4 +142,21 @@ export class OrganizationSettingsService {
 
     return { organizationId, name };
   }
+}
+
+export async function resolveDefaultCountry(
+  db: DatabaseClient,
+): Promise<{ id: string; currencyId: string }> {
+  const byId = await db.query.countries.findFirst({ where: { id: 'OM' } });
+  if (byId) return { id: byId.id, currencyId: byId.currencyId };
+
+  const byIso = await db.query.countries.findFirst({
+    where: { isoCode: 'OM' },
+  });
+  if (byIso) return { id: byIso.id, currencyId: byIso.currencyId };
+
+  const any = await db.query.countries.findFirst({ where: { isActive: true } });
+  if (any) return { id: any.id, currencyId: any.currencyId };
+
+  throw new Error('No default country configured in the countries table');
 }
