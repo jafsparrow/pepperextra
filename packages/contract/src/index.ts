@@ -11,6 +11,7 @@ import {
 import {
   getOrganizationSettings,
   updateOrganizationSettings,
+  updateOrganizationName,
 } from "./org-settings.js"
 import {
   getTeamSettings,
@@ -69,6 +70,7 @@ export type {
 export {
   organizationSettingsSchema,
   organizationSettingsUpdateSchema,
+  updateOrganizationNameSchema,
 } from "./org-settings.js"
 
 export type { OrganizationSettings } from "./org-settings.js"
@@ -194,6 +196,7 @@ export const contracts = populateContractRouterPaths({
   organizationSettings: {
     get: getOrganizationSettings,
     update: updateOrganizationSettings,
+    updateName: updateOrganizationName,
   },
   teamSettings: {
     get: getTeamSettings,

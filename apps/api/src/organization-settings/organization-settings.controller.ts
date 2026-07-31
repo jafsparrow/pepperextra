@@ -26,4 +26,14 @@ export class OrganizationSettingsController {
       },
     );
   }
+
+  @Implement(contracts.organizationSettings.updateName)
+  updateName() {
+    return implement(contracts.organizationSettings.updateName).handler(
+      async ({ input }) => {
+        const { organizationId, name } = input;
+        return this.settingsService.updateName(organizationId, name);
+      },
+    );
+  }
 }

@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@work
 import { Input } from "@workspace/ui/components/input"
 import { Button } from "@workspace/ui/components/button"
 import { toast } from "sonner"
-import { Pencil, Save, X, Globe, Phone, MapPin, CreditCard, Hash, Tag, MessageCircle, Mail, Link as LinkIcon, Clock } from "lucide-react"
+import { Pencil, Save, X, Globe, Phone, MapPin, Hash, Tag, MessageCircle, Mail, Link as LinkIcon, Clock } from "lucide-react"
 
 interface FieldConfig {
   label: string
@@ -15,22 +15,20 @@ interface FieldConfig {
   type?: string
 }
 
-const fields: (FieldConfig & { id: string })[] = [
-  { id: "country", label: "Country", placeholder: "e.g. Oman", icon: Globe },
-  { id: "currency", label: "Currency", placeholder: "e.g. USD, OMR", icon: CreditCard },
-  { id: "tagline", label: "Tagline", placeholder: "Your brand tagline", icon: Tag },
-  { id: "taxNumber", label: "Tax Number (VAT/GST)", placeholder: "e.g. VAT-123456", icon: Hash },
-  { id: "address", label: "Address", placeholder: "Full business address", icon: MapPin },
+const contactFields: (FieldConfig & { id: string })[] = [
   { id: "phone", label: "Phone", placeholder: "+968 1234 5678", icon: Phone, type: "tel" },
   { id: "whatsapp", label: "WhatsApp", placeholder: "+968 1234 5678", icon: MessageCircle, type: "tel" },
   { id: "email", label: "Email", placeholder: "contact@brand.com", icon: Mail, type: "email" },
   { id: "website", label: "Website", placeholder: "https://example.com", icon: LinkIcon, type: "url" },
-  { id: "timezone", label: "Timezone", placeholder: "e.g. Asia/Muscat", icon: Clock },
-  { id: "dateFormat", label: "Date Format", placeholder: "e.g. DD/MM/YYYY", icon: Clock },
 ]
 
-const currencies = [
-  "USD", "OMR", "AED", "SAR", "QAR", "BHD", "KWD", "EUR", "GBP", "INR", "PKR", "LKR",
+const metadataFields: (FieldConfig & { id: string })[] = [
+  { id: "country", label: "Country", placeholder: "e.g. Oman", icon: Globe },
+  { id: "tagline", label: "Tagline", placeholder: "Your brand tagline", icon: Tag },
+  { id: "taxNumber", label: "Tax Number (VAT/GST)", placeholder: "e.g. VAT-123456", icon: Hash },
+  { id: "address", label: "Address", placeholder: "Full business address", icon: MapPin },
+  { id: "timezone", label: "Timezone", placeholder: "e.g. Asia/Muscat", icon: Clock },
+  { id: "dateFormat", label: "Date Format", placeholder: "e.g. DD/MM/YYYY", icon: Clock },
 ]
 
 const countries = [
@@ -165,8 +163,87 @@ function InlineEditField({
   )
 }
 
+function OrgNameEditor({
+  name,
+  onSave,
+}: {
+  name: string
+  onSave: (value: string) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(name)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!editValue.trim()) return
+    setSaving(true)
+    try {
+      await onSave(editValue)
+      setEditing(false)
+      toast.success("Organization name updated")
+    } catch {
+      toast.error("Failed to update organization name")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setEditValue(name)
+    setEditing(false)
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {editing ? (
+        <>
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="h-9 max-w-md text-lg font-semibold"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave()
+              if (e.key === "Escape") handleCancel()
+            }}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-green-600"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            <Save className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground"
+            onClick={handleCancel}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </>
+      ) : (
+        <>
+          <h2 className="text-2xl font-semibold tracking-tight">{name}</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground"
+            onClick={() => setEditing(true)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </>
+      )}
+    </div>
+  )
+}
+
 export function OrgSettings() {
-  const { data: activeOrg } = authClient.useActiveOrganization()
+  const { data: activeOrg, refetch: refetchActiveOrg } = authClient.useActiveOrganization()
   const queryClient = useQueryClient()
 
   const { data: settings, isLoading } = useQuery({
@@ -184,6 +261,14 @@ export function OrgSettings() {
     })
   )
 
+  const updateNameMutation = useMutation(
+    orpc.organizationSettings.updateName.mutationOptions({
+      onSuccess: async () => {
+        await refetchActiveOrg()
+      },
+    })
+  )
+
   const handleUpdate = useCallback(
     async (key: string, value: string) => {
       if (!activeOrg?.id) return
@@ -193,6 +278,17 @@ export function OrgSettings() {
       })
     },
     [activeOrg?.id, updateMutation]
+  )
+
+  const handleUpdateName = useCallback(
+    async (name: string) => {
+      if (!activeOrg?.id) return
+      await updateNameMutation.mutateAsync({
+        organizationId: activeOrg.id,
+        name,
+      })
+    },
+    [activeOrg?.id, updateNameMutation]
   )
 
   if (!activeOrg) {
@@ -214,41 +310,58 @@ export function OrgSettings() {
   }
 
   const getOptionsForField = (id: string): string[] | undefined => {
-    if (id === "currency") return currencies
     if (id === "country") return countries
     if (id === "timezone") return timezones
     if (id === "dateFormat") return dateFormats
     return undefined
   }
 
+  const renderSection = (
+    title: string,
+    description: string,
+    fields: (FieldConfig & { id: string })[]
+  ) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-1">
+        {fields.map((field) => (
+          <InlineEditField
+            key={field.id}
+            {...field}
+            value={settings?.[field.id as keyof typeof settings] as string | null | undefined}
+            options={getOptionsForField(field.id)}
+            onSave={(val) => handleUpdate(field.id, val)}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  )
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Brand Settings</h2>
+      <div className="space-y-1">
+        <OrgNameEditor name={activeOrg.name} onSave={handleUpdateName} />
         <p className="text-sm text-muted-foreground">
-          Manage your restaurant brand's general information and preferences.
+          Manage your brand's general information and preferences. Currency is set automatically from the country.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>General Information</CardTitle>
-          <CardDescription>
-            Click any field to edit it. Press Enter to save or Escape to cancel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          {fields.map((field) => (
-            <InlineEditField
-              key={field.id}
-              {...field}
-              value={settings?.[field.id as keyof typeof settings] as string | null | undefined}
-              options={getOptionsForField(field.id)}
-              onSave={(val) => handleUpdate(field.id, val)}
-            />
-          ))}
-        </CardContent>
-      </Card>
+      {renderSection(
+        "Contact",
+        "How customers can reach you. Click any field to edit, press Enter to save or Escape to cancel.",
+        contactFields
+      )}
+
+      {renderSection(
+        "Metadata",
+        "Brand country, location and preferences. Currency is picked automatically from the country.",
+        metadataFields
+      )}
     </div>
   )
 }

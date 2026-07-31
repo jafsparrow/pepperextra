@@ -35,23 +35,44 @@ export const organizationSettingsUpdateSchema = z.object({
 export const getOrganizationSettings = oc
   .route({
     method: "GET",
-    path: "/organizations/${organizationId}/settings",
+    path: "/organizations/{organizationId}/settings",
   })
   .input(
     z.object({
       organizationId: z.string(),
-    }),
+    })
   )
   .output(organizationSettingsSchema)
 
 export const updateOrganizationSettings = oc
   .route({
     method: "PUT",
-    path: "/organizations/${organizationId}/settings",
+    path: "/organizations/{organizationId}/settings",
   })
   .input(
     organizationSettingsUpdateSchema.extend({
       organizationId: z.string(),
-    }),
+    })
   )
   .output(organizationSettingsSchema)
+
+export const updateOrganizationNameSchema = z.object({
+  name: z.string().min(1, "Organization name is required"),
+})
+
+export const updateOrganizationName = oc
+  .route({
+    method: "PUT",
+    path: "/organizations/{organizationId}/name",
+  })
+  .input(
+    updateOrganizationNameSchema.extend({
+      organizationId: z.string(),
+    })
+  )
+  .output(
+    z.object({
+      organizationId: z.string(),
+      name: z.string(),
+    })
+  )
