@@ -710,6 +710,45 @@ await db.transaction(async (tx) => {
 })
 ```
 
+### 8.5 Product Images & Vector Search
+
+```typescript
+// product_images — one row per photo. image_url is ALWAYS the absolute public URL.
+// storage_key is the provider key / local relative path (nullable).
+export const productImages = pgTable("product_images", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  productId: text("product_id").notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  orgId: text("org_id").notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),
+  storageKey: text("storage_key"),
+  imageVector: vector("image_vector", { dimensions: 512 }), // pgvector; dimension TBD by model
+  isPrimary: boolean("is_primary").default(false).notNull(),
+  altText: text("alt_text"),
+  mimeType: text("mime_type"),
+  width: integer("width"),
+  height: integer("height"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+}, (t) => [
+  index("product_images_product_idx").on(t.productId),
+  index("product_images_org_idx").on(t.orgId),
+  index("product_images_vector_hnsw")
+    .using("hnsw", t.imageVector.op("vector_cosine_ops"))
+    .where(sql`${t.deletedAt} IS NULL`),
+])
+```
+
+**Rules:**
+- `image_url` is always a **fully-resolvable public URL**. Never store relative paths or bytes in the DB.
+- Binary backend is a **deploy-time config**: local installs write to a public folder on the client machine; SaaS uses an object store/CDN. Same table, no per-row storage switch.
+- Upload flow: bytes → API → backend → public URL → persist in `image_url`.
+- **Vector search (Phase 7, deferred model):** phone vectorizes on-device, sends only the vector; API matches with cosine distance scoped to `org_id`. Do not upload raw search images.
+- Requires `pgvector` extension and the HNSW index above. Dimension `512` is a placeholder — update it once the embedding model is chosen.
+
+
 ### 8.3 Numeric Precision
 
 ```typescript
@@ -755,10 +794,17 @@ QR_POINTS_PER_SCAN=10
 # Services
 WHATSAPP_API_URL=
 WHATSAPP_API_KEY=
+
+# Vision / embeddings (Phase 7 — deferred; unset until model selected)
 VISION_API_KEY=
 VISION_API_URL=
 
 # File storage
+# Local installs: IMAGE_STORAGE_BACKEND=local, IMAGE_PUBLIC_DIR=/var/www/buildmate/uploads
+# Cloud SaaS: IMAGE_STORAGE_BACKEND=s3 (or r2/cloudinary), + bucket/region/keys
+IMAGE_STORAGE_BACKEND=
+IMAGE_PUBLIC_DIR=
+IMAGE_PUBLIC_URL_PREFIX=
 STORAGE_BUCKET=
 STORAGE_REGION=
 ```

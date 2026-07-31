@@ -15,6 +15,7 @@ import { priceLists, priceListOverrides } from "../schemas/price-lists"
 import { productTags } from "../schemas/tags"
 import { productTagAssignments } from "../schemas/tags"
 import { stock } from "../schemas/stock"
+import { productImages } from "../schemas/images"
 import { fulfillmentStations, fulfillmentStationLines } from "../schemas/stations"
 import { quotations, quotationLines, quotationCharges } from "../schemas/quotations"
 import { invoices, invoiceLines, invoiceCharges, invoiceCounters } from "../schemas/invoices"
@@ -51,6 +52,7 @@ export const dbRelations = defineRelations(
     productTags,
     productTagAssignments,
     stock,
+    productImages,
     fulfillmentStations,
     fulfillmentStationLines,
     quotations,
@@ -118,6 +120,7 @@ export const dbRelations = defineRelations(
       priceListOverrides: r.many.priceListOverrides(),
       productTags: r.many.productTags(),
       stock: r.many.stock(),
+      productImages: r.many.productImages(),
       fulfillmentStations: r.many.fulfillmentStations(),
       fulfillmentStationLines: r.many.fulfillmentStationLines(),
       quotations: r.many.quotations(),
@@ -215,6 +218,11 @@ export const dbRelations = defineRelations(
       qrCodes: r.many.qrCodes(),
       purchaseReceipts: r.many.purchaseReceipts(),
       supplierWarrantyClaims: r.many.supplierWarrantyClaims(),
+      images: r.many.productImages(),
+    },
+    productImages: {
+      product: r.one.products({ from: r.productImages.productId, to: r.products.id }),
+      organization: r.one.organization({ from: r.productImages.orgId, to: r.organization.id }),
     },
     productLocationOverrides: {
       product: r.one.products({ from: r.productLocationOverrides.productId, to: r.products.id }),

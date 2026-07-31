@@ -104,6 +104,10 @@ pnpm studio         # Drizzle Studio
 | `SINGLE_TENANT_MODE` | API | `"true"` for local installation |
 | `DEFAULT_MARGIN_FLOOR` | API | `"2.00"` percent |
 | `QR_POINTS_PER_SCAN` | API | `"10"` (configurable per org later) |
+| `IMAGE_STORAGE_BACKEND` | API | `"local"` (on-prem) or `"s3"`/`"r2"`/`"cloudinary"` (SaaS) |
+| `IMAGE_PUBLIC_DIR` | API | Local installs: public uploads folder on the client machine |
+| `IMAGE_PUBLIC_URL_PREFIX` | API | Public URL prefix for locally served images |
+| `STORAGE_BUCKET` / `STORAGE_REGION` | API | Object-store bucket/region for cloud image storage |
 
 > **Note:** VAT rate and currency are no longer env vars — they are configured per-tenant via `org_metadata.countryId` → `countries` table → `currencies` + `tax_types`. Seed data provides GCC defaults.
 

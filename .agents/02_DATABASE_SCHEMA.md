@@ -26,6 +26,12 @@
 - **Percentages:** `numeric(5,2)` — e.g. 5.00 for 5% VAT
 - **Tax rates:** Stored as basis points (1/100 of 1%) — `integer` (500 = 5.00%)
   - Conversion: `rate / 10000` (500 → 0.05)
+- **Images:** Product images live in `product_images`. The `image_url` column always stores an
+  **absolute public URL**. Binary file storage is a **deploy-time concern**, not a schema one —
+  see **Section 18. Image Storage Strategy** below.
+- **Vector search:** `product_images.image_vector` is a `pgvector` column (`vector(512)` placeholder).
+  Requires the `pgvector` extension. Similarity search uses the HNSW index with cosine distance.
+  The embedding **model is selected in a future release** — the schema is already in place.
 
 ---
 
@@ -230,6 +236,39 @@ export const products = pgTable("products", {
 ])
 // Note: GIN index on aliases added via raw migration for full-text search
 ```
+
+### `product_images`
+Product photos for display, plus a `pgvector` embedding for camera-based visual search.
+```typescript
+export const productImages = pgTable("product_images", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  productId: text("product_id").notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  orgId: text("org_id").notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),   // absolute public URL (local static path or CDN)
+  storageKey: text("storage_key"),         // provider-specific object key / local relative path
+  imageVector: vector("image_vector", { dimensions: 512 }), // embedding for similarity search
+  isPrimary: boolean("is_primary").default(false).notNull(),
+  altText: text("alt_text"),
+  mimeType: text("mime_type"),
+  width: integer("width"),
+  height: integer("height"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+}, (t) => [
+  index("product_images_product_idx").on(t.productId),
+  index("product_images_org_idx").on(t.orgId),
+  // HNSW index for approximate nearest-neighbour search (cosine distance)
+  index("product_images_vector_hnsw")
+    .using("hnsw", t.imageVector.op("vector_cosine_ops"))
+    .where(sql`${t.deletedAt} IS NULL`),
+])
+```
+> **Embedding dimension:** `512` is a placeholder. The exact dimension is locked when the
+> embedding model is selected (e.g. CLIP-family models produce 512/768/1024-dim vectors).
+> Requires the `pgvector` extension: `CREATE EXTENSION IF NOT EXISTS vector;`
 
 ### `product_location_overrides`
 Per-team price overrides for specific SKUs.
@@ -1167,9 +1206,10 @@ packages/db/src/
 ├── index.ts                        # re-exports everything
 ├── client.ts                       # createDatabaseClient()
 ├── auth-schema.ts                  # Better Auth tables (DO NOT MODIFY)
-├── schema/
+├── schemas/
 │   ├── localization.ts             # countries, currencies, tax_types, org_tax_config
 │   ├── catalog.ts                  # product_groups, products, product_location_overrides, catalog_requests
+│   ├── images.ts                   # product_images (imageUrl + pgvector embedding)
 │   ├── price-lists.ts              # price_lists, price_list_overrides
 │   ├── tags.ts                     # product_tags, product_tag_assignments
 │   ├── stock.ts                    # stock
@@ -1179,14 +1219,45 @@ packages/db/src/
 │   ├── payments.ts                 # payments
 │   ├── credit-notes.ts             # credit_notes, credit_note_lines, credit_note_charges
 │   ├── warranty.ts                 # warranty_items, invoice_warranty_lines, warranty_claims, supplier_warranty_claims
-│   ├── customers.ts              # customers, customer_contacts, sites, site_contacts
-│   ├── suppliers.ts              # suppliers, purchase_receipts
-│   ├── loyalty.ts                # tradespeople, loyalty_redemptions, qr_codes
-│   └── metadata.ts               # org_metadata, team_metadata, user_metadata
+│   ├── customers.ts                # customers, customer_contacts, sites, site_contacts
+│   ├── suppliers.ts                # suppliers, purchase_receipts
+│   ├── loyalty.ts                  # tradespeople, loyalty_redemptions, qr_codes
+│   └── metadata.ts                 # org_metadata, team_metadata, user_metadata
 └── schema-relations/
-    ├── auth-relation.ts            # Better Auth relations (DO NOT MODIFY)
-    └── buildmate-relations.ts      # BuildMate table relations
+    └── db-relations.ts             # all table relations (single file)
 ```
+
+---
+
+## 18. Image Storage Strategy
+
+Product images are stored in a single `product_images` table in **both deployment modes**.
+The binary file location is decided **at deploy time** (via storage config), never per-row.
+
+| Mode | Where the file lives | `image_url` value |
+|---|---|---|
+| **Local install** (client-hosted machine) | Public folder on the machine, served as static files (e.g. `/uploads/products/...`) | `http(s)://<host>/uploads/products/<file>` |
+| **Cloud SaaS** | Object store / CDN (S3-compatible, R2, Cloudinary, etc.) | `https://<cdn-host>/products/<file>` |
+
+Design decisions:
+- `image_url` is always the **final, absolute, publicly resolvable URL**.
+- `storage_key` stores the provider-specific key (object-store key or relative path) so the
+  backend can locate and delete the file. Nullable — safe to leave unset when not needed.
+- Upload flow: client uploads bytes → API stores to the active backend → backend returns the
+  public URL → URL is persisted in `product_images.image_url`.
+- The storage backend is a **runtime config** (env/org setting). No schema difference between modes.
+
+### 18.1 Camera-Based Visual Search (Vector Matching)
+
+> **Deferred implementation.** DB schema is ready; embedding model + phone-side vectorization
+> are selected in a future release.
+
+- Staff point the phone camera at a product image. The phone **vectorizes on-device**
+  (no image bytes leave the device) and sends only the embedding vector to the API.
+- API matches the incoming vector against `product_images.image_vector` using cosine distance
+  (`<->` operator / HNSW index), scoped to the org, returning the top-N matching SKUs.
+- No raw images are stored from a search — the vector alone is compared.
+- Relevant relations: `products.images`, `productImages.product`, `productImages.organization`.
 
 ---
 

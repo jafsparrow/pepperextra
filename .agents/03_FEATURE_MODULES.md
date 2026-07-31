@@ -137,9 +137,10 @@ Step 7 → Go live
 - Product aliases and synonyms (searchable)
 - Local device catalog sync for offline search
 - Link product to default warranty item (auto-populates on invoice)
+- **Product images** — one or more photos per SKU (`product_images`), display image + visual search embedding
 - **CSV import** — upload formatted CSV to bulk create/update products and product groups; downloadable template with column mapping guide
 
-**Tables:** `product_groups`, `products`, `product_location_overrides`, `catalog_requests`
+**Tables:** `product_groups`, `products`, `product_images`, `product_location_overrides`, `catalog_requests`
 
 **API Routes:**
 ```
@@ -153,6 +154,10 @@ DELETE /catalog/products/:id         → soft delete
 GET    /catalog/products/search      → search by name, alias, sku_code, spec_code
 GET    /catalog/products/spec/:specCode → filter products by spec code (cross-brand)
 GET    /catalog/groups/:id/alternatives → all SKUs in group ordered by brand priority
+POST   /catalog/products/:id/images  → upload image (stores file + returns image_url)
+GET    /catalog/products/:id/images  → list product images
+PATCH  /catalog/images/:id           → set is_primary, alt_text
+DELETE /catalog/images/:id           → soft delete image
 POST   /catalog/requests             → staff submits catalog request
 GET    /catalog/requests             → admin views pending requests
 PATCH  /catalog/requests/:id         → admin maps or approves
@@ -165,6 +170,7 @@ POST   /catalog/import/commit        → commit validated import
 ```
 [web]  Product group list + create/edit
 [web]  Product list per group + create/edit
+[web]  Product image gallery + upload
 [web]  Brand priority drag-and-drop per group
 [web]  Catalog request review queue
 [web]  CSV import — download template, upload, preview validation errors, confirm commit
@@ -882,18 +888,20 @@ PATCH  /customers/:id/price-visibility → toggle price visibility flag (owner o
 ---
 
 ### MODULE 23 — Camera-Based Product Search
-**Priority:** `[SMART]` · **Tags:** `[expo]` `[vision-ai]` `[nestjs]`
+**Priority:** `[SMART]` · **Tags:** `[expo]` `[vision-ai]` `[nestjs]` `[db]`
 
 **Scope:**
-- Staff points camera at physical product → AI detects object type
-- Searches local synced catalog → top 3 matching SKUs with stock and price
+- Staff points camera at physical product → image is **vectorized on-device** (embedding model, TBD)
+- Only the embedding vector is sent to the API — no image upload during search
+- API matches vector against `product_images.image_vector` via cosine similarity (pgvector/HNSW), org-scoped
+- Returns top 3 matching SKUs with stock and price
 - "Search manually instead" always visible
 - Works offline via local catalog sync
 
 **API Routes:**
 ```
-POST   /vision/detect                → send image, receive detected object categories
-GET    /catalog/match                → search catalog by object type (local cache or API)
+POST   /catalog/match                → body: embedding vector → top N matching SKUs (cosine distance)
+GET    /catalog/images/search        → (future) optional server-side embedding fallback when device vectorizer unavailable
 ```
 
 **UI Screens:**
@@ -908,6 +916,7 @@ GET    /catalog/match                → search catalog by object type (local ca
 - Local catalog sync must be complete and fresh before this works offline
 - Camera feature is a shortcut, never a replacement for manual search
 - Always show fallback — no dead ends
+- **Deferred:** embedding model + on-device vectorizer selected in a future release; `product_images.image_vector` + HNSW index are already in the schema
 
 ---
 

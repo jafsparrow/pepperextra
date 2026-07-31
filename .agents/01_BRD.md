@@ -117,7 +117,8 @@ The same codebase supports two deployment modes controlled by a config flag:
 | **Web Admin Panel** | TanStack Start *(preferred)* / Next.js *(fallback — decision open)* | Tenant onboarding, catalog, staff, reports, customer portal |
 | **Mobile App** | React Native Expo | Quotation flow, QR scanning, camera search, local catalog sync, WhatsApp PDF |
 | **Customer Portal** | Same web app as admin, separate route | Purchase history, invoices, site management, quotation requests |
-| **AI / Vision** | Cloud Vision API | Object detection for camera-based product search (Phase 6) |
+| **AI / Vision** | Embedding model (CLIP-family, TBD) | Camera-based product search via on-device vector embedding (Phase 7) |
+| **Image storage** | Local public folder (on-prem) / object store + CDN (SaaS) | Product images; `image_url` stored in DB, backend decided at deploy time |
 
 ### 5.4 Authentication — Better Auth
 
@@ -520,12 +521,21 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 
 ### 8.18 Camera-Based Product Search
 
-> Phase 6. Staff-facing only.
+> Phase 7. Staff-facing only.
 
-- Staff points phone camera at physical product → AI detects object type → searches local synced catalog.
+- Staff points phone camera at a physical product → the image is **vectorized on the device** (embedding) → only the vector is sent to the API → matched against `product_images.image_vector` via cosine similarity (pgvector/HNSW).
 - Returns top 3 matching SKUs with stock and price.
 - "Search manually instead" fallback always visible.
-- Works offline via local catalog sync.
+- Works offline via local catalog sync — on-device vectorization means no image upload during search.
+- **Deferred:** embedding model selection and on-device vectorizer are chosen in a future release; the DB schema (`product_images.image_vector`) is already in place.
+
+### 8.19 Product Image Storage
+
+- Every product can have one or more photos stored in `product_images` (`image_url`, optional `storage_key`).
+- **Local installs:** images are copied to a public folder on the client-hosted machine and served as static files; `image_url` points at that machine's URL.
+- **Cloud SaaS:** images are stored via an image-hosting provider (object store/CDN); `image_url` is the CDN URL.
+- In both modes the DB stores the absolute public `image_url`; the binary backend is a deploy-time config, not a per-row setting.
+- Each image row also carries a `pgvector` embedding for visual search (Section 8.18).
 
 ---
 
@@ -539,7 +549,7 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 | **4** | **Warranty Management** | Warranty catalog, invoice warranty lines, serial numbers, claim intake, service job tracking, supplier warranty recovery |
 | **5** | **Growth & Catalogue Quality** | Tradesperson profiles, QR batch generation, sequential registration, points scanning, quarterly redemption, catalog requests, product aliases, cross-location stock, dual stock tracking mode |
 | **6** | **Customer Retention** | Customer types (retail/account/contractor), site profiles, purchase history portal, invoice portal, price visibility flag, quotation request, tenant onboarding flow |
-| **7** | **Camera Product Search** | Vision AI, local catalog sync, top 3 results, manual fallback |
+| **7** | **Camera Product Search** | On-device image vectorization, pgvector similarity search, product images, top 3 results, manual fallback |
 
 ---
 
