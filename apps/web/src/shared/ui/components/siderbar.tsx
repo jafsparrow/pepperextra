@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Users, CreditCard } from "lucide-react"
+import { LayoutDashboard, Settings, Users, CreditCard, Boxes } from "lucide-react"
 import { Link } from "@tanstack/react-router"
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const navigationItems = [
   { title: "Overview", to: "/dashboard", icon: LayoutDashboard },
   { title: "Tenants", to: "/admin/tenants", icon: Users },
   { title: "Org", to: "/org", icon: Users },
+  { title: "Management", to: "/org/admin", icon: Boxes },
   { title: "Billing & Plans", to: "/settings/billing", icon: CreditCard },
   { title: "Settings", to: "/admin/settings", icon: Settings },
 ]

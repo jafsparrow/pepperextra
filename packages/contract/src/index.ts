@@ -29,6 +29,30 @@ import {
   updateBranchProfile,
   updateBranchInfo,
 } from "./branch.js"
+import {
+  listProductGroups,
+  createProductGroup,
+  updateProductGroup,
+  deleteProductGroup,
+} from "./product-group.js"
+import {
+  listProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "./product.js"
+import {
+  listSuppliers,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+} from "./supplier.js"
+import {
+  listCustomers,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+} from "./customer.js"
 
 // [NOTE] :- zod schema should be exported just like that
 // not as export type {}, coz we need whole thing to be available
@@ -73,6 +97,39 @@ export {
 } from "./branch.js"
 
 export type { BranchProfile, BranchInfoUpdate } from "./branch.js"
+
+export {
+  productGroupSchema,
+  productGroupCreateSchema,
+  productGroupUpdateSchema,
+} from "./product-group.js"
+
+export type { ProductGroup } from "./product-group.js"
+
+export {
+  productSchema,
+  productCreateSchema,
+  productUpdateSchema,
+} from "./product.js"
+
+export type { Product } from "./product.js"
+
+export {
+  supplierSchema,
+  supplierCreateSchema,
+  supplierUpdateSchema,
+} from "./supplier.js"
+
+export type { Supplier } from "./supplier.js"
+
+export {
+  customerSchema,
+  customerCreateSchema,
+  customerUpdateSchema,
+  customerTypeSchema,
+} from "./customer.js"
+
+export type { Customer } from "./customer.js"
 
 export const planetSchema = z.object({
   id: z.number().int().min(1),
@@ -162,5 +219,29 @@ export const contracts = populateContractRouterPaths({
   user: {
     resetPassword: resetUserPassword,
     changeOwnPassword: changeOwnPassword,
+  },
+  productGroup: {
+    list: listProductGroups,
+    create: createProductGroup,
+    update: updateProductGroup,
+    delete: deleteProductGroup,
+  },
+  product: {
+    list: listProducts,
+    create: createProduct,
+    update: updateProduct,
+    delete: deleteProduct,
+  },
+  supplier: {
+    list: listSuppliers,
+    create: createSupplier,
+    update: updateSupplier,
+    delete: deleteSupplier,
+  },
+  customer: {
+    list: listCustomers,
+    create: createCustomer,
+    update: updateCustomer,
+    delete: deleteCustomer,
   },
 })
