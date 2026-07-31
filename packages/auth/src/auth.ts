@@ -13,9 +13,13 @@ import {
 } from "./admin-access-control/roles.js"
 import {
   orgAccessControl,
-  staff,
-  cashier,
+  owner,
   manager,
+  branchManager,
+  salesperson,
+  cashier,
+  stationStaff,
+  staff,
   systemRoles,
 } from "./org-access-control/org-roles.js"
 
@@ -176,10 +180,14 @@ export const createAuthInstance = (
         maxOrganizationsPerUser: 1,
         ac: orgAccessControl,
         roles: {
-          staff,
-          cashier,
-          manager,
           ...systemRoles,
+          owner,
+          manager,
+          branchManager,
+          salesperson,
+          cashier,
+          stationStaff,
+          staff,
         },
         teams: { enabled: true },
         allowUserToCreateOrganization: options.allowUserToCreateOrganization,

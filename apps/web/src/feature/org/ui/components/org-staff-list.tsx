@@ -296,8 +296,10 @@ export function OrgStaffList({ orgId }: OrgStaffListProps) {
   const getRoleBadgeVariant = (role: string) => {
     switch (role.toLowerCase()) {
       case "manager":
+      case "branch_manager":
         return "default"
       case "cashier":
+      case "salesperson":
         return "secondary"
       case "staff":
       default:
@@ -485,6 +487,9 @@ export function OrgStaffList({ orgId }: OrgStaffListProps) {
                   <SelectItem value="staff">Staff</SelectItem>
                   <SelectItem value="cashier">Cashier</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="branch_manager">Branch Manager</SelectItem>
+                  <SelectItem value="salesperson">Salesperson</SelectItem>
+                  <SelectItem value="station_staff">Station Staff</SelectItem>
                 </SelectContent>
               </Select>
             </div>

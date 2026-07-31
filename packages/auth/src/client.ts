@@ -7,9 +7,13 @@ import {
 import { ac, customAdminRole, financeRole } from "./admin-access-control/roles"
 import {
   orgAccessControl,
-  staff,
-  cashier,
+  owner,
   manager,
+  branchManager,
+  salesperson,
+  cashier,
+  stationStaff,
+  staff,
   systemRoles,
 } from "./org-access-control/org-roles"
 export const authClient = createAuthClient({
@@ -43,10 +47,14 @@ export const authClient = createAuthClient({
       teams: { enabled: true },
       ac: orgAccessControl,
       roles: {
-        staff,
-        cashier,
-        manager,
         ...systemRoles,
+        owner,
+        manager,
+        branchManager,
+        salesperson,
+        cashier,
+        stationStaff,
+        staff,
       },
     }),
   ],

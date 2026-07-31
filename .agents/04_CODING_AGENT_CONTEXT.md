@@ -190,44 +190,57 @@ async createQuotation(@OrgContext() ctx: OrgCtx, @Body() dto: CreateQuotationDto
 ### 3.3 Role Permissions Reference
 
 ```typescript
+// Maps to the org role statements in packages/auth/src/org-access-control/org-roles.ts
+// (better-auth format is `resource: ["action", ...]`; the strings below are the `resource:action` pairs).
 export const ROLE_PERMISSIONS = {
-  owner: ['*'],  // all permissions
-  location_manager: [
-    'catalog:read', 'catalog:write',
-    'quotations:read', 'quotations:write',
-    'invoices:read', 'invoices:write',
-    'payments:write',
-    'credit_notes:write',
-    'warranty:write',
-    'staff:write',
-    'reports:read',
-    'cost_price:read',
-    'margin:read',
-    'stock:write',
-    'tags:write',
-    'stations:write',
-  ],
+  owner: ['*'],  // all permissions, all branches (super entity)
+  manager: [
+    'organization:update',
+    'member:update', 'member:delete',
+    'invitation:create', 'invitation:cancel',
+    'team:create', 'team:update', 'team:delete',
+    'branches:write', 'locations:write',
+    'catalog:write', 'menu:write', 'customers:write',
+    'inventory:write', 'staff:write',
+    'quotations:write', 'orders:write', 'billing:write',
+    'payments:write', 'creditNotes:write', 'discounts:write',
+    'kitchen:write', 'stationQueue:write',
+    'reports:read', 'reports:export', 'settings:update',
+  ],  // no organization:delete, no ac management
+  branch_manager: [
+    'branches:read', 'branches:update',
+    'locations:read', 'locations:update',
+    'catalog:read', 'menu:read', 'customers:read',
+    'inventory:read', 'inventory:adjust',
+    'staff:read',
+    'quotations:write', 'orders:write', 'billing:write',
+    'payments:read', 'creditNotes:read',
+    'kitchen:write', 'stationQueue:write',
+    'reports:read', 'settings:read',
+  ],  // own branch only
   salesperson: [
-    'catalog:read',
-    'quotations:write',
-    'margin:read',  // limited — floor enforced
-    'stock:read',
-    'tags:read',
-    'stations:read',
+    'catalog:read', 'menu:read',
+    'quotations:write',  // limited — margin floor enforced at runtime
+    'customers:write', 'discounts:read',
+    'inventory:read', 'stationQueue:read',
+    'reports:read',
   ],
   cashier: [
-    'catalog:read',
-    'quotations:read',
-    'invoices:write',
-    'payments:write',
-    'credit_notes:write',
-    'warranty:write',
-    'stations:read',
+    'catalog:read', 'quotations:read',
+    'billing:write', 'payments:write', 'creditNotes:write',
+    'inventory:read', 'stationQueue:read',
+    'reports:read',
   ],
   station_staff: [
-    'station_queue:read',   // own station only
-    'station_queue:write',  // mark ready, own station only
+    'stationQueue:read',   // own station only
+    'stationQueue:write',  // mark ready, own station only
+    'kitchen:write',
   ],
+  staff: [
+    'catalog:read', 'menu:read',
+    'orders:create', 'orders:read',
+    'inventory:read', 'stationQueue:read',
+  ],  // base role — default for org-created members
 };
 ```
 

@@ -13,11 +13,13 @@
 ---
 
 ### MODULE 01 — Multi-Tenant Foundation
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[db]` `[better-auth]`
 
 > Build this first. Every other module depends on it.
 
 **Scope:**
+
 - Tenant (organisation) and location (team) creation
 - `org_id` + `team_id` enforced on every database record
 - Row-level security (RLS) at database layer
@@ -28,6 +30,7 @@
 **Tables:** `countries`, `currencies`, `tax_types`, `org_tax_config`, `org_metadata`, `team_metadata`
 
 **API Routes:**
+
 ```
 POST   /auth/register                → create account + tenant + first location
 POST   /tenants/:id/locations        → add location
@@ -41,6 +44,7 @@ PATCH  /org/tax-config               → update org tax type overrides
 ```
 
 **Implementation Notes:**
+
 - Better Auth organisations = tenants; teams = locations
 - Every NestJS guard validates `org_id` from JWT
 - Cross-tenant data access must be impossible at every layer
@@ -50,11 +54,13 @@ PATCH  /org/tax-config               → update org tax type overrides
 ---
 
 ### MODULE 02 — Authentication & RBAC
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[better-auth]` `[web]` `[expo]`
 
 **Scope:**
+
 - Better Auth integration with RBAC plugin
-- Roles: `owner`, `location_manager`, `salesperson`, `cashier`, `station_staff`
+- Roles: `owner`, `manager`, `branch_manager`, `salesperson`, `cashier`, `station_staff`, `staff`
 - Resource-level `read`/`write` permissions per role
 - `is_owner` and `can_create_org` flags on user
 - First-login forced password change
@@ -63,15 +69,19 @@ PATCH  /org/tax-config               → update org tax type overrides
 **Tables:** `users`
 
 **Role → Key Permissions:**
+
 ```
-owner             → all:read, all:write, all locations
-location_manager  → all:read, all:write (own location only)
+owner             → all:read, all:write, all branches (super entity, cannot be reassigned)
+manager           → org-level: staff, catalog, inventory, quotations, reports, settings (no org delete, no ACL changes)
+branch_manager    → all:read, all:write (own branch only)  [renamed from location_manager]
 salesperson       → quotations:write, catalog:read, margin:read (limited)
 cashier           → invoices:write, payments:write, credit_notes:write
 station_staff     → station_queue:read (own station), station_queue:write
+staff             → base role (default for org-created members): catalog:read, orders:create/read
 ```
 
 **API Routes:**
+
 ```
 POST   /auth/login
 POST   /auth/logout
@@ -84,6 +94,7 @@ DELETE /staff/:id                    → soft delete
 ```
 
 **UI Screens:**
+
 ```
 [web]  Login page
 [web]  Staff management — list, add, edit, reset password
@@ -94,9 +105,11 @@ DELETE /staff/:id                    → soft delete
 ---
 
 ### MODULE 03 — Web Admin Panel Shell
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[web]` `[better-auth]`
 
 **Scope:**
+
 - TanStack Start (preferred) / Next.js web application shell
 - Better Auth session management
 - Role-aware navigation sidebar — hides sections user cannot access
@@ -104,6 +117,7 @@ DELETE /staff/:id                    → soft delete
 - Responsive — works on desktop and tablet
 
 **Onboarding Wizard Steps:**
+
 ```
 Step 1 → Register (email + password)
 Step 2 → Create organisation (shop name, VAT number)
@@ -115,6 +129,7 @@ Step 7 → Go live
 ```
 
 **UI Screens:**
+
 ```
 [web]  Registration + email verification
 [web]  Onboarding wizard (steps 1–7)
@@ -126,9 +141,11 @@ Step 7 → Go live
 ---
 
 ### MODULE 04 — Product Catalog
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[db]` `[web]` `[expo]`
 
 **Scope:**
+
 - Product groups (spec-based — drives alternative pricing logic)
 - Individual SKUs with brand tags
 - **Spec code** (e.g. "PP32UP" for 3/4" PVC Pipe) — searchable spec-level code for cross-brand filtering
@@ -143,6 +160,7 @@ Step 7 → Go live
 **Tables:** `product_groups`, `products`, `product_images`, `product_location_overrides`, `catalog_requests`
 
 **API Routes:**
+
 ```
 GET    /catalog                      → full catalog (tenant-scoped, paginated)
 GET    /catalog/sync                 → delta sync payload for local device cache
@@ -167,6 +185,7 @@ POST   /catalog/import/commit        → commit validated import
 ```
 
 **UI Screens:**
+
 ```
 [web]  Product group list + create/edit
 [web]  Product list per group + create/edit
@@ -182,9 +201,11 @@ POST   /catalog/import/commit        → commit validated import
 ---
 
 ### MODULE 05 — Price Lists
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[db]` `[web]`
 
 **Scope:**
+
 - Named price lists with per-SKU overrides
 - Automatic fallback to base price if SKU not in selected list
 - Price list selected at quotation creation
@@ -192,6 +213,7 @@ POST   /catalog/import/commit        → commit validated import
 **Tables:** `price_lists`, `price_list_overrides`
 
 **API Routes:**
+
 ```
 GET    /price-lists                  → list all for tenant
 POST   /price-lists                  → create
@@ -203,6 +225,7 @@ GET    /price-lists/:id/resolve/:product_id → resolve price with fallback logi
 ```
 
 **UI Screens:**
+
 ```
 [web]  Price list management — list, create, edit overrides
 [expo] Price list dropdown on quotation creation
@@ -211,11 +234,13 @@ GET    /price-lists/:id/resolve/:product_id → resolve price with fallback logi
 ---
 
 ### MODULE 06 — Quotation Engine
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[db]` `[expo]` `[pdf]` `[whatsapp]`
 
 > Core POC feature. The primary product differentiator.
 
 **Scope:**
+
 - Create quotation with line items
 - All brand alternatives shown colour-coded per product group
 - "Immediate alternative" button — swap all lines to next priority brand
@@ -228,6 +253,7 @@ GET    /price-lists/:id/resolve/:product_id → resolve price with fallback logi
 **Tables:** `quotations`, `quotation_lines`, `fulfillment_station_lines`
 
 **API Routes:**
+
 ```
 POST   /quotations                   → create draft quotation
 GET    /quotations                   → list (location-scoped, filterable by status/date)
@@ -242,6 +268,7 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 ```
 
 **UI Screens:**
+
 ```
 [expo] Quotation creation — add line items, select price list, select customer
 [expo] Alternatives view — colour-coded brands, per-alternative subtotals
@@ -252,6 +279,7 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 ```
 
 **PDF Must Include:**
+
 ```
 - Shop logo + shop name
 - VAT registration number
@@ -264,6 +292,7 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 ```
 
 **Alternative Pricing Logic:**
+
 ```
 1. For each line item, find all products in same product_group
 2. Order by brand_priority[] on product_group
@@ -276,9 +305,11 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 ---
 
 ### MODULE 07 — Margin Bottom Sheet & Discount Floors
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[expo]`
 
 **Scope:**
+
 - Staff-only bottom sheet on tapping quotation total
 - Cost price, margin per line, total margin %
 - Supplier price history per SKU visible on tap
@@ -287,6 +318,7 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 - Owner unrestricted
 
 **API Routes:**
+
 ```
 GET    /quotations/:id/margin        → margin breakdown (role-gated: salesperson limited, owner full)
 GET    /products/:id/cost-history    → supplier price history for SKU
@@ -294,6 +326,7 @@ PATCH  /locations/:id/margin-floor   → update minimum margin floor %
 ```
 
 **UI Screens:**
+
 ```
 [expo] Margin bottom sheet (slides up on tapping quotation total)
 [expo] Per-line margin % indicators
@@ -302,6 +335,7 @@ PATCH  /locations/:id/margin-floor   → update minimum margin floor %
 ```
 
 **Implementation Notes:**
+
 - Bottom sheet is local UI only — never sent to API or included in PDF
 - `salesperson` role: sees margin % but floor is enforced — cannot confirm below floor
 - `owner` role: sees full cost + margin, no floor enforcement
@@ -309,15 +343,18 @@ PATCH  /locations/:id/margin-floor   → update minimum margin floor %
 ---
 
 ### MODULE 08 — Home Screen Tags & Quick-Access Widget
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[expo]` `[web]`
 
 **Scope:**
+
 - Tags: location-scoped product shortcut groups (display only)
 - Quick-access widget: personal per-staff pinned products (max 10)
 
 **Tables:** `product_tags`, `product_tag_assignments`
 
 **API Routes:**
+
 ```
 GET    /tags                         → list tags for location
 POST   /tags                         → create tag (manager/owner only)
@@ -331,6 +368,7 @@ GET    /users/me/pinned-skus         → get pinned products with current price
 ```
 
 **UI Screens:**
+
 ```
 [web]  Tag management — create, edit, assign products
 [expo] Home screen — tag buttons grid + personal pinned widget
@@ -341,9 +379,11 @@ GET    /users/me/pinned-skus         → get pinned products with current price
 ---
 
 ### MODULE 09 — Stock Management
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[db]` `[web]` `[expo]`
 
 **Scope:**
+
 - Per-location stock per SKU
 - Dual tracking mode per product group (`group` or `sku`)
 - Reorder thresholds and low-stock alerts
@@ -354,6 +394,7 @@ GET    /users/me/pinned-skus         → get pinned products with current price
 **Tables:** `stock`, `group_stock` (view)
 
 **API Routes:**
+
 ```
 GET    /stock                        → all stock for location
 GET    /stock/:product_id            → stock for specific SKU across locations
@@ -365,6 +406,7 @@ PATCH  /catalog/groups/:id/stock-mode → switch group tracking mode (with warni
 ```
 
 **UI Screens:**
+
 ```
 [web]  Stock management — view, update levels, set tracking mode per group
 [web]  Low-stock / reorder alert dashboard
@@ -379,11 +421,13 @@ PATCH  /catalog/groups/:id/stock-mode → switch group tracking mode (with warni
 ---
 
 ### MODULE 10 — Fulfilment Station System
+
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[db]` `[expo]` `[web]`
 
 > Adapted from restaurant KOT system. Covers shop floor counters AND remote go-downs equally.
 
 **Scope:**
+
 - Station configuration (name = go-down identifier = printer identifier)
 - Category → station default assignment
 - Product-level station override
@@ -396,6 +440,7 @@ PATCH  /catalog/groups/:id/stock-mode → switch group tracking mode (with warni
 **Tables:** `fulfillment_stations`, `fulfillment_station_lines`
 
 **API Routes:**
+
 ```
 GET    /stations                     → list stations for location
 POST   /stations                     → create station
@@ -410,6 +455,7 @@ POST   /quotations/:id/stations/:sid/reprint → reprint station slip (any time)
 ```
 
 **UI Screens:**
+
 ```
 [web]  Station configuration — create stations, assign default categories
 [expo] Station staff screen — filtered queue, mark ready buttons
@@ -418,6 +464,7 @@ POST   /quotations/:id/stations/:sid/reprint → reprint station slip (any time)
 ```
 
 **Station Resolution Logic:**
+
 ```
 For each quotation_line:
   1. Check product.station_override_id → use if set
@@ -432,9 +479,11 @@ For each quotation_line:
 ---
 
 ### MODULE 11 — VAT-Compliant Invoicing
+
 **Priority:** `[CORE]` · **Tags:** `[nestjs]` `[db]` `[expo]` `[web]` `[pdf]`
 
 **Scope:**
+
 - Convert confirmed quotation to tax invoice
 - Immutable after issue — no edits allowed
 - VAT at 5% per line, totalled
@@ -444,6 +493,7 @@ For each quotation_line:
 **Tables:** `invoices`, `invoice_lines`
 
 **API Routes:**
+
 ```
 POST   /invoices                     → convert quotation to invoice
 GET    /invoices                     → list (filtered by location, status, date, contractor)
@@ -454,6 +504,7 @@ POST   /invoices/:id/void            → void (before payment only)
 ```
 
 **Invoice PDF Must Include (OTA Requirements):**
+
 ```
 - Shop name + logo
 - VAT registration number
@@ -469,11 +520,13 @@ POST   /invoices/:id/void            → void (before payment only)
 ---
 
 ### MODULE 12 — Payments
+
 **Priority:** `[CORE]` · **Tags:** `[nestjs]` `[db]` `[expo]` `[web]`
 
 **Tables:** `payments`
 
 **API Routes:**
+
 ```
 POST   /payments                     → record payment against invoice
 GET    /invoices/:id/payments        → payment history for invoice
@@ -481,6 +534,7 @@ POST   /payments/transfer            → internal: transfer payment to new invoi
 ```
 
 **UI Screens:**
+
 ```
 [expo] Record payment — amount, method (cash/transfer/cheque/store credit), reference
 [expo] Payment history on invoice detail
@@ -490,9 +544,11 @@ POST   /payments/transfer            → internal: transfer payment to new invoi
 ---
 
 ### MODULE 13 — Returns & Credit Notes
+
 **Priority:** `[CORE]` · **Tags:** `[nestjs]` `[db]` `[expo]` `[web]` `[pdf]`
 
 **Scope:**
+
 - Credit notes as the only legal return instrument — invoices never edited
 - Two paths: credit only | credit and reissue
 - Escape hatch: "Reissue remaining items as invoice" on partially_credited invoices
@@ -503,6 +559,7 @@ POST   /payments/transfer            → internal: transfer payment to new invoi
 **Tables:** `credit_notes`, `credit_note_lines`
 
 **API Routes:**
+
 ```
 POST   /invoices/:id/returns         → process return, select path A or B
 GET    /invoices/:id/credit-notes    → all credit notes against invoice
@@ -512,6 +569,7 @@ POST   /invoices/:id/reissue         → escape hatch: reissue remaining items
 ```
 
 **Return Flow Logic:**
+
 ```
 Path A (credit only):
   → POST /invoices/:id/returns { lines: [...], path: 'credit_only', refund_method }
@@ -536,6 +594,7 @@ Escape hatch:
 ```
 
 **UI Screens:**
+
 ```
 [expo] Process return — select returned items, choose path, select refund method
 [expo] Credit note PDF preview + WhatsApp share / print
@@ -546,11 +605,13 @@ Escape hatch:
 ---
 
 ### MODULE 14 — Accounts Receivable & Customer Credit
+
 **Priority:** `[CORE]` · **Tags:** `[nestjs]` `[db]` `[web]` `[expo]`
 
 **Tables:** `customers`, `customer_contacts`, `customer_sites`
 
 **API Routes:**
+
 ```
 POST   /customers                    → create customer (retail|account|contractor)
 PATCH  /customers/:id                → update (type, credit limit, payment terms, portal access)
@@ -569,6 +630,7 @@ POST   /invoices                     → create invoice with customer_id + optio
 ```
 
 **UI Screens:**
+
 ```
 [web]  Customer management — list, create, edit (type selector: retail/account/contractor)
 [web]  Customer detail — contacts, sites, credit settings, aging
@@ -579,8 +641,10 @@ POST   /invoices                     → create invoice with customer_id + optio
 ```
 
 ---
-[web]  Receivables aging dashboard
+
+[web] Receivables aging dashboard
 [expo] Credit limit warning shown before confirming new quotation for contractor
+
 ```
 
 ---
@@ -592,21 +656,25 @@ POST   /invoices                     → create invoice with customer_id + optio
 
 **API Routes:**
 ```
-POST   /suppliers                    → create supplier
-PATCH  /suppliers/:id                → update
-GET    /suppliers                    → list suppliers with payable totals
-GET    /suppliers/:id/payables       → outstanding payables + due dates
-POST   /purchase-receipts            → record delivery (trusted staff — appends to history)
-GET    /purchase-receipts/product/:id → price history for SKU across all suppliers
-GET    /payables                     → all supplier payables summary (owner view)
+
+POST /suppliers → create supplier
+PATCH /suppliers/:id → update
+GET /suppliers → list suppliers with payable totals
+GET /suppliers/:id/payables → outstanding payables + due dates
+POST /purchase-receipts → record delivery (trusted staff — appends to history)
+GET /purchase-receipts/product/:id → price history for SKU across all suppliers
+GET /payables → all supplier payables summary (owner view)
+
 ```
 
 **UI Screens:**
 ```
-[web]  Supplier management — list, create, edit
-[web]  Record purchase receipt
-[web]  Payables dashboard — what is owed to each supplier and when
+
+[web] Supplier management — list, create, edit
+[web] Record purchase receipt
+[web] Payables dashboard — what is owed to each supplier and when
 [expo] Record purchase receipt on mobile (for use on delivery)
+
 ```
 
 ---
@@ -621,17 +689,21 @@ GET    /payables                     → all supplier payables summary (owner vi
 
 **API Routes:**
 ```
-GET    /cost-suggestions             → SKUs with pending suggested cost updates
-POST   /cost-suggestions/:product_id/approve  → approve suggested cost
-POST   /cost-suggestions/:product_id/override → manually set cost price
-GET    /products/:id/cost-history    → full supplier price history
+
+GET /cost-suggestions → SKUs with pending suggested cost updates
+POST /cost-suggestions/:product_id/approve → approve suggested cost
+POST /cost-suggestions/:product_id/override → manually set cost price
+GET /products/:id/cost-history → full supplier price history
+
 ```
 
 **UI Screens:**
 ```
-[web]  Cost price review dashboard — pending suggestions, approve or override
+
+[web] Cost price review dashboard — pending suggestions, approve or override
 [expo] Notification badge for pending cost reviews
 [expo] Cost history modal (accessible from margin bottom sheet)
+
 ```
 
 ---
@@ -641,22 +713,26 @@ GET    /products/:id/cost-history    → full supplier price history
 
 **API Routes:**
 ```
-GET    /reports/daily-sales          → daily summary (date filter)
-GET    /reports/vat-summary          → quarterly OTA-format VAT report
-GET    /reports/invoice-log          → all invoices + CNs for period (audit evidence)
-GET    /reports/sales-performance    → by location, category, staff (month filter)
-GET    /reports/margin               → gross margin by category/product
-GET    /reports/stock-movement       → best/worst movers, slow-moving (60+ days)
-GET    /reports/receivables-aging    → AR at 30/60/90 days
-GET    /reports/payables             → AP summary by supplier
-GET    /reports/warranty-claims      → open claims, service jobs by status
+
+GET /reports/daily-sales → daily summary (date filter)
+GET /reports/vat-summary → quarterly OTA-format VAT report
+GET /reports/invoice-log → all invoices + CNs for period (audit evidence)
+GET /reports/sales-performance → by location, category, staff (month filter)
+GET /reports/margin → gross margin by category/product
+GET /reports/stock-movement → best/worst movers, slow-moving (60+ days)
+GET /reports/receivables-aging → AR at 30/60/90 days
+GET /reports/payables → AP summary by supplier
+GET /reports/warranty-claims → open claims, service jobs by status
+
 ```
 
 **UI Screens:**
 ```
-[web]  Reports dashboard with date range and location filters
-[web]  VAT summary — formatted for manual entry into OTA portal
-[web]  Export to PDF or CSV on all reports
+
+[web] Reports dashboard with date range and location filters
+[web] VAT summary — formatted for manual entry into OTA portal
+[web] Export to PDF or CSV on all reports
+
 ```
 
 ---
@@ -681,68 +757,79 @@ GET    /reports/warranty-claims      → open claims, service jobs by status
 
 **API Routes:**
 ```
-POST   /warranty-items               → create warranty catalog item
-GET    /warranty-items               → list (tenant-scoped)
-PATCH  /warranty-items/:id           → update
-DELETE /warranty-items/:id           → soft delete
 
-POST   /invoices/:id/warranty-lines  → add warranty line to invoice
-PATCH  /warranty-lines/:id           → edit terms, duration, serial number, price
-DELETE /warranty-lines/:id           → remove from invoice (before confirmation)
+POST /warranty-items → create warranty catalog item
+GET /warranty-items → list (tenant-scoped)
+PATCH /warranty-items/:id → update
+DELETE /warranty-items/:id → soft delete
 
-GET    /warranty/search              → search by serial number or invoice number
-GET    /warranty-lines/:id           → warranty detail + claim history
-POST   /warranty-lines/:id/claims    → process warranty claim
-PATCH  /warranty-claims/:id          → update service job status
-GET    /warranty-claims/open         → all open claims (manager/owner)
-GET    /warranty-claims/service      → service jobs by status
+POST /invoices/:id/warranty-lines → add warranty line to invoice
+PATCH /warranty-lines/:id → edit terms, duration, serial number, price
+DELETE /warranty-lines/:id → remove from invoice (before confirmation)
 
-POST   /supplier-warranty-claims     → create supplier recovery claim
-PATCH  /supplier-warranty-claims/:id → update status
-GET    /supplier-warranty-claims     → list pending supplier claims
+GET /warranty/search → search by serial number or invoice number
+GET /warranty-lines/:id → warranty detail + claim history
+POST /warranty-lines/:id/claims → process warranty claim
+PATCH /warranty-claims/:id → update service job status
+GET /warranty-claims/open → all open claims (manager/owner)
+GET /warranty-claims/service → service jobs by status
+
+POST /supplier-warranty-claims → create supplier recovery claim
+PATCH /supplier-warranty-claims/:id → update status
+GET /supplier-warranty-claims → list pending supplier claims
+
 ```
 
 **Warranty Auto-Population Logic:**
 ```
+
 When product added to invoice:
-  IF product.default_warranty_id IS NOT NULL:
-    → auto-create suggested warranty line
-    → set terms_notes from warranty_item defaults
-    → set duration_months from warranty_item.default_duration_months
-    → set max_claims from warranty_item.max_claims
-    → set price = warranty_item.base_price (default 0)
-    → staff can edit or remove before confirming
+IF product.default_warranty_id IS NOT NULL:
+→ auto-create suggested warranty line
+→ set terms_notes from warranty_item defaults
+→ set duration_months from warranty_item.default_duration_months
+→ set max_claims from warranty_item.max_claims
+→ set price = warranty_item.base_price (default 0)
+→ staff can edit or remove before confirming
+
 ```
 
 **Claim Validation Logic:**
 ```
+
 On claim intake:
-  1. Check invoice_warranty_lines.expiry_date >= today → valid/expired
-  2. Check claims_used < max_claims (if max_claims not null) → allowed/exhausted
-  3. If valid → proceed with resolution
-  4. Resolution: replaced_same | replaced_alternative | refund | sent_for_service
-  5. If replacement → create new invoice line for replacement item
-  6. If service → generate service_reference (SVC-YYYY-NNNNN), set status = 'received'
-  7. INCREMENT claims_used
-  8. Optionally create supplier_warranty_claim for recovery
+
+1. Check invoice_warranty_lines.expiry_date >= today → valid/expired
+2. Check claims_used < max_claims (if max_claims not null) → allowed/exhausted
+3. If valid → proceed with resolution
+4. Resolution: replaced_same | replaced_alternative | refund | sent_for_service
+5. If replacement → create new invoice line for replacement item
+6. If service → generate service_reference (SVC-YYYY-NNNNN), set status = 'received'
+7. INCREMENT claims_used
+8. Optionally create supplier_warranty_claim for recovery
+
 ```
 
 **Service Status Flow:**
 ```
+
 received → sent_to_supplier → repaired → ready_for_collection → collected
+
 ```
 
 **UI Screens:**
 ```
-[web]  Warranty catalog — list, create, edit warranty items
+
+[web] Warranty catalog — list, create, edit warranty items
 [expo] Warranty line on invoice — auto-populated suggestion, editable
 [expo] Serial number entry field on warranty line
 [expo] Warranty claim intake — search by invoice/serial, show validity + history
 [expo] Claim resolution screen — select resolution type
 [expo] Service job status update screen
-[web]  Open warranty claims dashboard
-[web]  Service jobs board (by status)
-[web]  Supplier warranty claims management
+[web] Open warranty claims dashboard
+[web] Service jobs board (by status)
+[web] Supplier warranty claims management
+
 ```
 
 ---
@@ -758,45 +845,51 @@ received → sent_to_supplier → repaired → ready_for_collection → collecte
 
 **API Routes:**
 ```
-POST   /tradespeople                 → register (phone + name + trade type)
-GET    /tradespeople/:id             → profile + points balance
-GET    /tradespeople                 → list (searchable by phone, name, trade)
-POST   /qr-codes/generate-batch      → pre-generate sequential QR batch
-GET    /qr-codes/batch/:id/download  → download batch for print agency
-POST   /qr-codes/register-range      → register batch by scanning first + last code
-POST   /qr-codes/scan                → validate + redeem + award points
-GET    /qr-codes/:serial             → check QR status
-POST   /tradespeople/:id/redeem      → process quarterly redemption
-GET    /loyalty/redemptions/pending  → all pending redemptions for current quarter
+
+POST /tradespeople → register (phone + name + trade type)
+GET /tradespeople/:id → profile + points balance
+GET /tradespeople → list (searchable by phone, name, trade)
+POST /qr-codes/generate-batch → pre-generate sequential QR batch
+GET /qr-codes/batch/:id/download → download batch for print agency
+POST /qr-codes/register-range → register batch by scanning first + last code
+POST /qr-codes/scan → validate + redeem + award points
+GET /qr-codes/:serial → check QR status
+POST /tradespeople/:id/redeem → process quarterly redemption
+GET /loyalty/redemptions/pending → all pending redemptions for current quarter
+
 ```
 
 **QR Scan Validation Logic:**
 ```
+
 POST /qr-codes/scan { serial, tradesperson_id }
-  → Lookup unit_serial in qr_codes
-  → NOT FOUND → return { valid: false, reason: 'invalid_code' }
-  → FOUND, status = 'redeemed' → return {
-      valid: false,
-      reason: 'already_redeemed',
-      redeemed_by: tradesperson.name,
-      redeemed_at: timestamp
-    }
-  → FOUND, status = 'registered' → {
-      UPDATE status = 'redeemed', tradesperson_id, scanned_by, scanned_at, redeemed_at
-      UPDATE tradespeople SET points_balance += points_value
-      return { valid: true, points_awarded: N, new_balance: M }
-    }
+→ Lookup unit_serial in qr_codes
+→ NOT FOUND → return { valid: false, reason: 'invalid_code' }
+→ FOUND, status = 'redeemed' → return {
+valid: false,
+reason: 'already_redeemed',
+redeemed_by: tradesperson.name,
+redeemed_at: timestamp
+}
+→ FOUND, status = 'registered' → {
+UPDATE status = 'redeemed', tradesperson_id, scanned_by, scanned_at, redeemed_at
+UPDATE tradespeople SET points_balance += points_value
+return { valid: true, points_awarded: N, new_balance: M }
+}
+
 ```
 
 **UI Screens:**
 ```
-[web]  QR batch generation + download for print agency
-[web]  Range registration — scan first + last code
+
+[web] QR batch generation + download for print agency
+[web] Range registration — scan first + last code
 [expo] QR scan screen — camera scan, instant result display
 [expo] Tradesperson registration at counter (phone + name + trade type)
 [expo] Points balance display after successful scan
-[web]  Tradesperson list + points balances
-[web]  Quarterly redemption management
+[web] Tradesperson list + points balances
+[web] Quarterly redemption management
+
 ```
 
 ---
@@ -811,12 +904,14 @@ Already partially covered in MODULE 04. This module adds:
 
 **API Routes:**
 ```
-POST   /catalog/requests             → staff submits (description + photo)
-PATCH  /catalog/requests/:id/map     → admin maps to existing SKU
-PATCH  /catalog/requests/:id/approve → admin approves as new product
-PATCH  /catalog/requests/:id/reject  → admin rejects with reason
-POST   /products/:id/aliases         → add alias
-DELETE /products/:id/aliases/:alias  → remove alias
+
+POST /catalog/requests → staff submits (description + photo)
+PATCH /catalog/requests/:id/map → admin maps to existing SKU
+PATCH /catalog/requests/:id/approve → admin approves as new product
+PATCH /catalog/requests/:id/reject → admin rejects with reason
+POST /products/:id/aliases → add alias
+DELETE /products/:id/aliases/:alias → remove alias
+
 ```
 
 ---
@@ -853,25 +948,29 @@ Already partially covered in MODULE 09. This module activates:
 
 **API Routes:**
 ```
-POST   /portal/auth/login            → customer login (account/contractor types)
-GET    /portal/sites                 → customer's linked sites (contractors only)
-GET    /portal/invoices              → all invoices across sites (prices hidden if flag off)
-GET    /portal/invoices/:id          → invoice detail + PDF
-GET    /portal/sites/:id/history     → purchase history for site
-GET    /portal/credit-notes          → credit notes for customer
-POST   /portal/quotation-requests    → submit quotation request
-PATCH  /customers/:id/price-visibility → toggle price visibility flag (owner only)
+
+POST /portal/auth/login → customer login (account/contractor types)
+GET /portal/sites → customer's linked sites (contractors only)
+GET /portal/invoices → all invoices across sites (prices hidden if flag off)
+GET /portal/invoices/:id → invoice detail + PDF
+GET /portal/sites/:id/history → purchase history for site
+GET /portal/credit-notes → credit notes for customer
+POST /portal/quotation-requests → submit quotation request
+PATCH /customers/:id/price-visibility → toggle price visibility flag (owner only)
+
 ```
 
 **UI Screens:**
 ```
-[web]  Customer portal login (separate from admin login)
-[web]  Customer dashboard — sites, balances, recent invoices
-[web]  Invoice list + detail + PDF download
-[web]  Site purchase history + product search (for contractors)
-[web]  Request quotation form
-[web]  Admin — customer management, site linking
-[web]  Admin — price visibility toggle per customer
+
+[web] Customer portal login (separate from admin login)
+[web] Customer dashboard — sites, balances, recent invoices
+[web] Invoice list + detail + PDF download
+[web] Site purchase history + product search (for contractors)
+[web] Request quotation form
+[web] Admin — customer management, site linking
+[web] Admin — price visibility toggle per customer
+
 ```
 [web]  Contractor dashboard — sites, balances, recent invoices
 [web]  Invoice list + detail + PDF download
@@ -888,9 +987,11 @@ PATCH  /customers/:id/price-visibility → toggle price visibility flag (owner o
 ---
 
 ### MODULE 23 — Camera-Based Product Search
+
 **Priority:** `[SMART]` · **Tags:** `[expo]` `[vision-ai]` `[nestjs]` `[db]`
 
 **Scope:**
+
 - Staff points camera at physical product → image is **vectorized on-device** (embedding model, TBD)
 - Only the embedding vector is sent to the API — no image upload during search
 - API matches vector against `product_images.image_vector` via cosine similarity (pgvector/HNSW), org-scoped
@@ -899,12 +1000,14 @@ PATCH  /customers/:id/price-visibility → toggle price visibility flag (owner o
 - Works offline via local catalog sync
 
 **API Routes:**
+
 ```
 POST   /catalog/match                → body: embedding vector → top N matching SKUs (cosine distance)
 GET    /catalog/images/search        → (future) optional server-side embedding fallback when device vectorizer unavailable
 ```
 
 **UI Screens:**
+
 ```
 [expo] Camera screen with scan button
 [expo] Detection result — top 3 SKUs with stock + price
@@ -913,6 +1016,7 @@ GET    /catalog/images/search        → (future) optional server-side embedding
 ```
 
 **Implementation Notes:**
+
 - Local catalog sync must be complete and fresh before this works offline
 - Camera feature is a shortcut, never a replacement for manual search
 - Always show fallback — no dead ends

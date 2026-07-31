@@ -3,9 +3,13 @@ import * as schema from "@repo/db/schema"
 import { BetterAuthOptions } from "better-auth/minimal"
 import { admin, organization } from "better-auth/plugins"
 import {
-  cashier,
-  manager,
   orgAccessControl,
+  owner,
+  manager,
+  branchManager,
+  salesperson,
+  cashier,
+  stationStaff,
   staff,
 } from "./org-access-control/org-roles"
 import { ac, customAdminRole, financeRole } from "./admin-access-control/roles"
@@ -47,9 +51,13 @@ export const createAuthConfig = (
         maxOrganizationsPerUser: 1,
         ac: orgAccessControl,
         roles: {
-          staff,
-          cashier,
+          owner,
           manager,
+          branchManager,
+          salesperson,
+          cashier,
+          stationStaff,
+          staff,
         },
         teams: { enabled: true },
         allowUserToCreateOrganization: async (user) => {
