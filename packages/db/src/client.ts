@@ -1,10 +1,10 @@
 import { drizzle } from "drizzle-orm/node-postgres"
-import { authRelations } from "./schema-relations/auth-relation.js"
+import { dbRelations } from "./schema-relations/db-relations.js"
 import { Pool } from "pg"
 
 export const createDatabaseClient = (connectionString: string) => {
   const pool = new Pool({ connectionString })
-  return drizzle({ client: pool, relations: authRelations })
+  return drizzle({ client: pool, relations: dbRelations })
 }
 
 export type DatabaseClient = ReturnType<typeof createDatabaseClient>

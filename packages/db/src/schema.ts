@@ -1,6 +1,5 @@
 export * from "./auth-schema.js"
-export * from "./schema-relations/auth-relation.js"
-export * from "./schema-relations/buildmate-relations.js"
+export * from "./schema-relations/db-relations.js"
 export * from "./schemas/enums.js"
 export * from "./schemas/localization.js"
 export * from "./schemas/metadata.js"

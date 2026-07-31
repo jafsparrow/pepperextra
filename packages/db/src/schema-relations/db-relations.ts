@@ -25,7 +25,7 @@ import { customers, customerContacts, sites, siteContacts } from "../schemas/cus
 import { suppliers, purchaseReceipts } from "../schemas/suppliers"
 import { tradespeople, loyaltyRedemptions, qrCodes } from "../schemas/loyalty"
 
-export const authRelations = defineRelations(
+export const dbRelations = defineRelations(
   {
     user,
     session,
@@ -109,8 +109,6 @@ export const authRelations = defineRelations(
       orgMetadata: r.many.orgMetadata(),
       teamMetadata: r.many.teamMetadata(),
       userMetadata: r.many.userMetadata(),
-      countries: r.many.countries(),
-      taxTypes: r.many.taxTypes(),
       orgTaxConfig: r.many.orgTaxConfig(),
       productGroups: r.many.productGroups(),
       products: r.many.products(),
@@ -172,7 +170,11 @@ export const authRelations = defineRelations(
       user: r.one.user({ from: r.invitation.inviterId, to: r.user.id }),
     },
     // ── Business table relations ─────────────
-    orgMetadata: { organization: r.one.organization({ from: r.orgMetadata.orgId, to: r.organization.id }) },
+    orgMetadata: {
+      organization: r.one.organization({ from: r.orgMetadata.orgId, to: r.organization.id }),
+      country: r.one.countries({ from: r.orgMetadata.countryId, to: r.countries.id }),
+      currency: r.one.currencies({ from: r.orgMetadata.currencyId, to: r.currencies.id }),
+    },
     teamMetadata: {
       team: r.one.team({ from: r.teamMetadata.teamId, to: r.team.id }),
       organization: r.one.organization({ from: r.teamMetadata.orgId, to: r.organization.id }),
@@ -182,7 +184,14 @@ export const authRelations = defineRelations(
       organization: r.one.organization({ from: r.userMetadata.orgId, to: r.organization.id }),
       team: r.one.team({ from: r.userMetadata.teamId, to: r.team.id }),
     },
-    countries: { currency: r.one.currencies({ from: r.countries.currencyId, to: r.currencies.id }) },
+    countries: {
+      currency: r.one.currencies({ from: r.countries.currencyId, to: r.currencies.id }),
+      orgMetadata: r.many.orgMetadata(),
+    },
+    currencies: {
+      countries: r.many.countries(),
+      orgMetadata: r.many.orgMetadata(),
+    },
     taxTypes: {
       country: r.one.countries({ from: r.taxTypes.countryId, to: r.countries.id }),
       orgConfigs: r.many.orgTaxConfig(),
@@ -291,6 +300,9 @@ export const authRelations = defineRelations(
       invoice: r.one.invoices({ from: r.invoiceCharges.invoiceId, to: r.invoices.id }),
       taxType: r.one.taxTypes({ from: r.invoiceCharges.taxTypeId, to: r.taxTypes.id }),
       organization: r.one.organization({ from: r.invoiceCharges.orgId, to: r.organization.id }),
+    },
+    invoiceCounters: {
+      organization: r.one.organization({ from: r.invoiceCounters.orgId, to: r.organization.id }),
     },
     payments: {
       organization: r.one.organization({ from: r.payments.orgId, to: r.organization.id }),
