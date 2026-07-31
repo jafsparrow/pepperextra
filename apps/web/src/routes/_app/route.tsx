@@ -1,5 +1,7 @@
 // routes/_authenticated/route.tsx
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router"
+import { createFileRoute, Outlet, Link, redirect, useNavigate } from "@tanstack/react-router"
+import { signOut } from "@repo/auth/client"
+import { Button } from "@workspace/ui/components/button"
 import {
   SidebarProvider,
   SidebarInset,
@@ -15,13 +17,32 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@workspace/ui/components/breadcrumb"
+import { LogOut } from "lucide-react"
+import { getServerSession } from "@/shared/utils/auth-session"
 
 // Notice the route matching path string matches the pathless folder name
 export const Route = createFileRoute("/_app")({
+  beforeLoad: async ({ location }) => {
+    const session = await getServerSession()
+    if (!session) {
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      })
+    }
+    return { session }
+  },
   component: AuthenticatedLayout,
 })
 
 function AuthenticatedLayout() {
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate({ to: "/login" })
+  }
+
   return (
     <SidebarProvider>
       {/* 1. Renders the persistent sidebar panel */}
@@ -47,6 +68,15 @@ function AuthenticatedLayout() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Log out
+          </Button>
         </header>
 
         {/* 3. The workspace panel where child components are injected */}
