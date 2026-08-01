@@ -5,6 +5,8 @@ export const organizationSettingsSchema = z.object({
   organizationId: z.string(),
   country: z.string().nullable().optional(),
   currency: z.string().nullable().optional(),
+  currencySymbol: z.string().nullable().optional(),
+  currencyDecimalPlaces: z.number().nullable().optional(),
   tagline: z.string().nullable().optional(),
   taxNumber: z.string().nullable().optional(),
   address: z.string().nullable().optional(),

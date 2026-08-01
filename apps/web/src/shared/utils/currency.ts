@@ -1,7 +1,7 @@
 import Decimal from "decimal.js"
 import type { Decimal as DecimalType } from "decimal.js"
 
-const DEFAULT_DECIMAL_PLACES = 3
+export const DEFAULT_DECIMAL_PLACES = 3
 
 export type DecimalSource = DecimalType.Value
 

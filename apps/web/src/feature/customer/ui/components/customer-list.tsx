@@ -43,7 +43,7 @@ import {
 } from "@workspace/ui/components/dropdown-menu"
 import { toast } from "sonner"
 import { orpc } from "@/shared/utils/orpc"
-import { formatMoney } from "@/shared/utils/currency"
+import { useCurrency } from "@/shared/org/use-currency"
 import { CUSTOMER_QUERY_KEYS, CUSTOMER_TYPE_LABELS } from "../../constants"
 import { CustomerModal } from "./customer-modal"
 
@@ -63,6 +63,7 @@ export function CustomerList({ orgId }: CustomerListProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const { format } = useCurrency()
 
   const { data: customers, isLoading } = useQuery(
     orpc.customer.list.queryOptions({
@@ -198,7 +199,7 @@ export function CustomerList({ orgId }: CustomerListProps) {
                   </Badge>
                   {customer.creditLimitMinor && (
                     <span className="hidden text-xs text-muted-foreground tabular-nums lg:inline">
-                      Limit {formatMoney(customer.creditLimitMinor)}
+                      Limit {format(customer.creditLimitMinor)}
                     </span>
                   )}
                   <DropdownMenu>

@@ -41,7 +41,7 @@ import {
 } from "@workspace/ui/components/dropdown-menu"
 import { toast } from "sonner"
 import { orpc } from "@/shared/utils/orpc"
-import { formatMoney } from "@/shared/utils/currency"
+import { useCurrency } from "@/shared/org/use-currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductModal } from "./product-modal"
 
@@ -56,6 +56,7 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const { format } = useCurrency()
 
   const { data: products, isLoading } = useQuery(
     orpc.product.list.queryOptions({
@@ -195,7 +196,7 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="hidden text-sm font-semibold tabular-nums sm:inline">
-                    {formatMoney(product.basePriceMinor)}
+                    {format(product.basePriceMinor)}
                   </span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
