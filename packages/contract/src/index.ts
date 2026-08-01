@@ -53,6 +53,15 @@ import {
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  getCustomer,
+  listCustomerInvoices,
+  listCustomerPayments,
+  listCustomerCreditNotes,
+  listCustomerWarrantyClaims,
+  listCustomerSites,
+  createCustomerSite,
+  updateCustomerSite,
+  deleteCustomerSite,
 } from "./customer.js"
 import { listCountries } from "./localization.js"
 
@@ -87,11 +96,7 @@ export {
   serviceChargeUpdateSchema,
 } from "./team-settings.js"
 
-export type {
-  TeamSettings,
-  TaxConfig,
-  ServiceCharge,
-} from "./team-settings.js"
+export type { TeamSettings, TaxConfig, ServiceCharge } from "./team-settings.js"
 
 export {
   branchProfileSchema,
@@ -130,9 +135,29 @@ export {
   customerCreateSchema,
   customerUpdateSchema,
   customerTypeSchema,
+  customerDetailsSchema,
+  customerFinancialSummarySchema,
+  customerSiteSchema,
+  customerSiteCreateSchema,
+  customerSiteUpdateSchema,
+  customerSiteManagerSchema,
+  customerInvoiceSchema,
+  customerPaymentSchema,
+  customerCreditNoteSchema,
+  customerWarrantyClaimSchema,
+  siteStatusSchema,
 } from "./customer.js"
 
-export type { Customer } from "./customer.js"
+export type {
+  Customer,
+  CustomerDetails,
+  CustomerFinancialSummary,
+  CustomerSite,
+  CustomerInvoice,
+  CustomerPayment,
+  CustomerCreditNote,
+  CustomerWarrantyClaim,
+} from "./customer.js"
 
 export { countrySchema } from "./localization.js"
 
@@ -248,9 +273,18 @@ export const contracts = populateContractRouterPaths({
   },
   customer: {
     list: listCustomers,
+    get: getCustomer,
     create: createCustomer,
     update: updateCustomer,
     delete: deleteCustomer,
+    listInvoices: listCustomerInvoices,
+    listPayments: listCustomerPayments,
+    listCreditNotes: listCustomerCreditNotes,
+    listWarrantyClaims: listCustomerWarrantyClaims,
+    listSites: listCustomerSites,
+    createSite: createCustomerSite,
+    updateSite: updateCustomerSite,
+    deleteSite: deleteCustomerSite,
   },
   countries: {
     list: listCountries,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -172,23 +173,35 @@ export function CustomerList({ orgId }: CustomerListProps) {
                 className="group flex items-center justify-between rounded-lg border border-border/40 bg-muted/30 p-3 transition-all hover:bg-muted/60"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="truncate text-sm font-medium text-foreground">
-                      {customer.name}
-                    </h4>
-                    <p className="mt-0.5 flex items-center gap-2 truncate text-xs text-muted-foreground">
-                      {customer.phone && <span>{customer.phone}</span>}
-                      {customer.email && (
-                        <span className="hidden items-center gap-1 sm:inline-flex">
-                          <Mail className="h-3 w-3" />
-                          {customer.email}
-                        </span>
-                      )}
-                    </p>
-                  </div>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="h-auto p-0 text-left hover:bg-transparent"
+                  >
+                    <Link
+                      to="/org/admin/customers/$id"
+                      params={{ id: customer.id }}
+                      className="flex min-w-0 items-center gap-3"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Users className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="truncate text-sm font-medium text-foreground">
+                          {customer.name}
+                        </h4>
+                        <p className="mt-0.5 flex items-center gap-2 truncate text-xs text-muted-foreground">
+                          {customer.phone && <span>{customer.phone}</span>}
+                          {customer.email && (
+                            <span className="hidden items-center gap-1 sm:inline-flex">
+                              <Mail className="h-3 w-3" />
+                              {customer.email}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </Link>
+                  </Button>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge
