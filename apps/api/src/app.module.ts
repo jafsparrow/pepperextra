@@ -22,6 +22,7 @@ import { ProductModule } from './product/product.module.js';
 import { SupplierModule } from './supplier/supplier.module.js';
 import { CustomerModule } from './customer/customer.module.js';
 import { APIError } from 'better-auth';
+import { CountriesModule } from './countries/countries.module.js';
 
 declare module '@orpc/nest' {
   interface ORPCGlobalContext {
@@ -45,6 +46,7 @@ declare module '@orpc/nest' {
     ProductModule,
     SupplierModule,
     CustomerModule,
+    CountriesModule,
 
     // 3. Register Auth Module Asynchronously
     AuthModule.forRootAsync({
