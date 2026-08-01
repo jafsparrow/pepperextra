@@ -1,15 +1,13 @@
-import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+} from "@tanstack/react-router"
 import { authClient } from "@repo/auth/client"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import {
-  Package,
-  Layers,
-  Truck,
-  Users,
-  Store,
-  Boxes,
-} from "lucide-react"
+import { Package, Layers, Truck, Users, Store, Boxes } from "lucide-react"
 import { BranchScopeSelector } from "@/shared/ui/components/branch-scope-selector"
 import { useAdminContext } from "@/shared/org/admin-context"
 
@@ -43,7 +41,8 @@ function AdminManagementLayout() {
             </h1>
             <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
               <Store className="h-3.5 w-3.5" />
-              {activeOrg ? activeOrg.name : "Organization"} catalog &amp; accounts
+              {activeOrg ? activeOrg.name : "Organization"} catalog &amp;
+              accounts
             </p>
           </div>
         </div>
@@ -53,7 +52,8 @@ function AdminManagementLayout() {
       {/* Sub-navigation */}
       <nav className="flex items-center gap-1 overflow-x-auto rounded-xl border border-border/40 bg-card/80 p-1 shadow-sm backdrop-blur-sm">
         {navItems.map((item) => {
-          const isActive = pathname === item.to || pathname.startsWith(`${item.to}/`)
+          const isActive =
+            pathname === item.to || pathname.startsWith(`${item.to}/`)
           return (
             <Button
               key={item.to}

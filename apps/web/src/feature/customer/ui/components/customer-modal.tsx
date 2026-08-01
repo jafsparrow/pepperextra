@@ -24,7 +24,11 @@ interface CustomerModalProps {
   customer?: Customer
 }
 
-export function CustomerModal({ orgId, children, customer }: CustomerModalProps) {
+export function CustomerModal({
+  orgId,
+  children,
+  customer,
+}: CustomerModalProps) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -71,7 +75,11 @@ export function CustomerModal({ orgId, children, customer }: CustomerModalProps)
     }
 
     if (customer) {
-      updateMutation.mutate({ organizationId: orgId, id: customer.id, ...payload })
+      updateMutation.mutate({
+        organizationId: orgId,
+        id: customer.id,
+        ...payload,
+      })
     } else {
       createMutation.mutate({ organizationId: orgId, ...payload })
     }
@@ -86,9 +94,11 @@ export function CustomerModal({ orgId, children, customer }: CustomerModalProps)
           <Button type="button">{customer ? "Edit" : "Add customer"}</Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{customer ? "Edit customer" : "Add customer"}</DialogTitle>
+          <DialogTitle>
+            {customer ? "Edit customer" : "Add customer"}
+          </DialogTitle>
           <DialogDescription>
             {customer
               ? "Update this customer's details."
@@ -107,7 +117,8 @@ export function CustomerModal({ orgId, children, customer }: CustomerModalProps)
                   phone: customer.phone ?? "",
                   email: customer.email ?? "",
                   creditLimit:
-                    customer.creditLimitMinor && customer.creditLimitMinor !== "0"
+                    customer.creditLimitMinor &&
+                    customer.creditLimitMinor !== "0"
                       ? (Number(customer.creditLimitMinor) / 1000).toString()
                       : "",
                   paymentTermsDays: customer.paymentTermsDays ?? undefined,
