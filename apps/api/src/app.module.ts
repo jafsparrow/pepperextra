@@ -19,6 +19,7 @@ import { TeamSettingsModule } from './team-settings/team-settings.module.js';
 import { BranchModule } from './branch/branch.module.js';
 import { ProductGroupModule } from './product-group/product-group.module.js';
 import { ProductModule } from './product/product.module.js';
+import { CategoryModule } from './category/category.module.js';
 import { SupplierModule } from './supplier/supplier.module.js';
 import { CustomerModule } from './customer/customer.module.js';
 import { APIError } from 'better-auth';
@@ -44,6 +45,7 @@ declare module '@orpc/nest' {
     BranchModule,
     ProductGroupModule,
     ProductModule,
+    CategoryModule,
     SupplierModule,
     CustomerModule,
     CountriesModule,

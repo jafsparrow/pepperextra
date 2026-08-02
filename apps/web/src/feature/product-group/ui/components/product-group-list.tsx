@@ -8,14 +8,8 @@ import {
   CardDescription,
   CardContent,
 } from "@workspace/ui/components/card"
+import { Badge } from "@workspace/ui/components/badge"
 import { Input } from "@workspace/ui/components/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
 import {
   Dialog,
   DialogContent,
@@ -24,7 +18,7 @@ import {
   DialogTitle,
 } from "@workspace/ui/components/dialog"
 import {
-  Package,
+  Layers,
   Plus,
   Search,
   MoreHorizontal,
@@ -41,73 +35,46 @@ import {
 } from "@workspace/ui/components/dropdown-menu"
 import { toast } from "sonner"
 import { orpc } from "@/shared/utils/orpc"
-import { useCurrency } from "@/shared/org/use-currency"
-import { PRODUCT_QUERY_KEYS } from "../../constants"
-import { ProductModal } from "./product-modal"
+import {
+  PRODUCT_GROUP_QUERY_KEYS,
+  STOCK_TRACKING_LABELS,
+} from "../../constants"
+import { ProductGroupModal } from "./product-group-modal"
 
-interface ProductListProps {
+interface ProductGroupListProps {
   orgId: string | undefined
-  teamId?: string
 }
 
-export function ProductList({ orgId, teamId }: ProductListProps) {
+export function ProductGroupList({ orgId }: ProductGroupListProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [groupFilter, setGroupFilter] = useState("all")
   const [isExpanded, setIsExpanded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const queryClient = useQueryClient()
-  const { format } = useCurrency()
 
-  const { data: products, isLoading } = useQuery(
-    orpc.product.list.queryOptions({
-      input: {
-        organizationId: orgId ?? "",
-        teamId,
-      },
-      enabled: !!orgId,
-    })
-  )
-
-  const { data: productGroups } = useQuery(
+  const { data: groups, isLoading } = useQuery(
     orpc.productGroup.list.queryOptions({
       input: { organizationId: orgId ?? "" },
       enabled: !!orgId,
     })
   )
 
-  const { data: categories } = useQuery(
-    orpc.category.list.queryOptions({
-      input: { organizationId: orgId ?? "" },
-      enabled: !!orgId,
-    })
-  )
-
-  const groupName = (id: string | null | undefined) =>
-    productGroups?.find((g) => g.id === id)?.specName ?? "—"
-
-  const categoryName = (id: string | null | undefined) =>
-    categories?.find((c) => c.id === id)?.name ?? "—"
-
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase()
-    return (products ?? []).filter((p) => {
-      if (groupFilter !== "all" && p.productGroupId !== groupFilter)
-        return false
-      if (!q) return true
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.skuCode.toLowerCase().includes(q) ||
-        (p.specCode ?? "").toLowerCase().includes(q) ||
-        (p.brandTag ?? "").toLowerCase().includes(q)
-      )
-    })
-  }, [products, searchQuery, groupFilter])
+    return (groups ?? []).filter(
+      (g) =>
+        !q ||
+        g.specName.toLowerCase().includes(q) ||
+        g.brandPriority?.some((b) => b.toLowerCase().includes(q))
+    )
+  }, [groups, searchQuery])
 
   const deleteMutation = useMutation(
-    orpc.product.delete.mutationOptions({
+    orpc.productGroup.delete.mutationOptions({
       onSuccess: () => {
-        toast.success("Product deleted")
-        queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() })
+        toast.success("Product group deleted")
+        queryClient.invalidateQueries({
+          queryKey: PRODUCT_GROUP_QUERY_KEYS.lists(),
+        })
         setDeleteTarget(null)
       },
       onError: (error) => toast.error(error.message),
@@ -122,98 +89,80 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
           <CardTitle className="flex items-center gap-2 text-lg font-bold">
-            <Package className="h-5 w-5 text-primary" />
-            Products
+            <Layers className="h-5 w-5 text-primary" />
+            Product Groups
           </CardTitle>
           <CardDescription>
-            Manage your catalog of products and materials.
+            Group products by spec name and set brand preferences.
           </CardDescription>
         </div>
         {orgId && (
-          <ProductModal
-            orgId={orgId}
-            productGroups={productGroups ?? []}
-            categories={categories ?? []}
-          >
+          <ProductGroupModal orgId={orgId}>
             <Button size="sm" className="gap-1">
               <Plus className="h-4 w-4" />
-              Add Product
+              Add Product Group
             </Button>
-          </ProductModal>
+          </ProductGroupModal>
         )}
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, SKU, spec or brand..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setIsExpanded(false)
-              }}
-              className="pl-9"
-            />
-          </div>
-          <Select value={groupFilter} onValueChange={setGroupFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              {productGroups?.map((g) => (
-                <SelectItem key={g.id} value={g.id}>
-                  {g.specName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="relative mb-4">
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search product groups or brands..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value)
+              setIsExpanded(false)
+            }}
+            className="pl-9"
+          />
         </div>
 
         {isLoading ? (
           <div className="space-y-3 py-4">
             <div className="h-14 w-full animate-pulse rounded-lg bg-muted/60" />
             <div className="h-14 w-full animate-pulse rounded-lg bg-muted/60" />
-            <div className="h-14 w-full animate-pulse rounded-lg bg-muted/60" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 py-10 text-center">
-            <Package className="mb-2 h-10 w-10 stroke-[1.5] text-muted-foreground" />
-            <h3 className="text-sm font-semibold">No products found</h3>
+            <Layers className="mb-2 h-10 w-10 stroke-[1.5] text-muted-foreground" />
+            <h3 className="text-sm font-semibold">No product groups found</h3>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-              {searchQuery || groupFilter !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Add your first product to start building your catalog."}
+              {searchQuery
+                ? "Try adjusting your search criteria."
+                : "Add your first product group to organize your product catalog."}
             </p>
           </div>
         ) : (
           <div className="space-y-2">
-            {visible.map((product) => (
+            {visible.map((group) => (
               <div
-                key={product.id}
+                key={group.id}
                 className="group flex items-center justify-between rounded-lg border border-border/40 bg-muted/30 p-3 transition-all hover:bg-muted/60"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Package className="h-4 w-4" />
+                    <Layers className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
                     <h4 className="truncate text-sm font-medium text-foreground">
-                      {product.name}
+                      {group.specName}
                     </h4>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-                      <span className="font-mono">{product.skuCode}</span>
-                      <span>{groupName(product.productGroupId)}</span>
-                      <span>{categoryName(product.categoryId)}</span>
-                      {product.brandTag && <span>· {product.brandTag}</span>}
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {group.brandPriority && group.brandPriority.length > 0
+                        ? group.brandPriority.join(" · ")
+                        : "No brand priority set"}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="hidden text-sm font-semibold tabular-nums sm:inline">
-                    {format(product.basePriceMinor)}
-                  </span>
+                  <Badge
+                    variant="outline"
+                    className="hidden text-xs font-semibold sm:inline-flex"
+                  >
+                    {STOCK_TRACKING_LABELS[group.stockTrackingMode]}
+                  </Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -221,19 +170,14 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <ProductModal
-                        orgId={orgId ?? ""}
-                        product={product}
-                        productGroups={productGroups ?? []}
-                        categories={categories ?? []}
-                      >
+                      <ProductGroupModal orgId={orgId ?? ""} group={group}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                      </ProductModal>
+                      </ProductGroupModal>
                       <DropdownMenuItem
-                        onClick={() => setDeleteTarget(product.id)}
+                        onClick={() => setDeleteTarget(group.id)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -274,10 +218,10 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete product</DialogTitle>
+            <DialogTitle>Delete product group</DialogTitle>
             <DialogDescription>
-              This will remove the product from your catalog. This action cannot
-              be undone.
+              This will remove the product group from your catalog. This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-2">
@@ -300,7 +244,9 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
                 })
               }
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete product"}
+              {deleteMutation.isPending
+                ? "Deleting..."
+                : "Delete product group"}
             </Button>
           </div>
         </DialogContent>

@@ -7,10 +7,11 @@ import {
   bigint,
   index,
   uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { generateId } from "../utils";
-import { organization, team, user } from "../auth-schema";
-import { stockModeEnum, catalogRequestStatusEnum } from "./enums";
+} from "drizzle-orm/pg-core"
+import type { AnyPgColumn } from "drizzle-orm/pg-core"
+import { generateId } from "../utils"
+import { organization, team, user } from "../auth-schema"
+import { stockModeEnum, catalogRequestStatusEnum } from "./enums"
 
 export const productGroups = pgTable(
   "product_groups",
@@ -35,7 +36,29 @@ export const productGroups = pgTable(
     index("product_groups_org_id_idx").on(t.orgId),
     uniqueIndex("product_groups_org_spec_uidx").on(t.orgId, t.specName),
   ]
-);
+)
+
+export const categories = pgTable(
+  "categories",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    parentId: text("parent_id").references((): AnyPgColumn => categories.id),
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (t) => [
+    index("categories_org_id_idx").on(t.orgId),
+    index("categories_org_parent_idx").on(t.orgId, t.parentId),
+  ]
+)
 
 export const products = pgTable(
   "products",
@@ -46,9 +69,8 @@ export const products = pgTable(
     orgId: text("org_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
-    productGroupId: text("product_group_id").references(
-      () => productGroups.id
-    ),
+    productGroupId: text("product_group_id").references(() => productGroups.id),
+    categoryId: text("category_id").references(() => categories.id),
     name: text("name").notNull(),
     skuCode: text("sku_code"),
     specCode: text("spec_code"),
@@ -75,10 +97,11 @@ export const products = pgTable(
   (t) => [
     index("products_org_id_idx").on(t.orgId),
     index("products_org_group_idx").on(t.orgId, t.productGroupId),
+    index("products_org_category_idx").on(t.orgId, t.categoryId),
     index("products_org_brand_idx").on(t.orgId, t.brandTag),
     index("products_org_spec_code_idx").on(t.orgId, t.specCode),
   ]
-);
+)
 
 export const productLocationOverrides = pgTable(
   "product_location_overrides",
@@ -101,7 +124,7 @@ export const productLocationOverrides = pgTable(
     uniqueIndex("product_loc_override_uidx").on(t.productId, t.teamId),
     index("product_loc_override_org_team_idx").on(t.orgId, t.teamId),
   ]
-);
+)
 
 export const catalogRequests = pgTable(
   "catalog_requests",
@@ -127,4 +150,4 @@ export const catalogRequests = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [index("catalog_requests_org_status_idx").on(t.orgId, t.status)]
-);
+)

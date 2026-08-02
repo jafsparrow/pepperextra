@@ -18,11 +18,13 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import { cn } from "@workspace/ui/lib/utils"
-import {
-  productFormSchema,
-} from "../../schema/product-schema"
+import { productFormSchema } from "../../schema/product-schema"
 import type { ProductFormValues } from "../../schema/product-schema"
-import type { ProductGroup } from "@repo/contracts"
+import type { ProductGroup, Category } from "@repo/contracts"
+import {
+  buildCategoryTree,
+  flattenCategoryTree,
+} from "@/feature/category/utils/tree"
 
 interface ProductFormProps {
   onSubmit?: (data: ProductFormValues) => void | Promise<void>
@@ -31,6 +33,7 @@ interface ProductFormProps {
   defaultValues?: Partial<ProductFormValues>
   submitLabel?: string
   productGroups?: ProductGroup[]
+  categories?: Category[]
 }
 
 export function ProductForm({
@@ -40,6 +43,7 @@ export function ProductForm({
   defaultValues,
   submitLabel = "Save product",
   productGroups = [],
+  categories = [],
 }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -47,6 +51,7 @@ export function ProductForm({
       name: defaultValues?.name ?? "",
       skuCode: defaultValues?.skuCode ?? "",
       productGroupId: defaultValues?.productGroupId ?? undefined,
+      categoryId: defaultValues?.categoryId ?? undefined,
       specCode: defaultValues?.specCode ?? "",
       brandTag: defaultValues?.brandTag ?? "",
       basePrice: defaultValues?.basePrice ?? "",
@@ -62,6 +67,7 @@ export function ProductForm({
       name: defaultValues?.name ?? "",
       skuCode: defaultValues?.skuCode ?? "",
       productGroupId: defaultValues?.productGroupId ?? undefined,
+      categoryId: defaultValues?.categoryId ?? undefined,
       specCode: defaultValues?.specCode ?? "",
       brandTag: defaultValues?.brandTag ?? "",
       basePrice: defaultValues?.basePrice ?? "",
@@ -71,6 +77,8 @@ export function ProductForm({
       reorderThreshold: defaultValues?.reorderThreshold ?? undefined,
     })
   }, [defaultValues, form])
+
+  const categoryOptions = flattenCategoryTree(buildCategoryTree(categories))
 
   return (
     <form
@@ -84,8 +92,14 @@ export function ProductForm({
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Product name</FieldLabel>
-              <Input {...field} type="text" placeholder="Ordinary Portland Cement 50kg" />
-              <FieldDescription>Display name shown on receipts and quotes.</FieldDescription>
+              <Input
+                {...field}
+                type="text"
+                placeholder="Ordinary Portland Cement 50kg"
+              />
+              <FieldDescription>
+                Display name shown on receipts and quotes.
+              </FieldDescription>
             </Field>
           )}
         />
@@ -97,7 +111,9 @@ export function ProductForm({
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>SKU</FieldLabel>
               <Input {...field} type="text" placeholder="CEM-OPC-50" />
-              <FieldDescription>Unique stock keeping unit code.</FieldDescription>
+              <FieldDescription>
+                Unique stock keeping unit code.
+              </FieldDescription>
             </Field>
           )}
         />
@@ -109,13 +125,18 @@ export function ProductForm({
           control={form.control}
           render={({ field }) => (
             <Field>
-              <FieldLabel>Category</FieldLabel>
-              <Select value={field.value ?? "none"} onValueChange={(v) => field.onChange(v === "none" ? undefined : v)}>
+              <FieldLabel>Product group</FieldLabel>
+              <Select
+                value={field.value ?? "none"}
+                onValueChange={(v) =>
+                  field.onChange(v === "none" ? undefined : v)
+                }
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Select a product group" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
+                  <SelectItem value="none">No product group</SelectItem>
                   {productGroups.map((group) => (
                     <SelectItem key={group.id} value={group.id}>
                       {group.specName}
@@ -123,6 +144,41 @@ export function ProductForm({
                   ))}
                 </SelectContent>
               </Select>
+              <FieldDescription>
+                Groups equivalent products across brands for alternatives.
+              </FieldDescription>
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="categoryId"
+          control={form.control}
+          render={({ field }) => (
+            <Field>
+              <FieldLabel>Category</FieldLabel>
+              <Select
+                value={field.value ?? "none"}
+                onValueChange={(v) =>
+                  field.onChange(v === "none" ? undefined : v)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categoryOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {"— ".repeat(option.depth)}
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldDescription>
+                Classification used for browsing the catalog.
+              </FieldDescription>
             </Field>
           )}
         />
@@ -146,7 +202,12 @@ export function ProductForm({
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Base price (major units)</FieldLabel>
-              <Input {...field} type="text" inputMode="decimal" placeholder="3.250" />
+              <Input
+                {...field}
+                type="text"
+                inputMode="decimal"
+                placeholder="3.250"
+              />
               <FieldDescription>
                 Entered in major units; converted to minor units for storage.
               </FieldDescription>
@@ -173,7 +234,9 @@ export function ProductForm({
           <Field>
             <FieldLabel>Spec code</FieldLabel>
             <Input {...field} type="text" placeholder="OPC 42.5N" />
-            <FieldDescription>Specification code for technical grade matching.</FieldDescription>
+            <FieldDescription>
+              Specification code for technical grade matching.
+            </FieldDescription>
           </Field>
         )}
       />
@@ -185,7 +248,9 @@ export function ProductForm({
           <Field>
             <FieldLabel>Aliases</FieldLabel>
             <Input {...field} type="text" placeholder="cement, اسمنت" />
-            <FieldDescription>Comma-separated alternate names used in search.</FieldDescription>
+            <FieldDescription>
+              Comma-separated alternate names used in search.
+            </FieldDescription>
           </Field>
         )}
       />
@@ -203,10 +268,14 @@ export function ProductForm({
               placeholder="100"
               value={field.value ?? ""}
               onChange={(e) =>
-                field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                field.onChange(
+                  e.target.value === "" ? undefined : Number(e.target.value)
+                )
               }
             />
-            <FieldDescription>Stock level that triggers a reorder alert.</FieldDescription>
+            <FieldDescription>
+              Stock level that triggers a reorder alert.
+            </FieldDescription>
           </Field>
         )}
       />
@@ -228,7 +297,9 @@ export function ProductForm({
       <Button
         type="submit"
         className="w-full"
-        disabled={isLoading || form.formState.isSubmitting || !form.formState.isValid}
+        disabled={
+          isLoading || form.formState.isSubmitting || !form.formState.isValid
+        }
       >
         {isLoading ? "Saving..." : submitLabel}
       </Button>

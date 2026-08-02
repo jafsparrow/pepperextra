@@ -19,6 +19,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import { categoryFormSchema } from "../../schema/category-schema"
 import type { CategoryFormValues } from "../../schema/category-schema"
+import type { FlattenedCategory } from "../../utils/tree"
 
 interface CategoryFormProps {
   onSubmit?: (data: CategoryFormValues) => void | Promise<void>
@@ -26,6 +27,7 @@ interface CategoryFormProps {
   className?: string
   defaultValues?: Partial<CategoryFormValues>
   submitLabel?: string
+  parentOptions?: FlattenedCategory[]
 }
 
 export function CategoryForm({
@@ -34,23 +36,22 @@ export function CategoryForm({
   className,
   defaultValues,
   submitLabel = "Save category",
+  parentOptions = [],
 }: CategoryFormProps) {
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
-      specName: defaultValues?.specName ?? "",
-      brandPriority: defaultValues?.brandPriority ?? "",
-      stockTrackingMode: defaultValues?.stockTrackingMode ?? "sku",
-      groupReorderThreshold: defaultValues?.groupReorderThreshold ?? undefined,
+      name: defaultValues?.name ?? "",
+      parentId: defaultValues?.parentId ?? null,
+      sortOrder: defaultValues?.sortOrder ?? 0,
     },
   })
 
   useEffect(() => {
     form.reset({
-      specName: defaultValues?.specName ?? "",
-      brandPriority: defaultValues?.brandPriority ?? "",
-      stockTrackingMode: defaultValues?.stockTrackingMode ?? "sku",
-      groupReorderThreshold: defaultValues?.groupReorderThreshold ?? undefined,
+      name: defaultValues?.name ?? "",
+      parentId: defaultValues?.parentId ?? null,
+      sortOrder: defaultValues?.sortOrder ?? 0,
     })
   }, [defaultValues, form])
 
@@ -61,37 +62,39 @@ export function CategoryForm({
     >
       <FieldGroup>
         <Controller
-          name="specName"
+          name="name"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Category name</FieldLabel>
-              <Input {...field} type="text" placeholder="Cement & Gypsum" />
+              <Input {...field} type="text" placeholder="Plumbing" />
               <FieldDescription>
-                The spec group name used to organize products.
+                A broad classification used to group products for browsing.
               </FieldDescription>
             </Field>
           )}
         />
 
         <Controller
-          name="stockTrackingMode"
+          name="sortOrder"
           control={form.control}
           render={({ field }) => (
             <Field>
-              <FieldLabel>Stock tracking mode</FieldLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sku">Per SKU</SelectItem>
-                  <SelectItem value="group">Group (category level)</SelectItem>
-                </SelectContent>
-              </Select>
+              <FieldLabel>Sort order</FieldLabel>
+              <Input
+                {...field}
+                type="number"
+                min={0}
+                placeholder="0"
+                value={field.value ?? ""}
+                onChange={(e) =>
+                  field.onChange(
+                    e.target.value === "" ? undefined : Number(e.target.value)
+                  )
+                }
+              />
               <FieldDescription>
-                Per SKU tracks each product variant; Group tracks at the category
-                level.
+                Lower values appear first among siblings.
               </FieldDescription>
             </Field>
           )}
@@ -99,37 +102,30 @@ export function CategoryForm({
       </FieldGroup>
 
       <Controller
-        name="brandPriority"
+        name="parentId"
         control={form.control}
         render={({ field }) => (
           <Field>
-            <FieldLabel>Brand priority</FieldLabel>
-            <Input {...field} type="text" placeholder="Royal Omani, Oman Cement" />
+            <FieldLabel>Parent category</FieldLabel>
+            <Select
+              value={field.value ?? "none"}
+              onValueChange={(v) => field.onChange(v === "none" ? null : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a parent category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No parent (top level)</SelectItem>
+                {parentOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {"— ".repeat(option.depth)}
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FieldDescription>
-              Comma-separated brands ordered by preference for quote alternatives.
-            </FieldDescription>
-          </Field>
-        )}
-      />
-
-      <Controller
-        name="groupReorderThreshold"
-        control={form.control}
-        render={({ field }) => (
-          <Field>
-            <FieldLabel>Group reorder threshold</FieldLabel>
-            <Input
-              {...field}
-              type="number"
-              min={0}
-              placeholder="50"
-              value={field.value ?? ""}
-              onChange={(e) =>
-                field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-              }
-            />
-            <FieldDescription>
-              Category-level stock alert threshold when tracking by group.
+              Leave empty to make this a top-level category.
             </FieldDescription>
           </Field>
         )}
@@ -138,7 +134,9 @@ export function CategoryForm({
       <Button
         type="submit"
         className="w-full"
-        disabled={isLoading || form.formState.isSubmitting || !form.formState.isValid}
+        disabled={
+          isLoading || form.formState.isSubmitting || !form.formState.isValid
+        }
       >
         {isLoading ? "Saving..." : submitLabel}
       </Button>

@@ -26,16 +26,15 @@ export class ProductController {
   @Implement(contracts.product.update)
   update() {
     return implement(contracts.product.update).handler(async ({ input }) => {
-      const { organizationId: _organizationId, id, ...data } = input;
-      console.log(_organizationId);
-      return this.productService.updateProduct(id, data);
+      const { organizationId, id, ...data } = input;
+      return this.productService.updateProduct(id, organizationId, data);
     });
   }
 
   @Implement(contracts.product.delete)
   delete() {
     return implement(contracts.product.delete).handler(async ({ input }) => {
-      await this.productService.deleteProduct(input.id);
+      await this.productService.deleteProduct(input.organizationId, input.id);
       return { success: true };
     });
   }

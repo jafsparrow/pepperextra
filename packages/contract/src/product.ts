@@ -5,6 +5,7 @@ export const productSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
   productGroupId: z.string().nullable().optional(),
+  categoryId: z.string().nullable().optional(),
   name: z.string(),
   skuCode: z.string(),
   specCode: z.string().nullable().optional(),
@@ -20,11 +21,17 @@ export type Product = z.infer<typeof productSchema>
 
 export const productCreateSchema = z.object({
   productGroupId: z.string().optional(),
+  categoryId: z.string().optional(),
   name: z.string().min(1, "Name is required"),
   skuCode: z.string().min(1, "SKU is required"),
   specCode: z.string().optional(),
   brandTag: z.string().optional(),
-  basePriceMinor: z.string().refine((v) => /^\d+$/.test(v), "Price must be a positive integer (minor units)"),
+  basePriceMinor: z
+    .string()
+    .refine(
+      (v) => /^\d+$/.test(v),
+      "Price must be a positive integer (minor units)"
+    ),
   unit: z.string().optional(),
   aliases: z.array(z.string()).optional(),
   eligibleForLoyalty: z.boolean().default(false),

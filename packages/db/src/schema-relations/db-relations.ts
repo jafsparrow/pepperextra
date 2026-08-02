@@ -9,20 +9,57 @@ import {
 } from "../auth-schema"
 import { team, teamMember } from "../auth-schema"
 import { orgMetadata, teamMetadata, userMetadata } from "../schemas/metadata"
-import { countries, currencies, taxTypes, orgTaxConfig } from "../schemas/localization"
-import { productGroups, products, productLocationOverrides, catalogRequests } from "../schemas/catalog"
+import {
+  countries,
+  currencies,
+  taxTypes,
+  orgTaxConfig,
+} from "../schemas/localization"
+import {
+  productGroups,
+  products,
+  productLocationOverrides,
+  catalogRequests,
+  categories,
+} from "../schemas/catalog"
 import { priceLists, priceListOverrides } from "../schemas/price-lists"
 import { productTags } from "../schemas/tags"
 import { productTagAssignments } from "../schemas/tags"
 import { stock } from "../schemas/stock"
 import { productImages } from "../schemas/images"
-import { fulfillmentStations, fulfillmentStationLines } from "../schemas/stations"
-import { quotations, quotationLines, quotationCharges } from "../schemas/quotations"
-import { invoices, invoiceLines, invoiceCharges, invoiceCounters } from "../schemas/invoices"
+import {
+  fulfillmentStations,
+  fulfillmentStationLines,
+} from "../schemas/stations"
+import {
+  quotations,
+  quotationLines,
+  quotationCharges,
+} from "../schemas/quotations"
+import {
+  invoices,
+  invoiceLines,
+  invoiceCharges,
+  invoiceCounters,
+} from "../schemas/invoices"
 import { payments } from "../schemas/payments"
-import { creditNotes, creditNoteLines, creditNoteCharges } from "../schemas/credit-notes"
-import { warrantyItems, invoiceWarrantyLines, warrantyClaims, supplierWarrantyClaims } from "../schemas/warranty"
-import { customers, customerContacts, sites, siteContacts } from "../schemas/customers"
+import {
+  creditNotes,
+  creditNoteLines,
+  creditNoteCharges,
+} from "../schemas/credit-notes"
+import {
+  warrantyItems,
+  invoiceWarrantyLines,
+  warrantyClaims,
+  supplierWarrantyClaims,
+} from "../schemas/warranty"
+import {
+  customers,
+  customerContacts,
+  sites,
+  siteContacts,
+} from "../schemas/customers"
 import { suppliers, purchaseReceipts } from "../schemas/suppliers"
 import { tradespeople, loyaltyRedemptions, qrCodes } from "../schemas/loyalty"
 
@@ -45,6 +82,7 @@ export const dbRelations = defineRelations(
     orgTaxConfig,
     productGroups,
     products,
+    categories,
     productLocationOverrides,
     catalogRequests,
     priceLists,
@@ -114,6 +152,7 @@ export const dbRelations = defineRelations(
       orgTaxConfig: r.many.orgTaxConfig(),
       productGroups: r.many.productGroups(),
       products: r.many.products(),
+      categories: r.many.categories(),
       productLocationOverrides: r.many.productLocationOverrides(),
       catalogRequests: r.many.catalogRequests(),
       priceLists: r.many.priceLists(),
@@ -150,7 +189,10 @@ export const dbRelations = defineRelations(
     },
     // ── Auth team extensions ──────────────────
     team: {
-      organization: r.one.organization({ from: r.team.organizationId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.team.organizationId,
+        to: r.organization.id,
+      }),
       teamMembers: r.many.teamMember(),
       teamMetadata: r.many.teamMetadata(),
       stock: r.many.stock(),
@@ -165,30 +207,54 @@ export const dbRelations = defineRelations(
       user: r.one.user({ from: r.teamMember.userId, to: r.user.id }),
     },
     member: {
-      organization: r.one.organization({ from: r.member.organizationId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.member.organizationId,
+        to: r.organization.id,
+      }),
       user: r.one.user({ from: r.member.userId, to: r.user.id }),
     },
     invitation: {
-      organization: r.one.organization({ from: r.invitation.organizationId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.invitation.organizationId,
+        to: r.organization.id,
+      }),
       user: r.one.user({ from: r.invitation.inviterId, to: r.user.id }),
     },
     // ── Business table relations ─────────────
     orgMetadata: {
-      organization: r.one.organization({ from: r.orgMetadata.orgId, to: r.organization.id }),
-      country: r.one.countries({ from: r.orgMetadata.countryId, to: r.countries.id }),
-      currency: r.one.currencies({ from: r.orgMetadata.currencyId, to: r.currencies.id }),
+      organization: r.one.organization({
+        from: r.orgMetadata.orgId,
+        to: r.organization.id,
+      }),
+      country: r.one.countries({
+        from: r.orgMetadata.countryId,
+        to: r.countries.id,
+      }),
+      currency: r.one.currencies({
+        from: r.orgMetadata.currencyId,
+        to: r.currencies.id,
+      }),
     },
     teamMetadata: {
       team: r.one.team({ from: r.teamMetadata.teamId, to: r.team.id }),
-      organization: r.one.organization({ from: r.teamMetadata.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.teamMetadata.orgId,
+        to: r.organization.id,
+      }),
     },
     userMetadata: {
       user: r.one.user({ from: r.userMetadata.userId, to: r.user.id }),
-      organization: r.one.organization({ from: r.userMetadata.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.userMetadata.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.userMetadata.teamId, to: r.team.id }),
     },
     countries: {
-      currency: r.one.currencies({ from: r.countries.currencyId, to: r.currencies.id }),
+      currency: r.one.currencies({
+        from: r.countries.currencyId,
+        to: r.currencies.id,
+      }),
       orgMetadata: r.many.orgMetadata(),
     },
     currencies: {
@@ -196,20 +262,54 @@ export const dbRelations = defineRelations(
       orgMetadata: r.many.orgMetadata(),
     },
     taxTypes: {
-      country: r.one.countries({ from: r.taxTypes.countryId, to: r.countries.id }),
+      country: r.one.countries({
+        from: r.taxTypes.countryId,
+        to: r.countries.id,
+      }),
       orgConfigs: r.many.orgTaxConfig(),
     },
     orgTaxConfig: {
-      organization: r.one.organization({ from: r.orgTaxConfig.orgId, to: r.organization.id }),
-      taxType: r.one.taxTypes({ from: r.orgTaxConfig.taxTypeId, to: r.taxTypes.id }),
+      organization: r.one.organization({
+        from: r.orgTaxConfig.orgId,
+        to: r.organization.id,
+      }),
+      taxType: r.one.taxTypes({
+        from: r.orgTaxConfig.taxTypeId,
+        to: r.taxTypes.id,
+      }),
     },
     productGroups: {
-      organization: r.one.organization({ from: r.productGroups.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.productGroups.orgId,
+        to: r.organization.id,
+      }),
+      products: r.many.products(),
+    },
+    categories: {
+      organization: r.one.organization({
+        from: r.categories.orgId,
+        to: r.organization.id,
+      }),
+      parent: r.one.categories({
+        from: r.categories.parentId,
+        to: r.categories.id,
+      }),
+      children: r.many.categories(),
       products: r.many.products(),
     },
     products: {
-      organization: r.one.organization({ from: r.products.orgId, to: r.organization.id }),
-      productGroup: r.one.productGroups({ from: r.products.productGroupId, to: r.productGroups.id }),
+      organization: r.one.organization({
+        from: r.products.orgId,
+        to: r.organization.id,
+      }),
+      productGroup: r.one.productGroups({
+        from: r.products.productGroupId,
+        to: r.productGroups.id,
+      }),
+      category: r.one.categories({
+        from: r.products.categoryId,
+        to: r.categories.id,
+      }),
       locationOverrides: r.many.productLocationOverrides(),
       stock: r.many.stock(),
       catalogRequests: r.many.catalogRequests(),
@@ -221,74 +321,164 @@ export const dbRelations = defineRelations(
       images: r.many.productImages(),
     },
     productImages: {
-      product: r.one.products({ from: r.productImages.productId, to: r.products.id }),
-      organization: r.one.organization({ from: r.productImages.orgId, to: r.organization.id }),
+      product: r.one.products({
+        from: r.productImages.productId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.productImages.orgId,
+        to: r.organization.id,
+      }),
     },
     productLocationOverrides: {
-      product: r.one.products({ from: r.productLocationOverrides.productId, to: r.products.id }),
-      team: r.one.team({ from: r.productLocationOverrides.teamId, to: r.team.id }),
-      organization: r.one.organization({ from: r.productLocationOverrides.orgId, to: r.organization.id }),
+      product: r.one.products({
+        from: r.productLocationOverrides.productId,
+        to: r.products.id,
+      }),
+      team: r.one.team({
+        from: r.productLocationOverrides.teamId,
+        to: r.team.id,
+      }),
+      organization: r.one.organization({
+        from: r.productLocationOverrides.orgId,
+        to: r.organization.id,
+      }),
     },
     catalogRequests: {
-      organization: r.one.organization({ from: r.catalogRequests.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.catalogRequests.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.catalogRequests.teamId, to: r.team.id }),
-      submittedByUser: r.one.user({ from: r.catalogRequests.submittedBy, to: r.user.id }),
-      mappedProduct: r.one.products({ from: r.catalogRequests.mappedToSku, to: r.products.id }),
+      submittedByUser: r.one.user({
+        from: r.catalogRequests.submittedBy,
+        to: r.user.id,
+      }),
+      mappedProduct: r.one.products({
+        from: r.catalogRequests.mappedToSku,
+        to: r.products.id,
+      }),
     },
     priceLists: {
-      organization: r.one.organization({ from: r.priceLists.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.priceLists.orgId,
+        to: r.organization.id,
+      }),
       overrides: r.many.priceListOverrides(),
     },
     priceListOverrides: {
-      priceList: r.one.priceLists({ from: r.priceListOverrides.priceListId, to: r.priceLists.id }),
-      product: r.one.products({ from: r.priceListOverrides.productId, to: r.products.id }),
-      organization: r.one.organization({ from: r.priceListOverrides.orgId, to: r.organization.id }),
+      priceList: r.one.priceLists({
+        from: r.priceListOverrides.priceListId,
+        to: r.priceLists.id,
+      }),
+      product: r.one.products({
+        from: r.priceListOverrides.productId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.priceListOverrides.orgId,
+        to: r.organization.id,
+      }),
     },
     productTags: {
-      organization: r.one.organization({ from: r.productTags.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.productTags.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.productTags.teamId, to: r.team.id }),
       tagAssignments: r.many.productTagAssignments(),
     },
     productTagAssignments: {
-      tag: r.one.productTags({ from: r.productTagAssignments.tagId, to: r.productTags.id }),
-      product: r.one.products({ from: r.productTagAssignments.productId, to: r.products.id }),
+      tag: r.one.productTags({
+        from: r.productTagAssignments.tagId,
+        to: r.productTags.id,
+      }),
+      product: r.one.products({
+        from: r.productTagAssignments.productId,
+        to: r.products.id,
+      }),
     },
     stock: {
       product: r.one.products({ from: r.stock.productId, to: r.products.id }),
       team: r.one.team({ from: r.stock.teamId, to: r.team.id }),
-      organization: r.one.organization({ from: r.stock.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.stock.orgId,
+        to: r.organization.id,
+      }),
     },
     fulfillmentStations: {
-      organization: r.one.organization({ from: r.fulfillmentStations.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.fulfillmentStations.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.fulfillmentStations.teamId, to: r.team.id }),
       stationLines: r.many.fulfillmentStationLines(),
     },
     fulfillmentStationLines: {
-      quotationLine: r.one.quotationLines({ from: r.fulfillmentStationLines.quotationLineId, to: r.quotationLines.id }),
-      station: r.one.fulfillmentStations({ from: r.fulfillmentStationLines.stationId, to: r.fulfillmentStations.id }),
-      organization: r.one.organization({ from: r.fulfillmentStationLines.orgId, to: r.organization.id }),
-      markedByUser: r.one.user({ from: r.fulfillmentStationLines.markedBy, to: r.user.id }),
+      quotationLine: r.one.quotationLines({
+        from: r.fulfillmentStationLines.quotationLineId,
+        to: r.quotationLines.id,
+      }),
+      station: r.one.fulfillmentStations({
+        from: r.fulfillmentStationLines.stationId,
+        to: r.fulfillmentStations.id,
+      }),
+      organization: r.one.organization({
+        from: r.fulfillmentStationLines.orgId,
+        to: r.organization.id,
+      }),
+      markedByUser: r.one.user({
+        from: r.fulfillmentStationLines.markedBy,
+        to: r.user.id,
+      }),
     },
     quotations: {
-      organization: r.one.organization({ from: r.quotations.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.quotations.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.quotations.teamId, to: r.team.id }),
-      createdByUser: r.one.user({ from: r.quotations.createdBy, to: r.user.id }),
+      createdByUser: r.one.user({
+        from: r.quotations.createdBy,
+        to: r.user.id,
+      }),
       lines: r.many.quotationLines(),
       charges: r.many.quotationCharges(),
     },
     quotationLines: {
-      quotation: r.one.quotations({ from: r.quotationLines.quotationId, to: r.quotations.id }),
-      product: r.one.products({ from: r.quotationLines.productId, to: r.products.id }),
-      organization: r.one.organization({ from: r.quotationLines.orgId, to: r.organization.id }),
+      quotation: r.one.quotations({
+        from: r.quotationLines.quotationId,
+        to: r.quotations.id,
+      }),
+      product: r.one.products({
+        from: r.quotationLines.productId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.quotationLines.orgId,
+        to: r.organization.id,
+      }),
       stationLines: r.many.fulfillmentStationLines(),
     },
     quotationCharges: {
-      quotation: r.one.quotations({ from: r.quotationCharges.quotationId, to: r.quotations.id }),
-      taxType: r.one.taxTypes({ from: r.quotationCharges.taxTypeId, to: r.taxTypes.id }),
-      organization: r.one.organization({ from: r.quotationCharges.orgId, to: r.organization.id }),
+      quotation: r.one.quotations({
+        from: r.quotationCharges.quotationId,
+        to: r.quotations.id,
+      }),
+      taxType: r.one.taxTypes({
+        from: r.quotationCharges.taxTypeId,
+        to: r.taxTypes.id,
+      }),
+      organization: r.one.organization({
+        from: r.quotationCharges.orgId,
+        to: r.organization.id,
+      }),
     },
     invoices: {
-      organization: r.one.organization({ from: r.invoices.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.invoices.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.invoices.teamId, to: r.team.id }),
       issuedByUser: r.one.user({ from: r.invoices.issuedBy, to: r.user.id }),
       lines: r.many.invoiceLines(),
@@ -298,109 +488,253 @@ export const dbRelations = defineRelations(
       warrantyLines: r.many.invoiceWarrantyLines(),
     },
     invoiceLines: {
-      invoice: r.one.invoices({ from: r.invoiceLines.invoiceId, to: r.invoices.id }),
-      product: r.one.products({ from: r.invoiceLines.productId, to: r.products.id }),
-      organization: r.one.organization({ from: r.invoiceLines.orgId, to: r.organization.id }),
+      invoice: r.one.invoices({
+        from: r.invoiceLines.invoiceId,
+        to: r.invoices.id,
+      }),
+      product: r.one.products({
+        from: r.invoiceLines.productId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.invoiceLines.orgId,
+        to: r.organization.id,
+      }),
       warrantyLines: r.many.invoiceWarrantyLines(),
       creditNoteLines: r.many.creditNoteLines(),
     },
     invoiceCharges: {
-      invoice: r.one.invoices({ from: r.invoiceCharges.invoiceId, to: r.invoices.id }),
-      taxType: r.one.taxTypes({ from: r.invoiceCharges.taxTypeId, to: r.taxTypes.id }),
-      organization: r.one.organization({ from: r.invoiceCharges.orgId, to: r.organization.id }),
+      invoice: r.one.invoices({
+        from: r.invoiceCharges.invoiceId,
+        to: r.invoices.id,
+      }),
+      taxType: r.one.taxTypes({
+        from: r.invoiceCharges.taxTypeId,
+        to: r.taxTypes.id,
+      }),
+      organization: r.one.organization({
+        from: r.invoiceCharges.orgId,
+        to: r.organization.id,
+      }),
     },
     invoiceCounters: {
-      organization: r.one.organization({ from: r.invoiceCounters.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.invoiceCounters.orgId,
+        to: r.organization.id,
+      }),
     },
     payments: {
-      organization: r.one.organization({ from: r.payments.orgId, to: r.organization.id }),
-      invoice: r.one.invoices({ from: r.payments.invoiceId, to: r.invoices.id }),
-      recordedByUser: r.one.user({ from: r.payments.recordedBy, to: r.user.id }),
+      organization: r.one.organization({
+        from: r.payments.orgId,
+        to: r.organization.id,
+      }),
+      invoice: r.one.invoices({
+        from: r.payments.invoiceId,
+        to: r.invoices.id,
+      }),
+      recordedByUser: r.one.user({
+        from: r.payments.recordedBy,
+        to: r.user.id,
+      }),
     },
     creditNotes: {
-      organization: r.one.organization({ from: r.creditNotes.orgId, to: r.organization.id }),
-      invoice: r.one.invoices({ from: r.creditNotes.invoiceId, to: r.invoices.id }),
-      createdByUser: r.one.user({ from: r.creditNotes.createdBy, to: r.user.id }),
+      organization: r.one.organization({
+        from: r.creditNotes.orgId,
+        to: r.organization.id,
+      }),
+      invoice: r.one.invoices({
+        from: r.creditNotes.invoiceId,
+        to: r.invoices.id,
+      }),
+      createdByUser: r.one.user({
+        from: r.creditNotes.createdBy,
+        to: r.user.id,
+      }),
       lines: r.many.creditNoteLines(),
       charges: r.many.creditNoteCharges(),
     },
     creditNoteLines: {
-      creditNote: r.one.creditNotes({ from: r.creditNoteLines.creditNoteId, to: r.creditNotes.id }),
-      invoiceLine: r.one.invoiceLines({ from: r.creditNoteLines.invoiceLineId, to: r.invoiceLines.id }),
-      product: r.one.products({ from: r.creditNoteLines.productId, to: r.products.id }),
-      organization: r.one.organization({ from: r.creditNoteLines.orgId, to: r.organization.id }),
+      creditNote: r.one.creditNotes({
+        from: r.creditNoteLines.creditNoteId,
+        to: r.creditNotes.id,
+      }),
+      invoiceLine: r.one.invoiceLines({
+        from: r.creditNoteLines.invoiceLineId,
+        to: r.invoiceLines.id,
+      }),
+      product: r.one.products({
+        from: r.creditNoteLines.productId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.creditNoteLines.orgId,
+        to: r.organization.id,
+      }),
     },
     creditNoteCharges: {
-      creditNote: r.one.creditNotes({ from: r.creditNoteCharges.creditNoteId, to: r.creditNotes.id }),
-      taxType: r.one.taxTypes({ from: r.creditNoteCharges.taxTypeId, to: r.taxTypes.id }),
-      organization: r.one.organization({ from: r.creditNoteCharges.orgId, to: r.organization.id }),
+      creditNote: r.one.creditNotes({
+        from: r.creditNoteCharges.creditNoteId,
+        to: r.creditNotes.id,
+      }),
+      taxType: r.one.taxTypes({
+        from: r.creditNoteCharges.taxTypeId,
+        to: r.taxTypes.id,
+      }),
+      organization: r.one.organization({
+        from: r.creditNoteCharges.orgId,
+        to: r.organization.id,
+      }),
     },
     warrantyItems: {
-      organization: r.one.organization({ from: r.warrantyItems.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.warrantyItems.orgId,
+        to: r.organization.id,
+      }),
       invoiceWarrantyLines: r.many.invoiceWarrantyLines(),
     },
     invoiceWarrantyLines: {
-      organization: r.one.organization({ from: r.invoiceWarrantyLines.orgId, to: r.organization.id }),
-      invoice: r.one.invoices({ from: r.invoiceWarrantyLines.invoiceId, to: r.invoices.id }),
-      invoiceLine: r.one.invoiceLines({ from: r.invoiceWarrantyLines.invoiceLineId, to: r.invoiceLines.id }),
-      warrantyItem: r.one.warrantyItems({ from: r.invoiceWarrantyLines.warrantyId, to: r.warrantyItems.id }),
+      organization: r.one.organization({
+        from: r.invoiceWarrantyLines.orgId,
+        to: r.organization.id,
+      }),
+      invoice: r.one.invoices({
+        from: r.invoiceWarrantyLines.invoiceId,
+        to: r.invoices.id,
+      }),
+      invoiceLine: r.one.invoiceLines({
+        from: r.invoiceWarrantyLines.invoiceLineId,
+        to: r.invoiceLines.id,
+      }),
+      warrantyItem: r.one.warrantyItems({
+        from: r.invoiceWarrantyLines.warrantyId,
+        to: r.warrantyItems.id,
+      }),
       claims: r.many.warrantyClaims(),
     },
     warrantyClaims: {
-      organization: r.one.organization({ from: r.warrantyClaims.orgId, to: r.organization.id }),
-      warrantyLine: r.one.invoiceWarrantyLines({ from: r.warrantyClaims.warrantyLineId, to: r.invoiceWarrantyLines.id }),
-      handledByUser: r.one.user({ from: r.warrantyClaims.handledBy, to: r.user.id }),
+      organization: r.one.organization({
+        from: r.warrantyClaims.orgId,
+        to: r.organization.id,
+      }),
+      warrantyLine: r.one.invoiceWarrantyLines({
+        from: r.warrantyClaims.warrantyLineId,
+        to: r.invoiceWarrantyLines.id,
+      }),
+      handledByUser: r.one.user({
+        from: r.warrantyClaims.handledBy,
+        to: r.user.id,
+      }),
     },
     supplierWarrantyClaims: {
-      organization: r.one.organization({ from: r.supplierWarrantyClaims.orgId, to: r.organization.id }),
-      supplier: r.one.suppliers({ from: r.supplierWarrantyClaims.supplierId, to: r.suppliers.id }),
-      product: r.one.products({ from: r.supplierWarrantyClaims.productId, to: r.products.id }),
+      organization: r.one.organization({
+        from: r.supplierWarrantyClaims.orgId,
+        to: r.organization.id,
+      }),
+      supplier: r.one.suppliers({
+        from: r.supplierWarrantyClaims.supplierId,
+        to: r.suppliers.id,
+      }),
+      product: r.one.products({
+        from: r.supplierWarrantyClaims.productId,
+        to: r.products.id,
+      }),
     },
     customers: {
-      organization: r.one.organization({ from: r.customers.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.customers.orgId,
+        to: r.organization.id,
+      }),
       contacts: r.many.customerContacts(),
       sites: r.many.sites(),
     },
     customerContacts: {
-      customer: r.one.customers({ from: r.customerContacts.customerId, to: r.customers.id }),
-      organization: r.one.organization({ from: r.customerContacts.orgId, to: r.organization.id }),
+      customer: r.one.customers({
+        from: r.customerContacts.customerId,
+        to: r.customers.id,
+      }),
+      organization: r.one.organization({
+        from: r.customerContacts.orgId,
+        to: r.organization.id,
+      }),
     },
     sites: {
-      organization: r.one.organization({ from: r.sites.orgId, to: r.organization.id }),
-      customer: r.one.customers({ from: r.sites.customerId, to: r.customers.id }),
+      organization: r.one.organization({
+        from: r.sites.orgId,
+        to: r.organization.id,
+      }),
+      customer: r.one.customers({
+        from: r.sites.customerId,
+        to: r.customers.id,
+      }),
       linkedByUser: r.one.user({ from: r.sites.linkedBy, to: r.user.id }),
       contacts: r.many.siteContacts(),
     },
     siteContacts: {
       site: r.one.sites({ from: r.siteContacts.siteId, to: r.sites.id }),
-      organization: r.one.organization({ from: r.siteContacts.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.siteContacts.orgId,
+        to: r.organization.id,
+      }),
     },
     suppliers: {
-      organization: r.one.organization({ from: r.suppliers.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.suppliers.orgId,
+        to: r.organization.id,
+      }),
       purchaseReceipts: r.many.purchaseReceipts(),
       supplierWarrantyClaims: r.many.supplierWarrantyClaims(),
     },
     purchaseReceipts: {
-      organization: r.one.organization({ from: r.purchaseReceipts.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.purchaseReceipts.orgId,
+        to: r.organization.id,
+      }),
       team: r.one.team({ from: r.purchaseReceipts.teamId, to: r.team.id }),
-      supplier: r.one.suppliers({ from: r.purchaseReceipts.supplierId, to: r.suppliers.id }),
-      product: r.one.products({ from: r.purchaseReceipts.productId, to: r.products.id }),
-      recordedByUser: r.one.user({ from: r.purchaseReceipts.recordedBy, to: r.user.id }),
+      supplier: r.one.suppliers({
+        from: r.purchaseReceipts.supplierId,
+        to: r.suppliers.id,
+      }),
+      product: r.one.products({
+        from: r.purchaseReceipts.productId,
+        to: r.products.id,
+      }),
+      recordedByUser: r.one.user({
+        from: r.purchaseReceipts.recordedBy,
+        to: r.user.id,
+      }),
     },
     tradespeople: {
-      organization: r.one.organization({ from: r.tradespeople.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.tradespeople.orgId,
+        to: r.organization.id,
+      }),
       redemptions: r.many.loyaltyRedemptions(),
       scannedQrCodes: r.many.qrCodes(),
     },
     loyaltyRedemptions: {
-      organization: r.one.organization({ from: r.loyaltyRedemptions.orgId, to: r.organization.id }),
-      tradesperson: r.one.tradespeople({ from: r.loyaltyRedemptions.tradespersonId, to: r.tradespeople.id }),
-      processedByUser: r.one.user({ from: r.loyaltyRedemptions.processedBy, to: r.user.id }),
+      organization: r.one.organization({
+        from: r.loyaltyRedemptions.orgId,
+        to: r.organization.id,
+      }),
+      tradesperson: r.one.tradespeople({
+        from: r.loyaltyRedemptions.tradespersonId,
+        to: r.tradespeople.id,
+      }),
+      processedByUser: r.one.user({
+        from: r.loyaltyRedemptions.processedBy,
+        to: r.user.id,
+      }),
     },
     qrCodes: {
-      organization: r.one.organization({ from: r.qrCodes.orgId, to: r.organization.id }),
+      organization: r.one.organization({
+        from: r.qrCodes.orgId,
+        to: r.organization.id,
+      }),
       product: r.one.products({ from: r.qrCodes.productId, to: r.products.id }),
-      tradesperson: r.one.tradespeople({ from: r.qrCodes.tradespersonId, to: r.tradespeople.id }),
+      tradesperson: r.one.tradespeople({
+        from: r.qrCodes.tradespersonId,
+        to: r.tradespeople.id,
+      }),
       scannedByUser: r.one.user({ from: r.qrCodes.scannedBy, to: r.user.id }),
     },
   })

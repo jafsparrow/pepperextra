@@ -16,16 +16,23 @@ import { toMinorUnits } from "@/shared/utils/currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductForm } from "./product-form"
 import type { ProductFormValues } from "../../schema/product-schema"
-import type { Product, ProductGroup } from "@repo/contracts"
+import type { Product, ProductGroup, Category } from "@repo/contracts"
 
 interface ProductModalProps {
   orgId: string
   children?: ReactNode
   product?: Product
   productGroups?: ProductGroup[]
+  categories?: Category[]
 }
 
-export function ProductModal({ orgId, children, product, productGroups = [] }: ProductModalProps) {
+export function ProductModal({
+  orgId,
+  children,
+  product,
+  productGroups = [],
+  categories = [],
+}: ProductModalProps) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -59,6 +66,7 @@ export function ProductModal({ orgId, children, product, productGroups = [] }: P
       name: data.name,
       skuCode: data.skuCode,
       productGroupId: data.productGroupId,
+      categoryId: data.categoryId,
       specCode: data.specCode || undefined,
       brandTag: data.brandTag || undefined,
       basePriceMinor:
@@ -78,7 +86,11 @@ export function ProductModal({ orgId, children, product, productGroups = [] }: P
     }
 
     if (product) {
-      updateMutation.mutate({ organizationId: orgId, id: product.id, ...payload })
+      updateMutation.mutate({
+        organizationId: orgId,
+        id: product.id,
+        ...payload,
+      })
     } else {
       createMutation.mutate({ organizationId: orgId, ...payload })
     }
@@ -105,6 +117,7 @@ export function ProductModal({ orgId, children, product, productGroups = [] }: P
         <ProductForm
           onSubmit={handleSubmit}
           productGroups={productGroups}
+          categories={categories}
           isLoading={createMutation.isPending || updateMutation.isPending}
           submitLabel={product ? "Save changes" : "Create product"}
           defaultValues={
@@ -113,6 +126,7 @@ export function ProductModal({ orgId, children, product, productGroups = [] }: P
                   name: product.name,
                   skuCode: product.skuCode,
                   productGroupId: product.productGroupId ?? undefined,
+                  categoryId: product.categoryId ?? undefined,
                   specCode: product.specCode ?? "",
                   brandTag: product.brandTag ?? "",
                   basePrice:

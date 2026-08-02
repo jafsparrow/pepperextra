@@ -6,8 +6,3 @@ export const CATEGORY_QUERY_KEYS = {
   details: () => [...CATEGORY_QUERY_KEYS.all, "detail"] as const,
   detail: (id: string) => [...CATEGORY_QUERY_KEYS.details(), id] as const,
 }
-
-export const STOCK_TRACKING_LABELS = {
-  group: "Group",
-  sku: "Per SKU",
-} as const

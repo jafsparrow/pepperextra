@@ -1,8 +1,6 @@
 # Category Store
 
-No client-side state store is used for this feature. Data fetching is handled
-by TanStack Query via the `orpc.productGroup.*` utilities, and mutations
-invalidate the `CATEGORY_QUERY_KEYS` factory keys.
+TanStack Query hooks and server-state for the category feature.
 
-If a `zustand` store becomes necessary (e.g. shared category selection across
-pages), place it here.
+- Uses `orpc.category.list` for the category tree.
+- Mutations (`orpc.category.create/update/delete`) invalidate `CATEGORY_QUERY_KEYS.lists()`.

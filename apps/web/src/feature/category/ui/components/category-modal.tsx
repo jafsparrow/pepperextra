@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { ReactNode } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@workspace/ui/components/button"
@@ -15,15 +15,28 @@ import { orpc } from "@/shared/utils/orpc"
 import { CATEGORY_QUERY_KEYS } from "../../constants"
 import { CategoryForm } from "./category-form"
 import type { CategoryFormValues } from "../../schema/category-schema"
-import type { ProductGroup } from "@repo/contracts"
+import {
+  buildCategoryTree,
+  collectDescendantIds,
+  flattenCategoryTree,
+} from "../../utils/tree"
+import type { Category } from "@repo/contracts"
 
 interface CategoryModalProps {
   orgId: string
   children?: ReactNode
-  category?: ProductGroup
+  categories?: Category[]
+  category?: Category
+  defaultParentId?: string | null
 }
 
-export function CategoryModal({ orgId, children, category }: CategoryModalProps) {
+export function CategoryModal({
+  orgId,
+  children,
+  categories = [],
+  category,
+  defaultParentId = null,
+}: CategoryModalProps) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -31,7 +44,7 @@ export function CategoryModal({ orgId, children, category }: CategoryModalProps)
     queryClient.invalidateQueries({ queryKey: CATEGORY_QUERY_KEYS.lists() })
 
   const createMutation = useMutation(
-    orpc.productGroup.create.mutationOptions({
+    orpc.category.create.mutationOptions({
       onSuccess: () => {
         toast.success("Category created")
         invalidate()
@@ -42,7 +55,7 @@ export function CategoryModal({ orgId, children, category }: CategoryModalProps)
   )
 
   const updateMutation = useMutation(
-    orpc.productGroup.update.mutationOptions({
+    orpc.category.update.mutationOptions({
       onSuccess: () => {
         toast.success("Category updated")
         invalidate()
@@ -52,24 +65,33 @@ export function CategoryModal({ orgId, children, category }: CategoryModalProps)
     })
   )
 
+  const parentOptions = useMemo(() => {
+    const excluded = new Set<string>()
+    if (category) {
+      excluded.add(category.id)
+      const node = findNode(buildCategoryTree(categories), category.id)
+      if (node) {
+        for (const id of collectDescendantIds(node)) excluded.add(id)
+      }
+    }
+    return flattenCategoryTree(buildCategoryTree(categories)).filter(
+      (c) => !excluded.has(c.id)
+    )
+  }, [categories, category])
+
   const handleSubmit = (data: CategoryFormValues) => {
     const payload = {
-      specName: data.specName,
-      brandPriority: data.brandPriority
-        ? data.brandPriority
-            .split(",")
-            .map((b) => b.trim())
-            .filter(Boolean)
-        : [],
-      stockTrackingMode: data.stockTrackingMode,
-      groupReorderThreshold:
-        data.groupReorderThreshold === undefined
-          ? undefined
-          : data.groupReorderThreshold,
+      name: data.name,
+      parentId: data.parentId,
+      sortOrder: data.sortOrder,
     }
 
     if (category) {
-      updateMutation.mutate({ organizationId: orgId, id: category.id, ...payload })
+      updateMutation.mutate({
+        organizationId: orgId,
+        id: category.id,
+        ...payload,
+      })
     } else {
       createMutation.mutate({ organizationId: orgId, ...payload })
     }
@@ -86,30 +108,43 @@ export function CategoryModal({ orgId, children, category }: CategoryModalProps)
       )}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{category ? "Edit category" : "Add category"}</DialogTitle>
+          <DialogTitle>
+            {category ? "Edit category" : "Add category"}
+          </DialogTitle>
           <DialogDescription>
             {category
               ? "Update this category's details."
-              : "Create a new category to organize your products."}
+              : "Create a new category to classify your products."}
           </DialogDescription>
         </DialogHeader>
         <CategoryForm
           onSubmit={handleSubmit}
+          parentOptions={parentOptions}
           isLoading={createMutation.isPending || updateMutation.isPending}
           submitLabel={category ? "Save changes" : "Create category"}
           defaultValues={
             category
               ? {
-                  specName: category.specName,
-                  brandPriority: category.brandPriority?.join(", ") ?? "",
-                  stockTrackingMode: category.stockTrackingMode,
-                  groupReorderThreshold:
-                    category.groupReorderThreshold ?? undefined,
+                  name: category.name,
+                  parentId: category.parentId ?? null,
+                  sortOrder: category.sortOrder,
                 }
-              : undefined
+              : { parentId: defaultParentId }
           }
         />
       </DialogContent>
     </Dialog>
   )
+}
+
+function findNode(
+  nodes: ReturnType<typeof buildCategoryTree>,
+  id: string
+): ReturnType<typeof buildCategoryTree>[number] | null {
+  for (const node of nodes) {
+    if (node.id === id) return node
+    const found = findNode(node.children, id)
+    if (found) return found
+  }
+  return null
 }

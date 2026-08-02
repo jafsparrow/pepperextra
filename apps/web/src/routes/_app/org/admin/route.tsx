@@ -7,7 +7,15 @@ import {
 import { authClient } from "@repo/auth/client"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import { Package, Layers, Truck, Users, Store, Boxes } from "lucide-react"
+import {
+  Package,
+  Layers,
+  Truck,
+  Users,
+  Store,
+  Boxes,
+  FolderTree,
+} from "lucide-react"
 import { BranchScopeSelector } from "@/shared/ui/components/branch-scope-selector"
 import { useAdminContext } from "@/shared/org/admin-context"
 
@@ -17,7 +25,8 @@ export const Route = createFileRoute("/_app/org/admin")({
 
 const navItems = [
   { title: "Products", to: "/org/admin/products", icon: Package },
-  { title: "Categories", to: "/org/admin/categories", icon: Layers },
+  { title: "Product Groups", to: "/org/admin/product-groups", icon: Layers },
+  { title: "Categories", to: "/org/admin/categories", icon: FolderTree },
   { title: "Suppliers", to: "/org/admin/suppliers", icon: Truck },
   { title: "Customers", to: "/org/admin/customers", icon: Users },
 ] as const
