@@ -30,6 +30,13 @@ export class ProductGroupService {
       unit: row.unit,
       aliases: row.aliases ?? [],
       eligibleForLoyalty: row.eligibleForLoyalty,
+      loyaltyPoints: {
+        mode: (row.loyaltyPointsMode ?? 'none') as
+          | 'none'
+          | 'fixed'
+          | 'price_percent',
+        value: row.loyaltyPointsValue,
+      },
       reorderThreshold: row.reorderThreshold,
     };
   }

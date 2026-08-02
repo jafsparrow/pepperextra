@@ -40,6 +40,7 @@ import { Route as AppOrgAdminProductGroupsIndexRouteImport } from './routes/_app
 import { Route as AppOrgAdminCustomersIndexRouteImport } from './routes/_app/org/admin/customers/index'
 import { Route as AppOrgAdminCategoriesIndexRouteImport } from './routes/_app/org/admin/categories/index'
 import { Route as AppOrgTeamsTeamIdSettingsRouteImport } from './routes/_app/org/teams/$teamId_.settings'
+import { Route as AppOrgAdminProductsIdRouteRouteImport } from './routes/_app/org/admin/products/$id/route'
 import { Route as AppOrgAdminCustomersIdRouteRouteImport } from './routes/_app/org/admin/customers/$id/route'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
@@ -201,6 +202,12 @@ const AppOrgTeamsTeamIdSettingsRoute =
     path: '/teams/$teamId/settings',
     getParentRoute: () => AppOrgRouteRoute,
   } as any)
+const AppOrgAdminProductsIdRouteRoute =
+  AppOrgAdminProductsIdRouteRouteImport.update({
+    id: '/products/$id',
+    path: '/products/$id',
+    getParentRoute: () => AppOrgAdminRouteRoute,
+  } as any)
 const AppOrgAdminCustomersIdRouteRoute =
   AppOrgAdminCustomersIdRouteRouteImport.update({
     id: '/customers/$id',
@@ -233,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/org/admin/': typeof AppOrgAdminIndexRoute
   '/org/teams/': typeof AppOrgTeamsIndexRoute
   '/org/admin/customers/$id': typeof AppOrgAdminCustomersIdRouteRoute
+  '/org/admin/products/$id': typeof AppOrgAdminProductsIdRouteRoute
   '/org/teams/$teamId/settings': typeof AppOrgTeamsTeamIdSettingsRoute
   '/org/admin/categories/': typeof AppOrgAdminCategoriesIndexRoute
   '/org/admin/customers/': typeof AppOrgAdminCustomersIndexRoute
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/org/admin': typeof AppOrgAdminIndexRoute
   '/org/teams': typeof AppOrgTeamsIndexRoute
   '/org/admin/customers/$id': typeof AppOrgAdminCustomersIdRouteRoute
+  '/org/admin/products/$id': typeof AppOrgAdminProductsIdRouteRoute
   '/org/teams/$teamId/settings': typeof AppOrgTeamsTeamIdSettingsRoute
   '/org/admin/categories': typeof AppOrgAdminCategoriesIndexRoute
   '/org/admin/customers': typeof AppOrgAdminCustomersIndexRoute
@@ -296,6 +305,7 @@ export interface FileRoutesById {
   '/_app/org/admin/': typeof AppOrgAdminIndexRoute
   '/_app/org/teams/': typeof AppOrgTeamsIndexRoute
   '/_app/org/admin/customers/$id': typeof AppOrgAdminCustomersIdRouteRoute
+  '/_app/org/admin/products/$id': typeof AppOrgAdminProductsIdRouteRoute
   '/_app/org/teams/$teamId_/settings': typeof AppOrgTeamsTeamIdSettingsRoute
   '/_app/org/admin/categories/': typeof AppOrgAdminCategoriesIndexRoute
   '/_app/org/admin/customers/': typeof AppOrgAdminCustomersIndexRoute
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/org/admin/'
     | '/org/teams/'
     | '/org/admin/customers/$id'
+    | '/org/admin/products/$id'
     | '/org/teams/$teamId/settings'
     | '/org/admin/categories/'
     | '/org/admin/customers/'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/org/admin'
     | '/org/teams'
     | '/org/admin/customers/$id'
+    | '/org/admin/products/$id'
     | '/org/teams/$teamId/settings'
     | '/org/admin/categories'
     | '/org/admin/customers'
@@ -392,6 +404,7 @@ export interface FileRouteTypes {
     | '/_app/org/admin/'
     | '/_app/org/teams/'
     | '/_app/org/admin/customers/$id'
+    | '/_app/org/admin/products/$id'
     | '/_app/org/teams/$teamId_/settings'
     | '/_app/org/admin/categories/'
     | '/_app/org/admin/customers/'
@@ -624,6 +637,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgTeamsTeamIdSettingsRouteImport
       parentRoute: typeof AppOrgRouteRoute
     }
+    '/_app/org/admin/products/$id': {
+      id: '/_app/org/admin/products/$id'
+      path: '/products/$id'
+      fullPath: '/org/admin/products/$id'
+      preLoaderRoute: typeof AppOrgAdminProductsIdRouteRouteImport
+      parentRoute: typeof AppOrgAdminRouteRoute
+    }
     '/_app/org/admin/customers/$id': {
       id: '/_app/org/admin/customers/$id'
       path: '/customers/$id'
@@ -657,6 +677,7 @@ const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
 interface AppOrgAdminRouteRouteChildren {
   AppOrgAdminIndexRoute: typeof AppOrgAdminIndexRoute
   AppOrgAdminCustomersIdRouteRoute: typeof AppOrgAdminCustomersIdRouteRoute
+  AppOrgAdminProductsIdRouteRoute: typeof AppOrgAdminProductsIdRouteRoute
   AppOrgAdminCategoriesIndexRoute: typeof AppOrgAdminCategoriesIndexRoute
   AppOrgAdminCustomersIndexRoute: typeof AppOrgAdminCustomersIndexRoute
   AppOrgAdminProductGroupsIndexRoute: typeof AppOrgAdminProductGroupsIndexRoute
@@ -667,6 +688,7 @@ interface AppOrgAdminRouteRouteChildren {
 const AppOrgAdminRouteRouteChildren: AppOrgAdminRouteRouteChildren = {
   AppOrgAdminIndexRoute: AppOrgAdminIndexRoute,
   AppOrgAdminCustomersIdRouteRoute: AppOrgAdminCustomersIdRouteRoute,
+  AppOrgAdminProductsIdRouteRoute: AppOrgAdminProductsIdRouteRoute,
   AppOrgAdminCategoriesIndexRoute: AppOrgAdminCategoriesIndexRoute,
   AppOrgAdminCustomersIndexRoute: AppOrgAdminCustomersIndexRoute,
   AppOrgAdminProductGroupsIndexRoute: AppOrgAdminProductGroupsIndexRoute,

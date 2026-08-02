@@ -1,6 +1,47 @@
 import { oc } from "@orpc/contract"
 import z from "zod"
 
+export const productImageSchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  organizationId: z.string(),
+  imageUrl: z.string(),
+  storageKey: z.string().nullable().optional(),
+  isPrimary: z.boolean().default(false),
+  altText: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  width: z.number().int().nullable().optional(),
+  height: z.number().int().nullable().optional(),
+  createdAt: z.string().datetime().nullable().optional(),
+})
+
+export type ProductImage = z.infer<typeof productImageSchema>
+
+export const productLocationOverrideSchema = z.object({
+  teamId: z.string(),
+  teamName: z.string().nullable().optional(),
+  priceOverrideMinor: z.string().nullable().optional(),
+})
+
+export type ProductLocationOverride = z.infer<
+  typeof productLocationOverrideSchema
+>
+
+export const productStockSchema = z.object({
+  teamId: z.string(),
+  teamName: z.string().nullable().optional(),
+  quantity: z.string(),
+})
+
+export type ProductStock = z.infer<typeof productStockSchema>
+
+export const loyaltyPointsConfigSchema = z.object({
+  mode: z.enum(["none", "fixed", "price_percent"]).default("none"),
+  value: z.number().int().min(0).nullable().optional(),
+})
+
+export type LoyaltyPointsConfig = z.infer<typeof loyaltyPointsConfigSchema>
+
 export const productSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
@@ -14,10 +55,32 @@ export const productSchema = z.object({
   unit: z.string().nullable().optional(),
   aliases: z.array(z.string()).optional(),
   eligibleForLoyalty: z.boolean().default(false),
+  loyaltyPoints: loyaltyPointsConfigSchema,
   reorderThreshold: z.number().int().nullable().optional(),
 })
 
 export type Product = z.infer<typeof productSchema>
+
+export const productDetailSchema = productSchema.extend({
+  activeCostPriceMinor: z.string().nullable().optional(),
+  costLastUpdated: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().nullable().optional(),
+  productGroup: z
+    .object({
+      specName: z.string(),
+      stockTrackingMode: z.enum(["group", "sku"]).default("sku"),
+      groupReorderThreshold: z.number().int().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+  categoryName: z.string().nullable().optional(),
+  images: z.array(productImageSchema).optional(),
+  stock: z.array(productStockSchema).optional(),
+  stockTotal: z.string().optional(),
+  locationOverrides: z.array(productLocationOverrideSchema).optional(),
+})
+
+export type ProductDetail = z.infer<typeof productDetailSchema>
 
 export const productCreateSchema = z.object({
   productGroupId: z.string().optional(),
@@ -35,6 +98,7 @@ export const productCreateSchema = z.object({
   unit: z.string().optional(),
   aliases: z.array(z.string()).optional(),
   eligibleForLoyalty: z.boolean().default(false),
+  loyaltyPoints: loyaltyPointsConfigSchema.optional(),
   reorderThreshold: z.number().int().optional(),
 })
 
@@ -55,6 +119,19 @@ export const listProducts = oc
     })
   )
   .output(z.array(productSchema))
+
+export const getProduct = oc
+  .route({
+    method: "GET",
+    path: "/organizations/{organizationId}/products/{id}",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+    })
+  )
+  .output(productDetailSchema)
 
 export const createProduct = oc
   .route({

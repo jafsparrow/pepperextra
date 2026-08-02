@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -196,7 +197,13 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
                   </div>
                   <div className="min-w-0">
                     <h4 className="truncate text-sm font-medium text-foreground">
-                      {product.name}
+                      <Link
+                        to="/org/admin/products/$id"
+                        params={{ id: product.id }}
+                        className="transition-colors hover:text-primary"
+                      >
+                        {product.name}
+                      </Link>
                     </h4>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                       <span className="font-mono">{product.skuCode}</span>

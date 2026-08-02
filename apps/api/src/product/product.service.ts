@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 import type { DatabaseClient } from '@repo/db';
-import { dz } from '@repo/db';
-import { products } from '@repo/db';
-import type { Product } from '@repo/contracts';
+import { dz, products, productImages } from '@repo/db';
+import type { Product, ProductDetail } from '@repo/contracts';
 import { and, eq, isNull } from 'drizzle-orm';
 
 const asMinor = (value: bigint | string | number | null | undefined): string =>
@@ -11,9 +11,24 @@ const asMinor = (value: bigint | string | number | null | undefined): string =>
 
 type ProductRow = typeof products.$inferSelect;
 
+interface UploadedFile {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+  size: number;
+}
+
+interface RoleScope {
+  isManagerOrOwner: boolean;
+  activeTeamId: string | null;
+}
+
 @Injectable()
 export class ProductService {
-  constructor(@Inject(DRIZZLE_TOKEN) private readonly db: DatabaseClient) {}
+  constructor(
+    @Inject(DRIZZLE_TOKEN) private readonly db: DatabaseClient,
+    private readonly configService: ConfigService,
+  ) {}
 
   private toProduct(row: ProductRow): Product {
     return {
@@ -29,8 +44,41 @@ export class ProductService {
       unit: row.unit,
       aliases: row.aliases ?? [],
       eligibleForLoyalty: row.eligibleForLoyalty,
+      loyaltyPoints: {
+        mode: (row.loyaltyPointsMode ?? 'none') as
+          | 'none'
+          | 'fixed'
+          | 'price_percent',
+        value: row.loyaltyPointsValue,
+      },
       reorderThreshold: row.reorderThreshold,
     };
+  }
+
+  private async resolveRoleScope(
+    organizationId: string,
+    session?: {
+      session?: { userId?: string; activeTeamId?: string | null } | null;
+    },
+  ): Promise<RoleScope> {
+    const userId = session?.session?.userId;
+    const activeTeamId = session?.session?.activeTeamId ?? null;
+
+    if (!userId) {
+      return { isManagerOrOwner: false, activeTeamId };
+    }
+
+    const roleRow = await this.db.query.member.findFirst({
+      where: {
+        organizationId,
+        userId,
+      },
+    });
+
+    const role = roleRow?.role;
+    const isManagerOrOwner = role === 'owner' || role === 'manager';
+
+    return { isManagerOrOwner, activeTeamId };
   }
 
   async listProducts(input: {
@@ -65,6 +113,95 @@ export class ProductService {
     return rows.map((row) => this.toProduct(row));
   }
 
+  async getProduct(
+    organizationId: string,
+    id: string,
+    session?: {
+      session?: { userId?: string; activeTeamId?: string | null } | null;
+    },
+  ): Promise<ProductDetail> {
+    const row = await this.db.query.products.findFirst({
+      where: { id, orgId: organizationId, deletedAt: { isNull: true } },
+      with: {
+        productGroup: true,
+        category: true,
+        images: {
+          where: { deletedAt: { isNull: true } },
+          orderBy: (t, { desc }) => [desc(t.isPrimary)],
+        },
+        stock: {
+          with: {
+            team: true,
+          },
+        },
+        locationOverrides: {
+          with: {
+            team: true,
+          },
+        },
+      },
+    });
+
+    if (!row) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const scope = await this.resolveRoleScope(organizationId, session);
+
+    const stockRows = row.stock ?? [];
+
+    const stock = stockRows.map((s) => ({
+      teamId: s.teamId,
+      teamName: s.team?.name ?? null,
+      quantity: s.quantity?.toString() ?? '0',
+    }));
+
+    let stockTotal = '0';
+    for (const s of stockRows) {
+      const q = s.quantity;
+      if (q) stockTotal = (BigInt(stockTotal) + BigInt(q)).toString();
+    }
+
+    const overrides = row.locationOverrides
+      .filter((o) => scope.isManagerOrOwner || scope.activeTeamId === o.teamId)
+      .map((o) => ({
+        teamId: o.teamId,
+        teamName: o.team?.name ?? null,
+        priceOverrideMinor: o.priceOverrideMinor?.toString() ?? null,
+      }));
+
+    return {
+      ...this.toProduct(row),
+      activeCostPriceMinor: asMinor(row.activeCostPriceMinor),
+      costLastUpdated: row.costLastUpdated?.toISOString() ?? null,
+      createdAt: row.createdAt?.toISOString() ?? null,
+      productGroup: row.productGroup
+        ? {
+            specName: row.productGroup.specName,
+            stockTrackingMode: row.productGroup.stockTrackingMode,
+            groupReorderThreshold: row.productGroup.groupReorderThreshold,
+          }
+        : null,
+      categoryName: row.category?.name ?? null,
+      images: row.images.map((img) => ({
+        id: img.id,
+        productId: img.productId,
+        organizationId: img.orgId,
+        imageUrl: img.imageUrl,
+        storageKey: img.storageKey,
+        isPrimary: img.isPrimary,
+        altText: img.altText,
+        mimeType: img.mimeType,
+        width: img.width,
+        height: img.height,
+        createdAt: img.createdAt?.toISOString() ?? null,
+      })),
+      stock,
+      stockTotal,
+      locationOverrides: overrides,
+    };
+  }
+
   async createProduct(
     organizationId: string,
     data: {
@@ -78,6 +215,10 @@ export class ProductService {
       unit?: string;
       aliases?: string[];
       eligibleForLoyalty?: boolean;
+      loyaltyPoints?: {
+        mode?: 'none' | 'fixed' | 'price_percent';
+        value?: number | null;
+      };
       reorderThreshold?: number;
     },
   ): Promise<Product> {
@@ -95,6 +236,11 @@ export class ProductService {
         unit: data.unit ?? null,
         aliases: data.aliases ?? [],
         eligibleForLoyalty: data.eligibleForLoyalty ?? false,
+        loyaltyPointsMode: data.loyaltyPoints?.mode ?? 'none',
+        loyaltyPointsValue:
+          data.loyaltyPoints?.mode === 'none'
+            ? null
+            : (data.loyaltyPoints?.value ?? null),
         reorderThreshold: data.reorderThreshold ?? null,
       })
       .returning();
@@ -116,6 +262,10 @@ export class ProductService {
       unit: string;
       aliases: string[];
       eligibleForLoyalty: boolean;
+      loyaltyPoints: {
+        mode?: 'none' | 'fixed' | 'price_percent';
+        value?: number | null;
+      };
       reorderThreshold: number;
     }>,
   ): Promise<Product> {
@@ -141,6 +291,13 @@ export class ProductService {
         ...(data.aliases !== undefined && { aliases: data.aliases }),
         ...(data.eligibleForLoyalty !== undefined && {
           eligibleForLoyalty: data.eligibleForLoyalty,
+        }),
+        ...(data.loyaltyPoints !== undefined && {
+          loyaltyPointsMode: data.loyaltyPoints.mode ?? 'none',
+          loyaltyPointsValue:
+            data.loyaltyPoints.mode === 'none'
+              ? null
+              : (data.loyaltyPoints.value ?? null),
         }),
         ...(data.reorderThreshold !== undefined && {
           reorderThreshold: data.reorderThreshold,
@@ -174,5 +331,79 @@ export class ProductService {
           isNull(products.deletedAt),
         ),
       );
+  }
+
+  async uploadImage(
+    organizationId: string,
+    productId: string,
+    file: UploadedFile,
+  ): Promise<{ url: string }> {
+    const product = await this.db.query.products.findFirst({
+      where: {
+        id: productId,
+        orgId: organizationId,
+        deletedAt: { isNull: true },
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const deploymentMode =
+      this.configService.get<string>('DEPLOYMENT_MODE') ?? 'local';
+
+    let url: string;
+    let storageKey: string | null = null;
+
+    if (deploymentMode === 'local') {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const uploadDir = path.resolve(
+        process.cwd(),
+        '..',
+        'web',
+        'public',
+        'uploads',
+        'products',
+      );
+      fs.mkdirSync(uploadDir, { recursive: true });
+      const filename = `${productId}-${Date.now()}${path.extname(file.originalname)}`;
+      fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+      url = `/uploads/products/${filename}`;
+      storageKey = filename;
+    } else {
+      url = `https://s3-bucket.example.com/products/${productId}/${Date.now()}-${file.originalname}`;
+    }
+
+    const existing = await this.db.query.productImages.findFirst({
+      where: {
+        productId,
+        orgId: organizationId,
+        deletedAt: { isNull: true },
+        isPrimary: true,
+      },
+    });
+
+    if (existing) {
+      await this.db
+        .update(productImages)
+        .set({ deletedAt: new Date(), updatedAt: new Date() })
+        .where(eq(productImages.id, existing.id));
+    }
+
+    await this.db.insert(productImages).values({
+      productId,
+      orgId: organizationId,
+      imageUrl: url,
+      storageKey,
+      isPrimary: true,
+      mimeType: file.mimetype,
+      width: null,
+      height: null,
+      altText: product.name,
+    });
+
+    return { url };
   }
 }

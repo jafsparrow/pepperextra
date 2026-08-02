@@ -88,6 +88,10 @@ export const products = pgTable(
     eligibleForLoyalty: boolean("eligible_for_loyalty")
       .default(false)
       .notNull(),
+    loyaltyPointsMode: text("loyalty_points_mode")
+      .default("none")
+      .notNull(),
+    loyaltyPointsValue: integer("loyalty_points_value"),
     reorderThreshold: integer("reorder_threshold"),
     aliases: text("aliases").array(),
     createdAt: timestamp("created_at").defaultNow().notNull(),

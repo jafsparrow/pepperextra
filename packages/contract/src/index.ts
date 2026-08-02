@@ -47,6 +47,7 @@ import {
 } from "./category.js"
 import {
   listProducts,
+  getProduct,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -135,9 +136,21 @@ export {
   productSchema,
   productCreateSchema,
   productUpdateSchema,
+  productDetailSchema,
+  productImageSchema,
+  productLocationOverrideSchema,
+  productStockSchema,
+  loyaltyPointsConfigSchema,
 } from "./product.js"
 
-export type { Product } from "./product.js"
+export type {
+  Product,
+  ProductDetail,
+  ProductImage,
+  ProductLocationOverride,
+  ProductStock,
+  LoyaltyPointsConfig,
+} from "./product.js"
 
 export {
   supplierSchema,
@@ -287,6 +300,7 @@ export const contracts = populateContractRouterPaths({
   },
   product: {
     list: listProducts,
+    get: getProduct,
     create: createProduct,
     update: updateProduct,
     delete: deleteProduct,

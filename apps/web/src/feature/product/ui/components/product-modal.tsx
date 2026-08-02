@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner"
 import { orpc } from "@/shared/utils/orpc"
 import { toMinorUnits } from "@/shared/utils/currency"
+import { useCurrency } from "@/shared/org/use-currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductForm } from "./product-form"
 import type { ProductFormValues } from "../../schema/product-schema"
@@ -22,6 +23,7 @@ interface ProductModalProps {
   orgId: string
   children?: ReactNode
   product?: Product
+  prefill?: Product
   categories?: Category[]
 }
 
@@ -29,10 +31,12 @@ export function ProductModal({
   orgId,
   children,
   product,
+  prefill,
   categories = [],
 }: ProductModalProps) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
+  const { fromMinorUnits } = useCurrency()
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() })
@@ -77,7 +81,13 @@ export function ProductModal({
             .map((a) => a.trim())
             .filter(Boolean)
         : [],
-      eligibleForLoyalty: data.eligibleForLoyalty,
+      eligibleForLoyalty: data.eligibleForLoyalty ?? false,
+      loyaltyPoints: {
+        mode: data.eligibleForLoyalty
+          ? (data.loyaltyPointsMode ?? "none")
+          : "none",
+        value: data.loyaltyPointsValue,
+      },
       reorderThreshold:
         data.reorderThreshold === undefined ? undefined : data.reorderThreshold,
     }
@@ -93,45 +103,59 @@ export function ProductModal({
     }
   }
 
+  const base = product ?? prefill
+
+  const basePriceMinor =
+    base && base.basePriceMinor && base.basePriceMinor !== "0"
+      ? fromMinorUnits(base.basePriceMinor).toFixed()
+      : ""
+
+  const title = product ? "Edit product" : prefill ? "Create product from" : "Add product"
+  const description = product
+    ? "Update this product's details."
+    : prefill
+      ? "Start a new product with details copied from an existing one."
+      : "Add a new product to your catalog."
+  const submitLabel = product
+    ? "Save changes"
+    : prefill
+      ? "Create product"
+      : "Create product"
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children ? (
         <DialogTrigger asChild>{children}</DialogTrigger>
       ) : (
         <DialogTrigger asChild>
-          <Button type="button">{product ? "Edit" : "Add product"}</Button>
+          <Button type="button">{title}</Button>
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{product ? "Edit product" : "Add product"}</DialogTitle>
-          <DialogDescription>
-            {product
-              ? "Update this product's details."
-              : "Add a new product to your catalog."}
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <ProductForm
           onSubmit={handleSubmit}
           categories={categories}
           isLoading={createMutation.isPending || updateMutation.isPending}
-          submitLabel={product ? "Save changes" : "Create product"}
+          submitLabel={submitLabel}
           defaultValues={
-            product
+            base
               ? {
-                  name: product.name,
-                  skuCode: product.skuCode,
-                  categoryId: product.categoryId ?? undefined,
-                  specCode: product.specCode ?? "",
-                  brandTag: product.brandTag ?? "",
-                  basePrice:
-                    product.basePriceMinor && product.basePriceMinor !== "0"
-                      ? (Number(product.basePriceMinor) / 1000).toString()
-                      : "",
-                  unit: product.unit ?? "",
-                  aliases: product.aliases?.join(", ") ?? "",
-                  eligibleForLoyalty: product.eligibleForLoyalty,
-                  reorderThreshold: product.reorderThreshold ?? undefined,
+                  name: product ? base.name : "",
+                  skuCode: product ? base.skuCode : "",
+                  categoryId: base.categoryId ?? undefined,
+                  specCode: base.specCode ?? "",
+                  brandTag: base.brandTag ?? "",
+                  basePrice: basePriceMinor,
+                  unit: base.unit ?? "",
+                  aliases: base.aliases?.join(", ") ?? "",
+                  eligibleForLoyalty: base.eligibleForLoyalty,
+                  loyaltyPointsMode: base.loyaltyPoints.mode,
+                  loyaltyPointsValue: base.loyaltyPoints.value ?? undefined,
+                  reorderThreshold: base.reorderThreshold ?? undefined,
                 }
               : undefined
           }
