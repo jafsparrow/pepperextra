@@ -130,11 +130,7 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
           </CardDescription>
         </div>
         {orgId && (
-          <ProductModal
-            orgId={orgId}
-            productGroups={productGroups ?? []}
-            categories={categories ?? []}
-          >
+          <ProductModal orgId={orgId} categories={categories ?? []}>
             <Button size="sm" className="gap-1">
               <Plus className="h-4 w-4" />
               Add Product
@@ -224,7 +220,6 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
                       <ProductModal
                         orgId={orgId ?? ""}
                         product={product}
-                        productGroups={productGroups ?? []}
                         categories={categories ?? []}
                       >
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>

@@ -4,6 +4,7 @@ import type { DatabaseClient } from '@repo/db';
 import { dz } from '@repo/db';
 import { products } from '@repo/db';
 import type { Product } from '@repo/contracts';
+import { and, eq, isNull } from 'drizzle-orm';
 
 const asMinor = (value: bigint | string | number | null | undefined): string =>
   value === null || value === undefined ? '0' : BigInt(value).toString();
@@ -167,10 +168,10 @@ export class ProductService {
       .update(products)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(
-        dz.and(
-          dz.eq(products.id, id),
-          dz.eq(products.orgId, organizationId),
-          dz.isNull(products.deletedAt),
+        and(
+          eq(products.id, id),
+          eq(products.orgId, organizationId),
+          isNull(products.deletedAt),
         ),
       );
   }

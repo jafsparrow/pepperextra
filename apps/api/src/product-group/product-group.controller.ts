@@ -48,4 +48,42 @@ export class ProductGroupController {
       },
     );
   }
+
+  @Implement(contracts.productGroup.listProducts)
+  listProducts() {
+    return implement(contracts.productGroup.listProducts).handler(
+      async ({ input }) => {
+        return this.productGroupService.listGroupProducts(
+          input.organizationId,
+          input.id,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.productGroup.addProduct)
+  addProduct() {
+    return implement(contracts.productGroup.addProduct).handler(
+      async ({ input }) => {
+        return this.productGroupService.addProductToGroup(
+          input.organizationId,
+          input.id,
+          input.productId,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.productGroup.removeProduct)
+  removeProduct() {
+    return implement(contracts.productGroup.removeProduct).handler(
+      async ({ input }) => {
+        return this.productGroupService.removeProductFromGroup(
+          input.organizationId,
+          input.id,
+          input.productId,
+        );
+      },
+    );
+  }
 }

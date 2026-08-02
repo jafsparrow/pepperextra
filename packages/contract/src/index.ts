@@ -35,6 +35,9 @@ import {
   createProductGroup,
   updateProductGroup,
   deleteProductGroup,
+  listGroupProducts,
+  addGroupProduct,
+  removeGroupProduct,
 } from "./product-group.js"
 import {
   listCategories,
@@ -272,6 +275,9 @@ export const contracts = populateContractRouterPaths({
     create: createProductGroup,
     update: updateProductGroup,
     delete: deleteProductGroup,
+    listProducts: listGroupProducts,
+    addProduct: addGroupProduct,
+    removeProduct: removeGroupProduct,
   },
   category: {
     list: listCategories,

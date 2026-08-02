@@ -16,13 +16,12 @@ import { toMinorUnits } from "@/shared/utils/currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductForm } from "./product-form"
 import type { ProductFormValues } from "../../schema/product-schema"
-import type { Product, ProductGroup, Category } from "@repo/contracts"
+import type { Product, Category } from "@repo/contracts"
 
 interface ProductModalProps {
   orgId: string
   children?: ReactNode
   product?: Product
-  productGroups?: ProductGroup[]
   categories?: Category[]
 }
 
@@ -30,7 +29,6 @@ export function ProductModal({
   orgId,
   children,
   product,
-  productGroups = [],
   categories = [],
 }: ProductModalProps) {
   const [open, setOpen] = useState(false)
@@ -65,7 +63,6 @@ export function ProductModal({
     const payload = {
       name: data.name,
       skuCode: data.skuCode,
-      productGroupId: data.productGroupId,
       categoryId: data.categoryId,
       specCode: data.specCode || undefined,
       brandTag: data.brandTag || undefined,
@@ -116,7 +113,6 @@ export function ProductModal({
         </DialogHeader>
         <ProductForm
           onSubmit={handleSubmit}
-          productGroups={productGroups}
           categories={categories}
           isLoading={createMutation.isPending || updateMutation.isPending}
           submitLabel={product ? "Save changes" : "Create product"}
@@ -125,7 +121,6 @@ export function ProductModal({
               ? {
                   name: product.name,
                   skuCode: product.skuCode,
-                  productGroupId: product.productGroupId ?? undefined,
                   categoryId: product.categoryId ?? undefined,
                   specCode: product.specCode ?? "",
                   brandTag: product.brandTag ?? "",

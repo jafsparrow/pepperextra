@@ -26,6 +26,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  Boxes,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ import {
   STOCK_TRACKING_LABELS,
 } from "../../constants"
 import { ProductGroupModal } from "./product-group-modal"
+import { ProductGroupProductsModal } from "./product-group-products-modal"
 
 interface ProductGroupListProps {
   orgId: string | undefined
@@ -169,7 +171,13 @@ export function ProductGroupList({ orgId }: ProductGroupListProps) {
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuContent align="end" className="w-44">
+                      <ProductGroupProductsModal orgId={orgId ?? ""} group={group}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Boxes className="mr-2 h-4 w-4" />
+                          Manage Products
+                        </DropdownMenuItem>
+                      </ProductGroupProductsModal>
                       <ProductGroupModal orgId={orgId ?? ""} group={group}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                           <Pencil className="mr-2 h-4 w-4" />

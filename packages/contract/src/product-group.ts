@@ -1,5 +1,6 @@
 import { oc } from "@orpc/contract"
 import z from "zod"
+import { productSchema } from "./product.js"
 
 export const productGroupSchema = z.object({
   id: z.string(),
@@ -71,3 +72,44 @@ export const deleteProductGroup = oc
     })
   )
   .output(z.object({ success: z.boolean() }))
+
+export const listGroupProducts = oc
+  .route({
+    method: "GET",
+    path: "/organizations/{organizationId}/product-groups/{id}/products",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+    })
+  )
+  .output(z.array(productSchema))
+
+export const addGroupProduct = oc
+  .route({
+    method: "POST",
+    path: "/organizations/{organizationId}/product-groups/{id}/products/{productId}",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+      productId: z.string(),
+    })
+  )
+  .output(productSchema)
+
+export const removeGroupProduct = oc
+  .route({
+    method: "DELETE",
+    path: "/organizations/{organizationId}/product-groups/{id}/products/{productId}",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+      productId: z.string(),
+    })
+  )
+  .output(productSchema)

@@ -20,7 +20,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 import { productFormSchema } from "../../schema/product-schema"
 import type { ProductFormValues } from "../../schema/product-schema"
-import type { ProductGroup, Category } from "@repo/contracts"
+import type { Category } from "@repo/contracts"
 import {
   buildCategoryTree,
   flattenCategoryTree,
@@ -32,7 +32,6 @@ interface ProductFormProps {
   className?: string
   defaultValues?: Partial<ProductFormValues>
   submitLabel?: string
-  productGroups?: ProductGroup[]
   categories?: Category[]
 }
 
@@ -42,7 +41,6 @@ export function ProductForm({
   className,
   defaultValues,
   submitLabel = "Save product",
-  productGroups = [],
   categories = [],
 }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
@@ -50,7 +48,6 @@ export function ProductForm({
     defaultValues: {
       name: defaultValues?.name ?? "",
       skuCode: defaultValues?.skuCode ?? "",
-      productGroupId: defaultValues?.productGroupId ?? undefined,
       categoryId: defaultValues?.categoryId ?? undefined,
       specCode: defaultValues?.specCode ?? "",
       brandTag: defaultValues?.brandTag ?? "",
@@ -66,7 +63,6 @@ export function ProductForm({
     form.reset({
       name: defaultValues?.name ?? "",
       skuCode: defaultValues?.skuCode ?? "",
-      productGroupId: defaultValues?.productGroupId ?? undefined,
       categoryId: defaultValues?.categoryId ?? undefined,
       specCode: defaultValues?.specCode ?? "",
       brandTag: defaultValues?.brandTag ?? "",
@@ -120,37 +116,6 @@ export function ProductForm({
       </FieldGroup>
 
       <FieldGroup>
-        <Controller
-          name="productGroupId"
-          control={form.control}
-          render={({ field }) => (
-            <Field>
-              <FieldLabel>Product group</FieldLabel>
-              <Select
-                value={field.value ?? "none"}
-                onValueChange={(v) =>
-                  field.onChange(v === "none" ? undefined : v)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a product group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No product group</SelectItem>
-                  {productGroups.map((group) => (
-                    <SelectItem key={group.id} value={group.id}>
-                      {group.specName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldDescription>
-                Groups equivalent products across brands for alternatives.
-              </FieldDescription>
-            </Field>
-          )}
-        />
-
         <Controller
           name="categoryId"
           control={form.control}
