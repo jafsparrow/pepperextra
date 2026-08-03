@@ -15,9 +15,6 @@ export const productFormSchema = z.object({
     .optional(),
   unit: z.string().optional(),
   aliases: z.string().optional(),
-  eligibleForLoyalty: z.boolean().optional(),
-  loyaltyPointsMode: z.enum(["none", "fixed", "price_percent"]).optional(),
-  loyaltyPointsValue: z.number().int().min(0).optional(),
   reorderThreshold: z.number().int().min(0).optional(),
 })
 

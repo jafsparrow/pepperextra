@@ -9,7 +9,6 @@ import {
   FieldLabel,
 } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
-import { Checkbox } from "@workspace/ui/components/checkbox"
 import {
   Select,
   SelectContent,
@@ -54,9 +53,6 @@ export function ProductForm({
       basePrice: defaultValues?.basePrice ?? "",
       unit: defaultValues?.unit ?? "",
       aliases: defaultValues?.aliases ?? "",
-      eligibleForLoyalty: defaultValues?.eligibleForLoyalty ?? false,
-      loyaltyPointsMode: defaultValues?.loyaltyPointsMode ?? "none",
-      loyaltyPointsValue: defaultValues?.loyaltyPointsValue ?? undefined,
       reorderThreshold: defaultValues?.reorderThreshold ?? undefined,
     },
   })
@@ -71,9 +67,6 @@ export function ProductForm({
       basePrice: defaultValues?.basePrice ?? "",
       unit: defaultValues?.unit ?? "",
       aliases: defaultValues?.aliases ?? "",
-      eligibleForLoyalty: defaultValues?.eligibleForLoyalty ?? false,
-      loyaltyPointsMode: defaultValues?.loyaltyPointsMode ?? "none",
-      loyaltyPointsValue: defaultValues?.loyaltyPointsValue ?? undefined,
       reorderThreshold: defaultValues?.reorderThreshold ?? undefined,
     })
   }, [defaultValues, form])
@@ -248,92 +241,6 @@ export function ProductForm({
           </Field>
         )}
       />
-
-      <FieldGroup>
-        <Controller
-          name="eligibleForLoyalty"
-          control={form.control}
-          render={({ field }) => (
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={(checked) => field.onChange(checked === true)}
-              />
-              Eligible for tradesperson loyalty points
-            </label>
-          )}
-        />
-
-        {form.watch("eligibleForLoyalty") && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Controller
-              name="loyaltyPointsMode"
-              control={form.control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>Points calculation</FieldLabel>
-                  <Select
-                    value={field.value ?? "none"}
-                    onValueChange={(v) => field.onChange(v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fixed">Fixed points per unit</SelectItem>
-                      <SelectItem value="price_percent">
-                        Percent of selling price
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FieldDescription>
-                    Fixed gives a set number of points; percent calculates
-                    points from the selling price.
-                  </FieldDescription>
-                </Field>
-              )}
-            />
-
-            {form.watch("loyaltyPointsMode") !== "none" && (
-              <Controller
-                name="loyaltyPointsValue"
-                control={form.control}
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel>
-                      {form.watch("loyaltyPointsMode") === "price_percent"
-                        ? "Points per % of price"
-                        : "Points per unit"}
-                    </FieldLabel>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder={
-                        form.watch("loyaltyPointsMode") === "price_percent"
-                          ? "2"
-                          : "10"
-                      }
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === ""
-                            ? undefined
-                            : Number(e.target.value)
-                        )
-                      }
-                    />
-                    <FieldDescription>
-                      {form.watch("loyaltyPointsMode") === "price_percent"
-                        ? "E.g. 2 = 2 points for every 1% earned on price."
-                        : "E.g. 10 = 10 points per unit sold."}
-                    </FieldDescription>
-                  </Field>
-                )}
-              />
-            )}
-          </div>
-        )}
-      </FieldGroup>
 
       <Button
         type="submit"

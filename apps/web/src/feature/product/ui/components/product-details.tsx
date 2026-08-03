@@ -25,6 +25,7 @@ import { orpc } from "@/shared/utils/orpc"
 import { useCurrency } from "@/shared/org/use-currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductModal } from "./product-modal"
+import { ProductLoyaltyDialog } from "./product-loyalty-dialog"
 
 interface ProductDetailsProps {
   orgId: string
@@ -190,14 +191,6 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
     { label: "Cost last updated", value: product.costLastUpdated },
     { label: "Created", value: product.createdAt },
     { label: "Aliases", value: product.aliases?.join(", ") },
-    {
-      label: "Loyalty eligibility",
-      value: product.eligibleForLoyalty ? "Yes" : "No",
-    },
-    {
-      label: "Loyalty points",
-      value: product.eligibleForLoyalty ? loyaltyLabel : "—",
-    },
   ]
 
   return (
@@ -443,7 +436,7 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-card/60 p-5">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <CreditCard className="h-5 w-5" />
@@ -457,12 +450,19 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
             </p>
           </div>
         </div>
-        {daysSinceCreated !== null && (
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            {daysSinceCreated}d old
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {daysSinceCreated !== null && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              {daysSinceCreated}d old
+            </span>
+          )}
+          <ProductLoyaltyDialog orgId={orgId} product={product}>
+            <Button size="sm" variant="outline">
+              Manage
+            </Button>
+          </ProductLoyaltyDialog>
+        </div>
       </div>
     </div>
   )

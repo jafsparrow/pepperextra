@@ -81,13 +81,6 @@ export function ProductModal({
             .map((a) => a.trim())
             .filter(Boolean)
         : [],
-      eligibleForLoyalty: data.eligibleForLoyalty ?? false,
-      loyaltyPoints: {
-        mode: data.eligibleForLoyalty
-          ? (data.loyaltyPointsMode ?? "none")
-          : "none",
-        value: data.loyaltyPointsValue,
-      },
       reorderThreshold:
         data.reorderThreshold === undefined ? undefined : data.reorderThreshold,
     }
@@ -152,9 +145,6 @@ export function ProductModal({
                   basePrice: basePriceMinor,
                   unit: base.unit ?? "",
                   aliases: base.aliases?.join(", ") ?? "",
-                  eligibleForLoyalty: base.eligibleForLoyalty,
-                  loyaltyPointsMode: base.loyaltyPoints.mode,
-                  loyaltyPointsValue: base.loyaltyPoints.value ?? undefined,
                   reorderThreshold: base.reorderThreshold ?? undefined,
                 }
               : undefined
