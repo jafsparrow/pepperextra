@@ -8,13 +8,13 @@ import {
   date,
   index,
   jsonb,
-  primaryKey,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { generateId } from "../utils";
 import { organization, team, user } from "../auth-schema";
 import { products } from "./catalog";
-import { invoiceStatusEnum } from "./enums";
-import { paymentMethodEnum } from "./enums";
+import { taxTypes } from "./localization";
+import { invoiceStatusEnum, paymentMethodEnum } from "./enums";
 
 export const suppliers = pgTable(
   "suppliers",
@@ -67,6 +67,10 @@ export const purchaseInvoices = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
+    uniqueIndex("purchase_invoices_org_number_uidx").on(
+      t.orgId,
+      t.invoiceNumber
+    ),
     index("purchase_invoices_org_supplier_idx").on(t.orgId, t.supplierId),
     index("purchase_invoices_org_status_idx").on(t.orgId, t.status),
     index("purchase_invoices_org_due_date_idx").on(t.orgId, t.dueDate),
@@ -108,6 +112,9 @@ export const purchaseInvoiceCharges = pgTable(
     purchaseInvoiceId: text("purchase_invoice_id")
       .notNull()
       .references(() => purchaseInvoices.id, { onDelete: "cascade" }),
+    taxTypeId: text("tax_type_id")
+      .notNull()
+      .references(() => taxTypes.id),
     orgId: text("org_id")
       .notNull()
       .references(() => organization.id),

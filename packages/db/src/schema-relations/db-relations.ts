@@ -60,7 +60,14 @@ import {
   sites,
   siteContacts,
 } from "../schemas/customers"
-import { suppliers, purchaseReceipts, purchaseInvoices, purchaseInvoiceLines, purchaseInvoiceCharges, supplierPayments } from "../schemas/suppliers"
+import {
+  suppliers,
+  purchaseReceipts,
+  purchaseInvoices,
+  purchaseInvoiceLines,
+  purchaseInvoiceCharges,
+  supplierPayments,
+} from "../schemas/suppliers"
 import { tradespeople, loyaltyRedemptions, qrCodes } from "../schemas/loyalty"
 
 export const dbRelations = defineRelations(
@@ -141,6 +148,7 @@ export const dbRelations = defineRelations(
       qrCodes: r.many.qrCodes(),
       sites: r.many.sites(),
       purchaseReceipts: r.many.purchaseReceipts(),
+      supplierPayments: r.many.supplierPayments(),
       fulfillmentStationLines: r.many.fulfillmentStationLines(),
     },
     session: { user: r.one.user({ from: r.session.userId, to: r.user.id }) },
@@ -187,6 +195,10 @@ export const dbRelations = defineRelations(
       siteContacts: r.many.siteContacts(),
       suppliers: r.many.suppliers(),
       purchaseReceipts: r.many.purchaseReceipts(),
+      purchaseInvoices: r.many.purchaseInvoices(),
+      purchaseInvoiceLines: r.many.purchaseInvoiceLines(),
+      purchaseInvoiceCharges: r.many.purchaseInvoiceCharges(),
+      supplierPayments: r.many.supplierPayments(),
       tradespeople: r.many.tradespeople(),
       loyaltyRedemptions: r.many.loyaltyRedemptions(),
       qrCodes: r.many.qrCodes(),
@@ -205,6 +217,7 @@ export const dbRelations = defineRelations(
       productTags: r.many.productTags(),
       catalogRequests: r.many.catalogRequests(),
       purchaseReceipts: r.many.purchaseReceipts(),
+      purchaseInvoices: r.many.purchaseInvoices(),
     },
     teamMember: {
       team: r.one.team({ from: r.teamMember.teamId, to: r.team.id }),
@@ -321,6 +334,7 @@ export const dbRelations = defineRelations(
       invoiceLines: r.many.invoiceLines(),
       qrCodes: r.many.qrCodes(),
       purchaseReceipts: r.many.purchaseReceipts(),
+      purchaseInvoiceLines: r.many.purchaseInvoiceLines(),
       supplierWarrantyClaims: r.many.supplierWarrantyClaims(),
       images: r.many.productImages(),
     },
@@ -741,6 +755,10 @@ export const dbRelations = defineRelations(
       purchaseInvoice: r.one.purchaseInvoices({
         from: r.purchaseInvoiceCharges.purchaseInvoiceId,
         to: r.purchaseInvoices.id,
+      }),
+      taxType: r.one.taxTypes({
+        from: r.purchaseInvoiceCharges.taxTypeId,
+        to: r.taxTypes.id,
       }),
       organization: r.one.organization({
         from: r.purchaseInvoiceCharges.orgId,

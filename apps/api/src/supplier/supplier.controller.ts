@@ -1,6 +1,9 @@
 import { Controller } from '@nestjs/common';
 import { Implement } from '@orpc/nest';
 import { implement } from '@orpc/server';
+import type { AuthInstance } from '@repo/auth';
+import { Session } from '@thallesp/nestjs-better-auth';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
 import { contracts } from '@repo/contracts';
 import { SupplierService } from './supplier.service.js';
 
@@ -26,16 +29,15 @@ export class SupplierController {
   @Implement(contracts.supplier.update)
   update() {
     return implement(contracts.supplier.update).handler(async ({ input }) => {
-      const { organizationId: _organizationId, id, ...data } = input;
-      console.log(_organizationId);
-      return this.supplierService.updateSupplier(id, data);
+      const { organizationId, id, ...data } = input;
+      return this.supplierService.updateSupplier(id, organizationId, data);
     });
   }
 
   @Implement(contracts.supplier.delete)
   delete() {
     return implement(contracts.supplier.delete).handler(async ({ input }) => {
-      await this.supplierService.deleteSupplier(input.id);
+      await this.supplierService.deleteSupplier(input.organizationId, input.id);
       return { success: true };
     });
   }
@@ -85,14 +87,19 @@ export class SupplierController {
   }
 
   @Implement(contracts.supplier.createPayment)
-  createPayment() {
+  createPayment(@Session() session: UserSession<AuthInstance>) {
     return implement(contracts.supplier.createPayment).handler(
       async ({ input }) => {
         const { organizationId, supplierId, ...data } = input;
+        const userId = session.session?.userId;
+        if (!userId) {
+          throw new Error('No authenticated user');
+        }
         return this.supplierService.createSupplierPayment(
           organizationId,
           supplierId,
           data,
+          userId,
         );
       },
     );

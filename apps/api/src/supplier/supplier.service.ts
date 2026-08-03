@@ -1,53 +1,100 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 import type { DatabaseClient } from '@repo/db';
+import { and, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
+import {
+  purchaseInvoices,
+  purchaseInvoiceLines,
+  supplierPayments,
+  suppliers,
+} from '@repo/db';
 import type {
+  PurchaseInvoice,
+  PurchaseInvoiceDetail,
+  PurchaseInvoiceLine,
   Supplier,
   SupplierDetails,
   SupplierFinancialSummary,
-  PurchaseInvoice,
-  PurchaseInvoiceDetail,
   SupplierPayment,
 } from '@repo/contracts';
 
-const uuid = () => crypto.randomUUID();
+const asMinor = (value: bigint | string | number | null | undefined): string =>
+  value === null || value === undefined ? '0' : BigInt(value).toString();
+
+const toIso = (value: Date | string | null | undefined): string | null =>
+  value === null || value === undefined
+    ? null
+    : value instanceof Date
+      ? value.toISOString()
+      : String(value);
+
+type SupplierRow = typeof suppliers.$inferSelect;
+type PurchaseInvoiceRow = typeof purchaseInvoices.$inferSelect;
 
 @Injectable()
 export class SupplierService {
   constructor(@Inject(DRIZZLE_TOKEN) private readonly db: DatabaseClient) {}
 
+  private toSupplier(row: SupplierRow): Supplier {
+    return {
+      id: row.id,
+      organizationId: row.orgId,
+      name: row.name,
+      contactName: row.contactName,
+      contactPhone: row.contactPhone,
+      contactEmail: row.contactEmail,
+      paymentTermsDays: row.paymentTermsDays,
+    };
+  }
+
+  private outstandingFor(
+    grandTotalMinor: bigint,
+    status: string,
+    paidMinor: bigint,
+    creditedMinor: bigint,
+  ): bigint {
+    if (status === 'paid' || status === 'fully_credited') {
+      return 0n;
+    }
+    const remaining = grandTotalMinor - paidMinor - creditedMinor;
+    return remaining > 0n ? remaining : 0n;
+  }
+
+  private toInvoice(
+    row: PurchaseInvoiceRow,
+    paidMinor: bigint,
+    creditedMinor: bigint,
+  ): PurchaseInvoice {
+    return {
+      id: row.id,
+      invoiceNumber: row.invoiceNumber,
+      status: row.status,
+      issuedAt: row.issuedAt.toISOString(),
+      dueDate: toIso(row.dueDate),
+      grandTotalMinor: asMinor(row.grandTotalMinor),
+      paidMinor: asMinor(paidMinor),
+      creditedMinor: asMinor(creditedMinor),
+      outstandingMinor: asMinor(
+        this.outstandingFor(
+          row.grandTotalMinor,
+          row.status,
+          paidMinor,
+          creditedMinor,
+        ),
+      ),
+    };
+  }
+
   async listSuppliers(organizationId: string): Promise<Supplier[]> {
-    console.log(organizationId);
-    // TODO: implement when db tables are defined
-    return Promise.resolve([
-      {
-        id: 'sup-omancem',
-        organizationId,
-        name: 'Oman Cement Company',
-        contactName: 'Salim Al Harthy',
-        contactPhone: '+968 9244 1122',
-        contactEmail: 'sales@oman-cement.om',
-        paymentTermsDays: 30,
+    const rows = await this.db.query.suppliers.findMany({
+      where: {
+        orgId: organizationId,
+        deletedAt: { isNull: true },
       },
-      {
-        id: 'sup-muscat-steel',
-        organizationId,
-        name: 'Muscat Steel Trading',
-        contactName: 'Rajesh Kumar',
-        contactPhone: '+968 9133 4455',
-        contactEmail: 'info@muscatsteel.om',
-        paymentTermsDays: 15,
-      },
-      {
-        id: 'sup-jotun',
-        organizationId,
-        name: 'Jotun Oman',
-        contactName: 'Aisha Al Balushi',
-        contactPhone: '+968 2456 7788',
-        contactEmail: 'orders.oman@jotun.com',
-        paymentTermsDays: 45,
-      },
-    ]);
+      orderBy: (t, { asc }) => [asc(t.name)],
+    });
+
+    return rows.map((row) => this.toSupplier(row));
   }
 
   async createSupplier(
@@ -60,20 +107,24 @@ export class SupplierService {
       paymentTermsDays?: number;
     },
   ): Promise<Supplier> {
-    // TODO: implement when db tables are defined
-    return Promise.resolve({
-      id: uuid(),
-      organizationId,
-      name: data.name,
-      contactName: data.contactName ?? null,
-      contactPhone: data.contactPhone ?? null,
-      contactEmail: data.contactEmail ?? null,
-      paymentTermsDays: data.paymentTermsDays ?? null,
-    });
+    const [row] = await this.db
+      .insert(suppliers)
+      .values({
+        orgId: organizationId,
+        name: data.name,
+        contactName: data.contactName ?? null,
+        contactPhone: data.contactPhone ?? null,
+        contactEmail: data.contactEmail ?? null,
+        paymentTermsDays: data.paymentTermsDays ?? 30,
+      })
+      .returning();
+
+    return this.toSupplier(row);
   }
 
   async updateSupplier(
     id: string,
+    organizationId: string,
     data: Partial<{
       name: string;
       contactName: string;
@@ -82,117 +133,106 @@ export class SupplierService {
       paymentTermsDays: number;
     }>,
   ): Promise<Supplier> {
-    // TODO: implement when db tables are defined
-    return Promise.resolve({
-      id,
-      organizationId: '',
-      name: data.name ?? '',
-      contactName: data.contactName ?? null,
-      contactPhone: data.contactPhone ?? null,
-      contactEmail: data.contactEmail ?? null,
-      paymentTermsDays: data.paymentTermsDays ?? null,
-    });
+    const [row] = await this.db
+      .update(suppliers)
+      .set({
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.contactName !== undefined && {
+          contactName: data.contactName,
+        }),
+        ...(data.contactPhone !== undefined && {
+          contactPhone: data.contactPhone,
+        }),
+        ...(data.contactEmail !== undefined && {
+          contactEmail: data.contactEmail,
+        }),
+        ...(data.paymentTermsDays !== undefined && {
+          paymentTermsDays: data.paymentTermsDays,
+        }),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(suppliers.id, id),
+          eq(suppliers.orgId, organizationId),
+          isNull(suppliers.deletedAt),
+        ),
+      )
+      .returning();
+
+    if (!row) {
+      throw new NotFoundException('Supplier not found');
+    }
+
+    return this.toSupplier(row);
   }
 
-  async deleteSupplier(id: string): Promise<void> {
-    console.log(id);
-    // TODO: implement when db tables are defined
-    return Promise.resolve();
+  async deleteSupplier(organizationId: string, id: string): Promise<void> {
+    const [row] = await this.db
+      .update(suppliers)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(
+        and(
+          eq(suppliers.id, id),
+          eq(suppliers.orgId, organizationId),
+          isNull(suppliers.deletedAt),
+        ),
+      )
+      .returning();
+
+    if (!row) {
+      throw new NotFoundException('Supplier not found');
+    }
   }
 
   async getSupplier(
     organizationId: string,
     id: string,
   ): Promise<SupplierDetails> {
-    // TODO: implement when db tables are defined
-    const supplier: Supplier = {
-      id,
+    const row = await this.db.query.suppliers.findFirst({
+      where: { id, orgId: organizationId, deletedAt: { isNull: true } },
+    });
+
+    if (!row) {
+      throw new NotFoundException('Supplier not found');
+    }
+
+    const financialSummary = await this.computeFinancialSummary(
       organizationId,
-      name: 'Oman Cement Company',
-      contactName: 'Salim Al Harthy',
-      contactPhone: '+968 9244 1122',
-      contactEmail: 'sales@oman-cement.om',
-      paymentTermsDays: 30,
-    };
+      id,
+    );
 
-    const financialSummary: SupplierFinancialSummary = {
-      totalBilledMinor: '15000000',
-      totalPaidMinor: '5000000',
-      totalCreditedMinor: '0',
-      outstandingMinor: '10000000',
-      overdueMinor: '3000000',
-      invoiceCount: 5,
-      openInvoiceCount: 3,
-      overdueInvoiceCount: 2,
+    return {
+      ...this.toSupplier(row),
+      financialSummary,
     };
-
-    return Promise.resolve({ ...supplier, financialSummary });
   }
 
   async listSupplierInvoices(
     organizationId: string,
     supplierId: string,
   ): Promise<PurchaseInvoice[]> {
-    void organizationId;
-    void supplierId;
-    // TODO: implement when db tables are defined
-    return Promise.resolve([
-      {
-        id: 'pi-001',
-        invoiceNumber: 'PINV-2024-001',
-        status: 'active',
-        issuedAt: '2024-01-10T00:00:00Z',
-        dueDate: '2024-02-09T00:00:00Z',
-        grandTotalMinor: '5000000',
-        paidMinor: '0',
-        creditedMinor: '0',
-        outstandingMinor: '5000000',
-      },
-      {
-        id: 'pi-002',
-        invoiceNumber: 'PINV-2024-002',
-        status: 'active',
-        issuedAt: '2024-01-20T00:00:00Z',
-        dueDate: '2024-02-19T00:00:00Z',
-        grandTotalMinor: '3000000',
-        paidMinor: '1000000',
-        creditedMinor: '0',
-        outstandingMinor: '2000000',
-      },
-      {
-        id: 'pi-003',
-        invoiceNumber: 'PINV-2024-003',
-        status: 'paid',
-        issuedAt: '2024-01-05T00:00:00Z',
-        dueDate: '2024-02-04T00:00:00Z',
-        grandTotalMinor: '2000000',
-        paidMinor: '2000000',
-        creditedMinor: '0',
-        outstandingMinor: '0',
-      },
-      {
-        id: 'pi-004',
-        invoiceNumber: 'PINV-2024-004',
-        status: 'active',
-        issuedAt: '2024-02-01T00:00:00Z',
-        dueDate: '2024-03-03T00:00:00Z',
-        grandTotalMinor: '4500000',
-        paidMinor: '0',
-        creditedMinor: '0',
-        outstandingMinor: '4500000',
-      },
-      {
-        id: 'pi-005',
-        invoiceNumber: 'PINV-2024-005',
-        status: 'active',
-        issuedAt: '2024-02-15T00:00:00Z',
-        dueDate: '2024-03-17T00:00:00Z',
-        grandTotalMinor: '1500000',
-        paidMinor: '500000',
-        creditedMinor: '0',
-        outstandingMinor: '1000000',
-      },
-    ]);
+    const invoiceRows = await this.db
+      .select()
+      .from(purchaseInvoices)
+      .where(
+        and(
+          eq(purchaseInvoices.orgId, organizationId),
+          eq(purchaseInvoices.supplierId, supplierId),
+          ne(purchaseInvoices.status, 'void'),
+        ),
+      )
+      .orderBy(desc(purchaseInvoices.issuedAt));
+
+    const paidByInvoice = await this.loadPaidAllocations(
+      invoiceRows.map((i) => i.id),
+    );
+
+    return invoiceRows.map((invoice) => {
+      const paid = paidByInvoice.get(invoice.id) ?? 0n;
+      const credited = invoice.creditedMinor;
+      return this.toInvoice(invoice, paid, credited);
+    });
   }
 
   async getSupplierInvoice(
@@ -200,77 +240,72 @@ export class SupplierService {
     supplierId: string,
     invoiceId: string,
   ): Promise<PurchaseInvoiceDetail> {
-    // TODO: implement when db tables are defined
-    return Promise.resolve({
-      id: invoiceId,
-      invoiceNumber: 'PINV-2024-001',
-      status: 'active',
-      issuedAt: '2024-01-10T00:00:00Z',
-      dueDate: '2024-02-09T00:00:00Z',
-      grandTotalMinor: '5000000',
-      paidMinor: '0',
-      creditedMinor: '0',
-      outstandingMinor: '5000000',
-      lines: [
-        {
-          id: 'pil-001',
-          description: 'Portland Cement - 50kg bags',
-          quantity: '100',
-          unitCostMinor: '35000',
-          lineTotalMinor: '3500000',
-          taxBreakdown: { '5%': 175000 },
+    const row = await this.db.query.purchaseInvoices.findFirst({
+      where: {
+        id: invoiceId,
+        orgId: organizationId,
+        supplierId,
+      },
+      with: {
+        lines: {
+          orderBy: (t, { asc }) => [asc(t.sortOrder)],
         },
-        {
-          id: 'pil-002',
-          description: 'White Cement - 50kg bags',
-          quantity: '50',
-          unitCostMinor: '28000',
-          lineTotalMinor: '1400000',
-          taxBreakdown: { '5%': 70000 },
-        },
-      ],
-      subtotalMinor: '4900000',
-      taxTotalMinor: '245000',
-      taxBreakdown: { '5%': 245000 },
+      },
     });
+
+    if (!row) {
+      throw new NotFoundException('Purchase invoice not found');
+    }
+
+    const paidByInvoice = await this.loadPaidAllocations([row.id]);
+    const paid = paidByInvoice.get(row.id) ?? 0n;
+    const credited = row.creditedMinor;
+
+    return {
+      ...this.toInvoice(row, paid, credited),
+      subtotalMinor: asMinor(row.subtotalMinor),
+      taxTotalMinor: asMinor(row.taxTotalMinor),
+      taxBreakdown: row.taxBreakdown,
+      lines: row.lines.map((line) => this.toLine(line)),
+    };
   }
 
   async listSupplierPayments(
     organizationId: string,
     supplierId: string,
   ): Promise<SupplierPayment[]> {
-    void organizationId;
-    void supplierId;
-    // TODO: implement when db tables are defined
-    return Promise.resolve([
-      {
-        id: 'sp-001',
-        purchaseInvoiceId: 'pi-002',
-        invoiceNumber: 'PINV-2024-002',
-        amountMinor: '1000000',
-        method: 'bank_transfer',
-        reference: 'TXN-2024-001',
-        paidAt: '2024-01-25T00:00:00Z',
-      },
-      {
-        id: 'sp-002',
-        purchaseInvoiceId: 'pi-003',
-        invoiceNumber: 'PINV-2024-003',
-        amountMinor: '2000000',
-        method: 'bank_transfer',
-        reference: 'TXN-2024-002',
-        paidAt: '2024-01-30T00:00:00Z',
-      },
-      {
-        id: 'sp-003',
-        purchaseInvoiceId: 'pi-005',
-        invoiceNumber: 'PINV-2024-005',
-        amountMinor: '500000',
-        method: 'cash',
-        reference: 'CSH-2024-001',
-        paidAt: '2024-02-20T00:00:00Z',
-      },
-    ]);
+    const rows = await this.db
+      .select({
+        id: supplierPayments.id,
+        purchaseInvoiceId: supplierPayments.purchaseInvoiceId,
+        invoiceNumber: purchaseInvoices.invoiceNumber,
+        amountMinor: supplierPayments.amountMinor,
+        method: supplierPayments.method,
+        reference: supplierPayments.reference,
+        paidAt: supplierPayments.paidAt,
+      })
+      .from(supplierPayments)
+      .innerJoin(
+        purchaseInvoices,
+        eq(supplierPayments.purchaseInvoiceId, purchaseInvoices.id),
+      )
+      .where(
+        and(
+          eq(supplierPayments.orgId, organizationId),
+          eq(supplierPayments.supplierId, supplierId),
+        ),
+      )
+      .orderBy(desc(supplierPayments.paidAt));
+
+    return rows.map((row) => ({
+      id: row.id,
+      purchaseInvoiceId: row.purchaseInvoiceId,
+      invoiceNumber: row.invoiceNumber,
+      amountMinor: asMinor(row.amountMinor),
+      method: row.method,
+      reference: row.reference,
+      paidAt: row.paidAt.toISOString(),
+    }));
   }
 
   async createSupplierPayment(
@@ -283,19 +318,184 @@ export class SupplierService {
       paidAt: string;
       allocations: { purchaseInvoiceId: string; amountMinor: string }[];
     },
+    recordedBy: string,
   ): Promise<SupplierPayment[]> {
-    // TODO: implement when db tables are defined
-    // For now, return mock payments based on allocations
-    const payments: SupplierPayment[] = data.allocations.map((alloc) => ({
-      id: uuid(),
-      purchaseInvoiceId: alloc.purchaseInvoiceId,
-      invoiceNumber: `PINV-2024-${alloc.purchaseInvoiceId.slice(-3)}`,
-      amountMinor: alloc.amountMinor,
-      method: data.method,
-      reference: data.reference ?? null,
-      paidAt: data.paidAt,
-    }));
+    if (data.allocations.length === 0) {
+      throw new NotFoundException('No allocations provided');
+    }
 
-    return Promise.resolve(payments);
+    return this.db.transaction(async (tx) => {
+      const created: SupplierPayment[] = [];
+
+      for (const alloc of data.allocations) {
+        const amount = BigInt(alloc.amountMinor);
+        if (amount <= 0n) {
+          continue;
+        }
+
+        const [invoice] = await tx
+          .select({
+            id: purchaseInvoices.id,
+            invoiceNumber: purchaseInvoices.invoiceNumber,
+            grandTotalMinor: purchaseInvoices.grandTotalMinor,
+            paidMinor: purchaseInvoices.paidMinor,
+            status: purchaseInvoices.status,
+          })
+          .from(purchaseInvoices)
+          .where(
+            and(
+              eq(purchaseInvoices.id, alloc.purchaseInvoiceId),
+              eq(purchaseInvoices.orgId, organizationId),
+              eq(purchaseInvoices.supplierId, supplierId),
+            ),
+          );
+
+        if (!invoice) {
+          throw new NotFoundException('Purchase invoice not found');
+        }
+
+        const [paymentRow] = await tx
+          .insert(supplierPayments)
+          .values({
+            orgId: organizationId,
+            supplierId,
+            purchaseInvoiceId: alloc.purchaseInvoiceId,
+            amountMinor: amount,
+            method: data.method,
+            reference: data.reference ?? null,
+            recordedBy,
+            paidAt: new Date(data.paidAt),
+          })
+          .returning();
+
+        const newPaid = invoice.paidMinor + amount;
+        const newStatus =
+          newPaid >= invoice.grandTotalMinor
+            ? ('paid' as const)
+            : invoice.status;
+
+        await tx
+          .update(purchaseInvoices)
+          .set({
+            paidMinor: newPaid,
+            status: newStatus,
+            updatedAt: new Date(),
+          })
+          .where(eq(purchaseInvoices.id, invoice.id));
+
+        created.push({
+          id: paymentRow.id,
+          purchaseInvoiceId: paymentRow.purchaseInvoiceId,
+          invoiceNumber: invoice.invoiceNumber,
+          amountMinor: asMinor(paymentRow.amountMinor),
+          method: paymentRow.method,
+          reference: paymentRow.reference,
+          paidAt: paymentRow.paidAt.toISOString(),
+        });
+      }
+
+      return created;
+    });
+  }
+
+  private async computeFinancialSummary(
+    organizationId: string,
+    supplierId: string,
+  ): Promise<SupplierFinancialSummary> {
+    const invoiceRows = await this.db
+      .select()
+      .from(purchaseInvoices)
+      .where(
+        and(
+          eq(purchaseInvoices.orgId, organizationId),
+          eq(purchaseInvoices.supplierId, supplierId),
+          ne(purchaseInvoices.status, 'void'),
+        ),
+      );
+
+    const paidByInvoice = await this.loadPaidAllocations(
+      invoiceRows.map((i) => i.id),
+    );
+
+    let totalBilled = 0n;
+    let totalPaid = 0n;
+    let totalCredited = 0n;
+    let outstanding = 0n;
+    let overdue = 0n;
+    let openInvoiceCount = 0;
+    let overdueInvoiceCount = 0;
+    const today = new Date();
+
+    for (const invoice of invoiceRows) {
+      totalBilled += invoice.grandTotalMinor;
+      const paid = paidByInvoice.get(invoice.id) ?? 0n;
+      const credited = invoice.creditedMinor;
+      totalPaid += paid;
+      totalCredited += credited;
+
+      const due = this.outstandingFor(
+        invoice.grandTotalMinor,
+        invoice.status,
+        paid,
+        credited,
+      );
+
+      if (due > 0n) {
+        outstanding += due;
+        openInvoiceCount += 1;
+        if (
+          invoice.dueDate &&
+          new Date(invoice.dueDate).getTime() < today.getTime()
+        ) {
+          overdue += due;
+          overdueInvoiceCount += 1;
+        }
+      }
+    }
+
+    return {
+      totalBilledMinor: asMinor(totalBilled),
+      totalPaidMinor: asMinor(totalPaid),
+      totalCreditedMinor: asMinor(totalCredited),
+      outstandingMinor: asMinor(outstanding),
+      overdueMinor: asMinor(overdue),
+      invoiceCount: invoiceRows.length,
+      openInvoiceCount,
+      overdueInvoiceCount,
+    };
+  }
+
+  private async loadPaidAllocations(
+    invoiceIds: string[],
+  ): Promise<Map<string, bigint>> {
+    if (invoiceIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.db
+      .select({
+        purchaseInvoiceId: supplierPayments.purchaseInvoiceId,
+        total: sql<string>`COALESCE(SUM(${supplierPayments.amountMinor}), 0)`,
+      })
+      .from(supplierPayments)
+      .where(inArray(supplierPayments.purchaseInvoiceId, invoiceIds))
+      .groupBy(supplierPayments.purchaseInvoiceId);
+
+    return new Map(
+      rows.map((row) => [row.purchaseInvoiceId, BigInt(row.total)]),
+    );
+  }
+
+  private toLine(
+    row: typeof purchaseInvoiceLines.$inferSelect,
+  ): PurchaseInvoiceLine {
+    return {
+      id: row.id,
+      description: row.description,
+      quantity: row.quantity.toString(),
+      unitCostMinor: asMinor(row.unitCostMinor),
+      lineTotalMinor: asMinor(row.lineTotalMinor),
+      taxBreakdown: row.taxBreakdown,
+    };
   }
 }
