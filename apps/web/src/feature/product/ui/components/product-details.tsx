@@ -17,6 +17,7 @@ import {
   Boxes,
   ShoppingCart,
   CreditCard,
+  StickyNote,
   Clock,
   Warehouse,
   MapPin,
@@ -26,6 +27,7 @@ import { useCurrency } from "@/shared/org/use-currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductModal } from "./product-modal"
 import { ProductLoyaltyDialog } from "./product-loyalty-dialog"
+import { ProductNotesDialog } from "./product-notes-dialog"
 
 interface ProductDetailsProps {
   orgId: string
@@ -249,6 +251,11 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
                     Loyalty
                   </Badge>
                 )}
+                {product.needsNotes && (
+                  <Badge variant="secondary" className="text-[11px] font-semibold">
+                    Notes required
+                  </Badge>
+                )}
               </div>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -462,6 +469,31 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
               Manage
             </Button>
           </ProductLoyaltyDialog>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <StickyNote className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold">Line notes</h3>
+            <p className="text-xs text-muted-foreground">
+              {product.needsNotes
+                ? product.notes
+                  ? `"${product.notes}" — auto-added to quotation & invoice lines.`
+                  : "Automatic notes are enabled for this product."
+                : "No automatic notes on quotation & invoice lines."}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <ProductNotesDialog orgId={orgId} product={product}>
+            <Button size="sm" variant="outline">
+              Manage
+            </Button>
+          </ProductNotesDialog>
         </div>
       </div>
     </div>

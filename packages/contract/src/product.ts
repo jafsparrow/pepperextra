@@ -57,6 +57,8 @@ export const productSchema = z.object({
   eligibleForLoyalty: z.boolean().default(false),
   loyaltyPoints: loyaltyPointsConfigSchema,
   reorderThreshold: z.number().int().nullable().optional(),
+  needsNotes: z.boolean().default(false),
+  notes: z.string().nullable().optional(),
 })
 
 export type Product = z.infer<typeof productSchema>
@@ -100,6 +102,8 @@ export const productCreateSchema = z.object({
   eligibleForLoyalty: z.boolean().default(false),
   loyaltyPoints: loyaltyPointsConfigSchema.optional(),
   reorderThreshold: z.number().int().optional(),
+  needsNotes: z.boolean().default(false),
+  notes: z.string().optional(),
 })
 
 export const productUpdateSchema = productCreateSchema.partial()

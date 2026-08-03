@@ -71,6 +71,7 @@ export const quotationLines = pgTable(
     }).notNull(),
     lineTotalMinor: bigint("line_total_minor", { mode: "bigint" }).notNull(),
     taxBreakdown: jsonb("tax_breakdown"),
+    notes: text("notes"),
     stationId: text("station_id"),
     sortOrder: integer("sort_order").default(0).notNull(),
   },

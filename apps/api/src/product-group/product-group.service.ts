@@ -38,6 +38,8 @@ export class ProductGroupService {
         value: row.loyaltyPointsValue,
       },
       reorderThreshold: row.reorderThreshold,
+      needsNotes: row.needsNotes,
+      notes: row.notes,
     };
   }
 

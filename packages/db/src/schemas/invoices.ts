@@ -75,6 +75,7 @@ export const invoiceLines = pgTable(
     costPriceMinor: bigint("cost_price_minor", { mode: "bigint" }).notNull(),
     lineTotalMinor: bigint("line_total_minor", { mode: "bigint" }).notNull(),
     taxBreakdown: jsonb("tax_breakdown").notNull(),
+    notes: text("notes"),
     stationId: text("station_id"),
     sortOrder: integer("sort_order").default(0).notNull(),
   },

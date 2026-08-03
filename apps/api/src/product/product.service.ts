@@ -52,6 +52,8 @@ export class ProductService {
         value: row.loyaltyPointsValue,
       },
       reorderThreshold: row.reorderThreshold,
+      needsNotes: row.needsNotes,
+      notes: row.notes,
     };
   }
 
@@ -220,6 +222,8 @@ export class ProductService {
         value?: number | null;
       };
       reorderThreshold?: number;
+      needsNotes?: boolean;
+      notes?: string;
     },
   ): Promise<Product> {
     const [row] = await this.db
@@ -242,6 +246,8 @@ export class ProductService {
             ? null
             : (data.loyaltyPoints?.value ?? null),
         reorderThreshold: data.reorderThreshold ?? null,
+        needsNotes: data.needsNotes ?? false,
+        notes: data.notes ?? null,
       })
       .returning();
 
@@ -267,6 +273,8 @@ export class ProductService {
         value?: number | null;
       };
       reorderThreshold: number;
+      needsNotes: boolean;
+      notes: string;
     }>,
   ): Promise<Product> {
     const [row] = await this.db
@@ -302,6 +310,10 @@ export class ProductService {
         ...(data.reorderThreshold !== undefined && {
           reorderThreshold: data.reorderThreshold,
         }),
+        ...(data.needsNotes !== undefined && {
+          needsNotes: data.needsNotes,
+        }),
+        ...(data.notes !== undefined && { notes: data.notes }),
         updatedAt: new Date(),
       })
       .where(
