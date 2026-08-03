@@ -1,9 +1,19 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 import type { DatabaseClient } from '@repo/db';
 import { dz, products, productImages } from '@repo/db';
-import type { Product, ProductDetail } from '@repo/contracts';
+import { orgMetadata, currencies } from '@repo/db';
+import type {
+  Product,
+  ProductDetail,
+  ProductUploadReport,
+} from '@repo/contracts';
 import { and, eq, isNull } from 'drizzle-orm';
 
 const asMinor = (value: bigint | string | number | null | undefined): string =>
@@ -418,4 +428,271 @@ export class ProductService {
 
     return { url };
   }
+
+  async uploadProducts(
+    organizationId: string,
+    file: UploadedFile,
+  ): Promise<ProductUploadReport> {
+    if (!file) {
+      throw new BadRequestException('A CSV file is required');
+    }
+    if (!file.originalname.toLowerCase().endsWith('.csv')) {
+      throw new BadRequestException('Please upload a CSV file');
+    }
+
+    const rows = parseCsv(file.buffer.toString('utf8'));
+    if (rows.length === 0) {
+      throw new BadRequestException('The CSV file is empty');
+    }
+
+    const columnIndex = new Map<string, number>();
+    rows[0].forEach((header, index) => {
+      const canonical = HEADER_ALIASES[normalizeHeader(header)];
+      if (canonical && !columnIndex.has(canonical)) {
+        columnIndex.set(canonical, index);
+      }
+    });
+
+    if (!columnIndex.has('name') || !columnIndex.has('skuCode')) {
+      throw new BadRequestException(
+        'The CSV must include "name" and "sku_code" columns',
+      );
+    }
+
+    const [categoryByName, groupByName, minorUnitPerMajor] = await Promise.all([
+      this.db.query.categories
+        .findMany({
+          where: { orgId: organizationId, deletedAt: { isNull: true } },
+          columns: { id: true, name: true },
+        })
+        .then((cats) => new Map(cats.map((c) => [c.name.toLowerCase(), c.id]))),
+      this.db.query.productGroups
+        .findMany({
+          where: { orgId: organizationId, deletedAt: { isNull: true } },
+          columns: { id: true, specName: true },
+        })
+        .then(
+          (groups) =>
+            new Map(groups.map((g) => [g.specName.toLowerCase(), g.id])),
+        ),
+      this.getMinorUnitPerMajor(organizationId),
+    ]);
+
+    const cell = (row: string[], key: string): string =>
+      (row[columnIndex.get(key)!] ?? '').trim();
+
+    const errors: { row: number; message: string }[] = [];
+    const toInsert: (typeof products.$inferInsert)[] = [];
+    const seenSkus = new Set<string>();
+
+    for (let i = 1; i < rows.length; i++) {
+      const line = rows[i];
+      const rowErrors: string[] = [];
+
+      const name = cell(line, 'name');
+      const skuCode = cell(line, 'skuCode');
+      if (!name) rowErrors.push('name is required');
+      if (!skuCode) {
+        rowErrors.push('sku_code is required');
+      } else {
+        const normalizedSku = skuCode.toLowerCase();
+        if (seenSkus.has(normalizedSku)) {
+          rowErrors.push(`duplicate sku_code "${skuCode}" in file`);
+        }
+        seenSkus.add(normalizedSku);
+      }
+
+      const basePrice = cell(line, 'basePrice');
+      let basePriceMinor: bigint | null = null;
+      if (basePrice) {
+        const parsed = Number(basePrice);
+        if (Number.isNaN(parsed) || parsed < 0) {
+          rowErrors.push(
+            `base_price "${basePrice}" is not a valid non-negative number`,
+          );
+        } else {
+          basePriceMinor = BigInt(Math.round(parsed * minorUnitPerMajor));
+        }
+      }
+
+      const reorderThresholdRaw = cell(line, 'reorderThreshold');
+      let reorderThreshold: number | null = null;
+      if (reorderThresholdRaw) {
+        const parsed = Number(reorderThresholdRaw);
+        if (!Number.isInteger(parsed) || parsed < 0) {
+          rowErrors.push(
+            `reorder_threshold "${reorderThresholdRaw}" must be a non-negative integer`,
+          );
+        } else {
+          reorderThreshold = parsed;
+        }
+      }
+
+      const groupName = cell(line, 'group');
+      let groupId: string | null = null;
+      if (groupName) {
+        groupId = groupByName.get(groupName.toLowerCase()) ?? null;
+        if (!groupId) {
+          rowErrors.push(`group "${groupName}" not found`);
+        }
+      }
+
+      const categoryName = cell(line, 'category');
+      let categoryId: string | null = null;
+      if (categoryName) {
+        categoryId = categoryByName.get(categoryName.toLowerCase()) ?? null;
+        if (!categoryId) {
+          rowErrors.push(`category "${categoryName}" not found`);
+        }
+      }
+
+      if (rowErrors.length > 0) {
+        errors.push({ row: i + 1, message: rowErrors.join('; ') });
+        continue;
+      }
+
+      const aliasesRaw = cell(line, 'aliases');
+      toInsert.push({
+        orgId: organizationId,
+        name,
+        skuCode,
+        specCode: cell(line, 'specCode') || null,
+        brandTag: cell(line, 'brandTag') || null,
+        basePriceMinor: basePriceMinor ?? 0n,
+        unit: cell(line, 'unit') || null,
+        aliases: aliasesRaw
+          ? aliasesRaw
+              .split('|')
+              .map((a) => a.trim())
+              .filter(Boolean)
+          : [],
+        reorderThreshold,
+        productGroupId: groupId,
+        categoryId,
+      });
+    }
+
+    let inserted = 0;
+    if (toInsert.length > 0) {
+      const result = await this.db
+        .insert(products)
+        .values(toInsert)
+        .returning();
+      inserted = result.length;
+    }
+
+    return {
+      total: rows.length - 1,
+      inserted,
+      failed: errors.length,
+      errors,
+    };
+  }
+
+  private async getMinorUnitPerMajor(organizationId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ minorUnitPerMajor: currencies.minorUnitPerMajor })
+      .from(orgMetadata)
+      .innerJoin(currencies, eq(orgMetadata.currencyId, currencies.id))
+      .where(eq(orgMetadata.orgId, organizationId))
+      .limit(1);
+
+    return row?.minorUnitPerMajor ?? 100;
+  }
+}
+
+const HEADER_ALIASES: Record<string, string> = {
+  name: 'name',
+  productname: 'name',
+  sku: 'skuCode',
+  skucode: 'skuCode',
+  sku_code: 'skuCode',
+  spec: 'specCode',
+  speccode: 'specCode',
+  spec_code: 'specCode',
+  brand: 'brandTag',
+  brandtag: 'brandTag',
+  brand_tag: 'brandTag',
+  baseprice: 'basePrice',
+  base_price: 'basePrice',
+  price: 'basePrice',
+  unit: 'unit',
+  aliases: 'aliases',
+  reorderthreshold: 'reorderThreshold',
+  reorder_threshold: 'reorderThreshold',
+  group: 'group',
+  productgroup: 'group',
+  product_group: 'group',
+  category: 'category',
+};
+
+const normalizeHeader = (header: string): string =>
+  header
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '');
+
+function parseCsv(input: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < input.length) {
+    const ch = input[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (input[i + 1] === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i += 1;
+        continue;
+      }
+      field += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === '"') {
+      inQuotes = true;
+      i += 1;
+      continue;
+    }
+
+    if (ch === ',') {
+      row.push(field);
+      field = '';
+      i += 1;
+      continue;
+    }
+
+    if (ch === '\n' || ch === '\r') {
+      row.push(field);
+      field = '';
+      if (row.some((c) => c.trim() !== '')) {
+        rows.push(row);
+      }
+      row = [];
+      if (ch === '\r' && input[i + 1] === '\n') {
+        i += 1;
+      }
+      i += 1;
+      continue;
+    }
+
+    field += ch;
+    i += 1;
+  }
+
+  row.push(field);
+  if (row.some((c) => c.trim() !== '')) {
+    rows.push(row);
+  }
+
+  return rows;
 }

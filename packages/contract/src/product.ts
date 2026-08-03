@@ -108,6 +108,21 @@ export const productCreateSchema = z.object({
 
 export const productUpdateSchema = productCreateSchema.partial()
 
+export const productUploadErrorSchema = z.object({
+  row: z.number().int(),
+  message: z.string(),
+})
+
+export const productUploadReportSchema = z.object({
+  total: z.number().int(),
+  inserted: z.number().int(),
+  failed: z.number().int(),
+  errors: z.array(productUploadErrorSchema),
+})
+
+export type ProductUploadError = z.infer<typeof productUploadErrorSchema>
+export type ProductUploadReport = z.infer<typeof productUploadReportSchema>
+
 export const listProducts = oc
   .route({
     method: "GET",

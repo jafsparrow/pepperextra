@@ -153,6 +153,8 @@ export {
   productLocationOverrideSchema,
   productStockSchema,
   loyaltyPointsConfigSchema,
+  productUploadReportSchema,
+  productUploadErrorSchema,
 } from "./product.js"
 
 export type {
@@ -162,6 +164,8 @@ export type {
   ProductLocationOverride,
   ProductStock,
   LoyaltyPointsConfig,
+  ProductUploadReport,
+  ProductUploadError,
 } from "./product.js"
 
 export {

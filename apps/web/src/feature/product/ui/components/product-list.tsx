@@ -33,6 +33,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  FileUp,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -45,6 +46,7 @@ import { orpc } from "@/shared/utils/orpc"
 import { useCurrency } from "@/shared/org/use-currency"
 import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductModal } from "./product-modal"
+import { ProductUploadDialog } from "./product-upload-dialog"
 
 interface ProductListProps {
   orgId: string | undefined
@@ -131,12 +133,29 @@ export function ProductList({ orgId, teamId }: ProductListProps) {
           </CardDescription>
         </div>
         {orgId && (
-          <ProductModal orgId={orgId} categories={categories ?? []}>
-            <Button size="sm" className="gap-1">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </ProductModal>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-1">
+                <Plus className="h-4 w-4" />
+                Add
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <ProductModal orgId={orgId} categories={categories ?? []}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Product
+                </DropdownMenuItem>
+              </ProductModal>
+              <ProductUploadDialog orgId={orgId}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <FileUp className="mr-2 h-4 w-4" />
+                  Import from CSV
+                </DropdownMenuItem>
+              </ProductUploadDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </CardHeader>
       <CardContent>

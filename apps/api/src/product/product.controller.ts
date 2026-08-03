@@ -76,4 +76,13 @@ export class ProductController {
   ) {
     return this.productService.uploadImage(organizationId, id, file);
   }
+
+  @Post('organizations/:organizationId/products/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProducts(
+    @Param('organizationId') organizationId: string,
+    @UploadedFile() file: UploadedFile,
+  ) {
+    return this.productService.uploadProducts(organizationId, file);
+  }
 }
