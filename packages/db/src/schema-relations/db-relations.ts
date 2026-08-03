@@ -60,7 +60,7 @@ import {
   sites,
   siteContacts,
 } from "../schemas/customers"
-import { suppliers, purchaseReceipts } from "../schemas/suppliers"
+import { suppliers, purchaseReceipts, purchaseInvoices, purchaseInvoiceLines, purchaseInvoiceCharges, supplierPayments } from "../schemas/suppliers"
 import { tradespeople, loyaltyRedemptions, qrCodes } from "../schemas/loyalty"
 
 export const dbRelations = defineRelations(
@@ -114,6 +114,10 @@ export const dbRelations = defineRelations(
     siteContacts,
     suppliers,
     purchaseReceipts,
+    purchaseInvoices,
+    purchaseInvoiceLines,
+    purchaseInvoiceCharges,
+    supplierPayments,
     tradespeople,
     loyaltyRedemptions,
     qrCodes,
@@ -682,6 +686,8 @@ export const dbRelations = defineRelations(
         to: r.organization.id,
       }),
       purchaseReceipts: r.many.purchaseReceipts(),
+      purchaseInvoices: r.many.purchaseInvoices(),
+      supplierPayments: r.many.supplierPayments(),
       supplierWarrantyClaims: r.many.supplierWarrantyClaims(),
     },
     purchaseReceipts: {
@@ -700,6 +706,62 @@ export const dbRelations = defineRelations(
       }),
       recordedByUser: r.one.user({
         from: r.purchaseReceipts.recordedBy,
+        to: r.user.id,
+      }),
+    },
+    purchaseInvoices: {
+      organization: r.one.organization({
+        from: r.purchaseInvoices.orgId,
+        to: r.organization.id,
+      }),
+      team: r.one.team({ from: r.purchaseInvoices.teamId, to: r.team.id }),
+      supplier: r.one.suppliers({
+        from: r.purchaseInvoices.supplierId,
+        to: r.suppliers.id,
+      }),
+      lines: r.many.purchaseInvoiceLines(),
+      charges: r.many.purchaseInvoiceCharges(),
+      payments: r.many.supplierPayments(),
+    },
+    purchaseInvoiceLines: {
+      purchaseInvoice: r.one.purchaseInvoices({
+        from: r.purchaseInvoiceLines.purchaseInvoiceId,
+        to: r.purchaseInvoices.id,
+      }),
+      product: r.one.products({
+        from: r.purchaseInvoiceLines.productId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.purchaseInvoiceLines.orgId,
+        to: r.organization.id,
+      }),
+    },
+    purchaseInvoiceCharges: {
+      purchaseInvoice: r.one.purchaseInvoices({
+        from: r.purchaseInvoiceCharges.purchaseInvoiceId,
+        to: r.purchaseInvoices.id,
+      }),
+      organization: r.one.organization({
+        from: r.purchaseInvoiceCharges.orgId,
+        to: r.organization.id,
+      }),
+    },
+    supplierPayments: {
+      organization: r.one.organization({
+        from: r.supplierPayments.orgId,
+        to: r.organization.id,
+      }),
+      supplier: r.one.suppliers({
+        from: r.supplierPayments.supplierId,
+        to: r.suppliers.id,
+      }),
+      purchaseInvoice: r.one.purchaseInvoices({
+        from: r.supplierPayments.purchaseInvoiceId,
+        to: r.purchaseInvoices.id,
+      }),
+      recordedByUser: r.one.user({
+        from: r.supplierPayments.recordedBy,
         to: r.user.id,
       }),
     },

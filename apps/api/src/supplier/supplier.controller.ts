@@ -39,4 +39,62 @@ export class SupplierController {
       return { success: true };
     });
   }
+
+  @Implement(contracts.supplier.get)
+  get() {
+    return implement(contracts.supplier.get).handler(async ({ input }) => {
+      return this.supplierService.getSupplier(input.organizationId, input.id);
+    });
+  }
+
+  @Implement(contracts.supplier.listInvoices)
+  listInvoices() {
+    return implement(contracts.supplier.listInvoices).handler(
+      async ({ input }) => {
+        return this.supplierService.listSupplierInvoices(
+          input.organizationId,
+          input.id,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.supplier.getInvoice)
+  getInvoice() {
+    return implement(contracts.supplier.getInvoice).handler(
+      async ({ input }) => {
+        return this.supplierService.getSupplierInvoice(
+          input.organizationId,
+          input.supplierId,
+          input.invoiceId,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.supplier.listPayments)
+  listPayments() {
+    return implement(contracts.supplier.listPayments).handler(
+      async ({ input }) => {
+        return this.supplierService.listSupplierPayments(
+          input.organizationId,
+          input.id,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.supplier.createPayment)
+  createPayment() {
+    return implement(contracts.supplier.createPayment).handler(
+      async ({ input }) => {
+        const { organizationId, supplierId, ...data } = input;
+        return this.supplierService.createSupplierPayment(
+          organizationId,
+          supplierId,
+          data,
+        );
+      },
+    );
+  }
 }

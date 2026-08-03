@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -143,9 +144,13 @@ export function SupplierList({ orgId }: SupplierListProps) {
                     <Truck className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="truncate text-sm font-medium text-foreground">
+                    <Link
+                      to="/org/admin/suppliers/$id"
+                      params={{ id: supplier.id }}
+                      className="truncate text-sm font-medium text-foreground hover:text-primary transition-colors"
+                    >
                       {supplier.name}
-                    </h4>
+                    </Link>
                     <p className="mt-0.5 flex items-center gap-2 truncate text-xs text-muted-foreground">
                       {supplier.contactName && <span>{supplier.contactName}</span>}
                       {supplier.contactPhone && <span>· {supplier.contactPhone}</span>}

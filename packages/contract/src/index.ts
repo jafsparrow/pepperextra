@@ -57,6 +57,11 @@ import {
   createSupplier,
   updateSupplier,
   deleteSupplier,
+  getSupplier,
+  listSupplierInvoices,
+  getSupplierInvoice,
+  listSupplierPayments,
+  createSupplierPayment,
 } from "./supplier.js"
 import {
   listCustomers,
@@ -156,9 +161,17 @@ export {
   supplierSchema,
   supplierCreateSchema,
   supplierUpdateSchema,
+  supplierFinancialSummarySchema,
+  supplierDetailsSchema,
+  purchaseInvoiceSchema,
+  purchaseInvoiceLineSchema,
+  purchaseInvoiceDetailSchema,
+  supplierPaymentSchema,
+  supplierPaymentAllocationSchema,
+  createSupplierPaymentInputSchema,
 } from "./supplier.js"
 
-export type { Supplier } from "./supplier.js"
+export type { Supplier, SupplierFinancialSummary, SupplierDetails, PurchaseInvoice, PurchaseInvoiceLine, PurchaseInvoiceDetail, SupplierPayment } from "./supplier.js"
 
 export {
   customerSchema,
@@ -310,6 +323,11 @@ export const contracts = populateContractRouterPaths({
     create: createSupplier,
     update: updateSupplier,
     delete: deleteSupplier,
+    get: getSupplier,
+    listInvoices: listSupplierInvoices,
+    getInvoice: getSupplierInvoice,
+    listPayments: listSupplierPayments,
+    createPayment: createSupplierPayment,
   },
   customer: {
     list: listCustomers,
