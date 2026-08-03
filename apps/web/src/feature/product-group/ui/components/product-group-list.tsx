@@ -42,6 +42,7 @@ import {
 } from "../../constants"
 import { ProductGroupModal } from "./product-group-modal"
 import { ProductGroupProductsModal } from "./product-group-products-modal"
+import { ProductGroupDetailDialog } from "./product-group-detail-dialog"
 
 interface ProductGroupListProps {
   orgId: string | undefined
@@ -143,27 +144,45 @@ export function ProductGroupList({ orgId }: ProductGroupListProps) {
                 key={group.id}
                 className="group flex items-center justify-between rounded-lg border border-border/40 bg-muted/30 p-3 transition-all hover:bg-muted/60"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Layers className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="truncate text-sm font-medium text-foreground">
-                      {group.specName}
-                    </h4>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {group.brandPriority && group.brandPriority.length > 0
-                        ? group.brandPriority.join(" · ")
-                        : "No brand priority set"}
-                    </p>
-                  </div>
-                </div>
+                <ProductGroupDetailDialog orgId={orgId ?? ""} group={group}>
+                  <button
+                    type="button"
+                    className="flex min-w-0 items-center gap-3 text-left"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Layers className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="truncate text-sm font-medium text-foreground group-hover:text-primary">
+                        {group.specName}
+                      </h4>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {group.brandPriority && group.brandPriority.length > 0
+                          ? group.brandPriority.join(" · ")
+                          : "No brand priority set"}
+                      </p>
+                    </div>
+                  </button>
+                </ProductGroupDetailDialog>
                 <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
                     className="hidden text-xs font-semibold sm:inline-flex"
                   >
                     {STOCK_TRACKING_LABELS[group.stockTrackingMode]}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="hidden text-xs font-semibold sm:inline-flex"
+                  >
+                    {group.productCount} product
+                    {group.productCount === 1 ? "" : "s"}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="hidden text-xs font-semibold tabular-nums sm:inline-flex"
+                  >
+                    {group.groupStockTotal} in stock
                   </Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

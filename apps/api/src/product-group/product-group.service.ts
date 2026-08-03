@@ -1,20 +1,45 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 import type { DatabaseClient } from '@repo/db';
-import { products } from '@repo/db';
-import type { Product, ProductGroup } from '@repo/contracts';
-import { and, eq, isNull } from 'drizzle-orm';
-
-const uuid = () => crypto.randomUUID();
+import { productGroups, products, stock } from '@repo/db';
+import type {
+  Product,
+  ProductGroup,
+  ProductGroupDetail,
+} from '@repo/contracts';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 const asMinor = (value: bigint | string | number | null | undefined): string =>
   value === null || value === undefined ? '0' : BigInt(value).toString();
 
 type ProductRow = typeof products.$inferSelect;
+type ProductGroupRow = typeof productGroups.$inferSelect;
 
 @Injectable()
 export class ProductGroupService {
   constructor(@Inject(DRIZZLE_TOKEN) private readonly db: DatabaseClient) {}
+
+  private toProductGroup(
+    row: ProductGroupRow,
+    productCount = 0,
+    groupStockTotal = '0',
+  ): ProductGroup {
+    return {
+      id: row.id,
+      organizationId: row.orgId,
+      specName: row.specName,
+      brandPriority: row.brandPriority ?? [],
+      stockTrackingMode: row.stockTrackingMode,
+      groupReorderThreshold: row.groupReorderThreshold,
+      productCount,
+      groupStockTotal,
+    };
+  }
 
   private toProduct(row: ProductRow): Product {
     return {
@@ -109,34 +134,62 @@ export class ProductGroupService {
   }
 
   async listProductGroups(organizationId: string): Promise<ProductGroup[]> {
-    console.log(organizationId);
-    // TODO: implement when db tables are defined
-    return Promise.resolve([
-      {
-        id: 'grp-cement',
-        organizationId,
-        specName: 'Cement & Gypsum',
-        brandPriority: ['Royal Omani', 'Oman Cement'],
-        stockTrackingMode: 'group',
-        groupReorderThreshold: 50,
-      },
-      {
-        id: 'grp-steel',
-        organizationId,
-        specName: 'Steel & Metal',
-        brandPriority: ['Muscat Steel'],
-        stockTrackingMode: 'sku',
-        groupReorderThreshold: null,
-      },
-      {
-        id: 'grp-paint',
-        organizationId,
-        specName: 'Paints & Finishes',
-        brandPriority: ['Jotun', 'Dulux'],
-        stockTrackingMode: 'sku',
-        groupReorderThreshold: 20,
-      },
-    ]);
+    const rows = await this.db.query.productGroups.findMany({
+      where: { orgId: organizationId, deletedAt: { isNull: true } },
+      orderBy: (t, { asc }) => [asc(t.specName)],
+    });
+
+    const groupIds = rows.map((row) => row.id);
+    const countByGroup = new Map<string, number>();
+    const stockByGroup = new Map<string, bigint>();
+
+    if (groupIds.length > 0) {
+      const counts = await this.db
+        .select({
+          groupId: products.productGroupId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(products)
+        .where(
+          and(
+            inArray(products.productGroupId, groupIds),
+            isNull(products.deletedAt),
+          ),
+        )
+        .groupBy(products.productGroupId);
+
+      for (const c of counts) {
+        if (c.groupId) countByGroup.set(c.groupId, c.count);
+      }
+
+      const stockRows = await this.db
+        .select({
+          groupId: products.productGroupId,
+          quantity: stock.quantity,
+        })
+        .from(stock)
+        .innerJoin(products, eq(stock.productId, products.id))
+        .where(
+          and(
+            inArray(products.productGroupId, groupIds),
+            isNull(products.deletedAt),
+          ),
+        );
+
+      for (const r of stockRows) {
+        if (!r.groupId) continue;
+        const q = r.quantity ? BigInt(r.quantity) : 0n;
+        stockByGroup.set(r.groupId, (stockByGroup.get(r.groupId) ?? 0n) + q);
+      }
+    }
+
+    return rows.map((row) =>
+      this.toProductGroup(
+        row,
+        countByGroup.get(row.id) ?? 0,
+        (stockByGroup.get(row.id) ?? 0n).toString(),
+      ),
+    );
   }
 
   async createProductGroup(
@@ -148,18 +201,31 @@ export class ProductGroupService {
       groupReorderThreshold?: number;
     },
   ): Promise<ProductGroup> {
-    // TODO: implement when db tables are defined
-    return Promise.resolve({
-      id: uuid(),
-      organizationId,
-      specName: data.specName,
-      brandPriority: data.brandPriority ?? [],
-      stockTrackingMode: data.stockTrackingMode ?? 'sku',
-      groupReorderThreshold: data.groupReorderThreshold ?? null,
-    });
+    try {
+      const [row] = await this.db
+        .insert(productGroups)
+        .values({
+          orgId: organizationId,
+          specName: data.specName,
+          brandPriority: data.brandPriority ?? [],
+          stockTrackingMode: data.stockTrackingMode ?? 'sku',
+          groupReorderThreshold: data.groupReorderThreshold ?? null,
+        })
+        .returning();
+
+      return this.toProductGroup(row, 0, '0');
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new ConflictException(
+          'A product group with this name already exists',
+        );
+      }
+      throw error;
+    }
   }
 
   async updateProductGroup(
+    organizationId: string,
     id: string,
     data: Partial<{
       specName: string;
@@ -168,20 +234,151 @@ export class ProductGroupService {
       groupReorderThreshold: number;
     }>,
   ): Promise<ProductGroup> {
-    // TODO: implement when db tables are defined
-    return Promise.resolve({
-      id,
-      organizationId: '',
-      specName: data.specName ?? '',
-      brandPriority: data.brandPriority ?? [],
-      stockTrackingMode: data.stockTrackingMode ?? 'sku',
-      groupReorderThreshold: data.groupReorderThreshold ?? null,
+    const [row] = await this.db
+      .update(productGroups)
+      .set({
+        ...(data.specName !== undefined && { specName: data.specName }),
+        ...(data.brandPriority !== undefined && {
+          brandPriority: data.brandPriority,
+        }),
+        ...(data.stockTrackingMode !== undefined && {
+          stockTrackingMode: data.stockTrackingMode,
+        }),
+        ...(data.groupReorderThreshold !== undefined && {
+          groupReorderThreshold: data.groupReorderThreshold,
+        }),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(productGroups.id, id),
+          eq(productGroups.orgId, organizationId),
+          isNull(productGroups.deletedAt),
+        ),
+      )
+      .returning();
+
+    if (!row) {
+      throw new NotFoundException('Product group not found');
+    }
+
+    const productCount = await this.countGroupProducts(organizationId, id);
+    const groupStockTotal = await this.sumGroupStock(organizationId, id);
+    return this.toProductGroup(row, productCount, groupStockTotal);
+  }
+
+  async getProductGroupDetail(
+    organizationId: string,
+    groupId: string,
+  ): Promise<ProductGroupDetail> {
+    const group = await this.db.query.productGroups.findFirst({
+      where: {
+        id: groupId,
+        orgId: organizationId,
+        deletedAt: { isNull: true },
+      },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Product group not found');
+    }
+
+    const rows = await this.db.query.products.findMany({
+      where: {
+        orgId: organizationId,
+        productGroupId: groupId,
+        deletedAt: { isNull: true },
+      },
+      with: { stock: true },
+      orderBy: (t, { asc }) => [asc(t.name)],
+    });
+
+    let groupStockTotal = 0n;
+    const products = rows.map((row) => {
+      let stockTotal = 0n;
+      for (const s of row.stock ?? []) {
+        if (s.quantity) stockTotal += BigInt(s.quantity);
+      }
+      groupStockTotal += stockTotal;
+      return { ...this.toProduct(row), stockTotal: stockTotal.toString() };
+    });
+
+    return {
+      ...this.toProductGroup(
+        group,
+        products.length,
+        groupStockTotal.toString(),
+      ),
+      products,
+    };
+  }
+
+  async deleteProductGroup(organizationId: string, id: string): Promise<void> {
+    const existing = await this.db.query.productGroups.findFirst({
+      where: { id, orgId: organizationId, deletedAt: { isNull: true } },
+      columns: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Product group not found');
+    }
+
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(products)
+        .set({ productGroupId: null, updatedAt: new Date() })
+        .where(
+          and(
+            eq(products.productGroupId, id),
+            eq(products.orgId, organizationId),
+          ),
+        );
+
+      await tx
+        .update(productGroups)
+        .set({ deletedAt: new Date(), updatedAt: new Date() })
+        .where(eq(productGroups.id, id));
     });
   }
 
-  async deleteProductGroup(id: string): Promise<void> {
-    console.log(id);
-    // TODO: implement when db tables are defined
-    return Promise.resolve();
+  private async countGroupProducts(
+    organizationId: string,
+    groupId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(products)
+      .where(
+        and(
+          eq(products.productGroupId, groupId),
+          eq(products.orgId, organizationId),
+          isNull(products.deletedAt),
+        ),
+      );
+
+    return row?.count ?? 0;
+  }
+
+  private async sumGroupStock(
+    organizationId: string,
+    groupId: string,
+  ): Promise<string> {
+    const rows = await this.db
+      .select({ quantity: stock.quantity })
+      .from(stock)
+      .innerJoin(products, eq(stock.productId, products.id))
+      .where(
+        and(
+          eq(products.productGroupId, groupId),
+          eq(products.orgId, organizationId),
+          isNull(products.deletedAt),
+        ),
+      );
+
+    let total = 0n;
+    for (const r of rows) {
+      if (r.quantity) total += BigInt(r.quantity);
+    }
+    return total.toString();
   }
 }

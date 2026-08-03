@@ -9,9 +9,23 @@ export const productGroupSchema = z.object({
   brandPriority: z.array(z.string()).nullable().optional(),
   stockTrackingMode: z.enum(["group", "sku"]).default("sku"),
   groupReorderThreshold: z.number().int().nullable().optional(),
+  productCount: z.number().int().default(0),
+  groupStockTotal: z.string().default("0"),
 })
 
 export type ProductGroup = z.infer<typeof productGroupSchema>
+
+export const productGroupProductSchema = productSchema.extend({
+  stockTotal: z.string(),
+})
+
+export type ProductGroupProduct = z.infer<typeof productGroupProductSchema>
+
+export const productGroupDetailSchema = productGroupSchema.extend({
+  products: z.array(productGroupProductSchema),
+})
+
+export type ProductGroupDetail = z.infer<typeof productGroupDetailSchema>
 
 export const productGroupCreateSchema = z.object({
   specName: z.string().min(1, "Spec name is required"),
@@ -113,3 +127,16 @@ export const removeGroupProduct = oc
     })
   )
   .output(productSchema)
+
+export const getProductGroupDetail = oc
+  .route({
+    method: "GET",
+    path: "/organizations/{organizationId}/product-groups/{id}/detail",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+    })
+  )
+  .output(productGroupDetailSchema)

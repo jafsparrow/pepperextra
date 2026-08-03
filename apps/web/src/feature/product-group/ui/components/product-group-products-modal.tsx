@@ -27,16 +27,27 @@ interface ProductGroupProductsModalProps {
   orgId: string
   group: ProductGroup
   children?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function ProductGroupProductsModal({
   orgId,
   group,
   children,
+  open: openProp,
+  onOpenChange,
 }: ProductGroupProductsModalProps) {
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const queryClient = useQueryClient()
+
+  const isControlled = openProp !== undefined
+  const open = isControlled ? openProp : internalOpen
+  const setOpen = (value: boolean) => {
+    if (isControlled) onOpenChange?.(value)
+    else setInternalOpen(value)
+  }
 
   const { data: groupProducts, isLoading: groupLoading } = useQuery(
     orpc.productGroup.listProducts.queryOptions({
@@ -69,6 +80,11 @@ export function ProductGroupProductsModal({
     })
     queryClient.invalidateQueries({
       queryKey: PRODUCT_GROUP_QUERY_KEYS.lists(),
+    })
+    queryClient.invalidateQueries({
+      queryKey: orpc.productGroup.listProducts.queryKey({
+        input: { organizationId: orgId, id: group.id },
+      }),
     })
   }
 

@@ -38,6 +38,7 @@ import {
   listGroupProducts,
   addGroupProduct,
   removeGroupProduct,
+  getProductGroupDetail,
 } from "./product-group.js"
 import {
   listCategories,
@@ -125,9 +126,15 @@ export {
   productGroupSchema,
   productGroupCreateSchema,
   productGroupUpdateSchema,
+  productGroupProductSchema,
+  productGroupDetailSchema,
 } from "./product-group.js"
 
-export type { ProductGroup } from "./product-group.js"
+export type {
+  ProductGroup,
+  ProductGroupProduct,
+  ProductGroupDetail,
+} from "./product-group.js"
 
 export {
   categorySchema,
@@ -304,6 +311,7 @@ export const contracts = populateContractRouterPaths({
     listProducts: listGroupProducts,
     addProduct: addGroupProduct,
     removeProduct: removeGroupProduct,
+    detail: getProductGroupDetail,
   },
   category: {
     list: listCategories,

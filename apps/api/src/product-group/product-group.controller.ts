@@ -32,9 +32,12 @@ export class ProductGroupController {
   update() {
     return implement(contracts.productGroup.update).handler(
       async ({ input }) => {
-        const { organizationId: _organizationId, id, ...data } = input;
-        console.log(_organizationId);
-        return this.productGroupService.updateProductGroup(id, data);
+        const { organizationId, id, ...data } = input;
+        return this.productGroupService.updateProductGroup(
+          organizationId,
+          id,
+          data,
+        );
       },
     );
   }
@@ -43,7 +46,10 @@ export class ProductGroupController {
   delete() {
     return implement(contracts.productGroup.delete).handler(
       async ({ input }) => {
-        await this.productGroupService.deleteProductGroup(input.id);
+        await this.productGroupService.deleteProductGroup(
+          input.organizationId,
+          input.id,
+        );
         return { success: true };
       },
     );
@@ -54,6 +60,18 @@ export class ProductGroupController {
     return implement(contracts.productGroup.listProducts).handler(
       async ({ input }) => {
         return this.productGroupService.listGroupProducts(
+          input.organizationId,
+          input.id,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.productGroup.detail)
+  detail() {
+    return implement(contracts.productGroup.detail).handler(
+      async ({ input }) => {
+        return this.productGroupService.getProductGroupDetail(
           input.organizationId,
           input.id,
         );
