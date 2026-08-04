@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { ReactNode } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@workspace/ui/components/button"
 import {
   Dialog,
@@ -31,6 +31,13 @@ export function CustomerModal({
 }: CustomerModalProps) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
+
+  const { data: priceLists } = useQuery(
+    orpc.priceList.list.queryOptions({
+      input: { organizationId: orgId },
+      enabled: !!orgId && open,
+    })
+  )
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: CUSTOMER_QUERY_KEYS.lists() })
@@ -71,6 +78,10 @@ export function CustomerModal({
         data.paymentTermsDays === undefined ? undefined : data.paymentTermsDays,
       vatNumber: data.vatNumber || undefined,
       billingAddress: data.billingAddress || undefined,
+      defaultPriceListId:
+        data.defaultPriceListId && data.defaultPriceListId !== "__none__"
+          ? data.defaultPriceListId
+          : undefined,
       notes: data.notes || undefined,
     }
 
@@ -109,6 +120,7 @@ export function CustomerModal({
           onSubmit={handleSubmit}
           isLoading={createMutation.isPending || updateMutation.isPending}
           submitLabel={customer ? "Save changes" : "Create customer"}
+          priceLists={priceLists ?? []}
           defaultValues={
             customer
               ? {
@@ -124,6 +136,7 @@ export function CustomerModal({
                   paymentTermsDays: customer.paymentTermsDays ?? undefined,
                   vatNumber: customer.vatNumber ?? "",
                   billingAddress: customer.billingAddress ?? "",
+                  defaultPriceListId: customer.defaultPriceListId ?? "",
                   notes: customer.notes ?? "",
                 }
               : undefined

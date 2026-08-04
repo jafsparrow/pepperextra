@@ -269,12 +269,18 @@ async resolveAlternatives(
 ### 4.2 Price Resolution Order
 
 ```
-1. price_list_overrides (if price_list_id selected on quotation)
+1. Price list explicitly selected on the quotation/invoice (if any)
    → WHERE price_list_id = ? AND product_id = ?
-2. product_location_overrides (location-specific base price)
+2. Customer's default price list (if no price list selected and a customer is chosen)
+   → customers.default_price_list_id → price_list_overrides
+3. product_location_overrides (location-specific base price)
    → WHERE product_id = ? AND team_id = ?
-3. products.base_price (tenant-wide default)
+4. products.base_price (tenant-wide default)
 ```
+
+Per SKU within the effective price list, a missing override falls back to
+`product_location_overrides` then `products.base_price`. The resolved price is
+snapshotted onto the line (`unit_price_minor`) when the quotation/invoice is confirmed.
 
 ### 4.3 Invoice Number Generation
 

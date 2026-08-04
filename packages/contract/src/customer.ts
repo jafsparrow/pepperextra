@@ -24,6 +24,7 @@ export const customerSchema = z.object({
   shippingAddress: z.string().nullable().optional(),
   portalLogin: z.boolean().nullable().optional(),
   taxExempt: z.boolean().nullable().optional(),
+  defaultPriceListId: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 })
 
@@ -47,6 +48,7 @@ export const customerCreateSchema = z.object({
   shippingAddress: z.string().optional(),
   portalLogin: z.boolean().optional(),
   taxExempt: z.boolean().optional(),
+  defaultPriceListId: z.string().optional(),
   notes: z.string().optional(),
 })
 

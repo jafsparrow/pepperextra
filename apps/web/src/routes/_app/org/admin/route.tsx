@@ -15,6 +15,7 @@ import {
   Store,
   Boxes,
   FolderTree,
+  DollarSign,
 } from "lucide-react"
 import { BranchScopeSelector } from "@/shared/ui/components/branch-scope-selector"
 import { useAdminContext } from "@/shared/org/admin-context"
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/_app/org/admin")({
 const navItems = [
   { title: "Products", to: "/org/admin/products", icon: Package },
   { title: "Product Groups", to: "/org/admin/product-groups", icon: Layers },
+  { title: "Pricelist", to: "/org/admin/price-lists", icon: DollarSign },
+
   { title: "Categories", to: "/org/admin/categories", icon: FolderTree },
   { title: "Suppliers", to: "/org/admin/suppliers", icon: Truck },
   { title: "Customers", to: "/org/admin/customers", icon: Users },

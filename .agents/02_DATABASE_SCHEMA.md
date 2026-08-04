@@ -375,6 +375,13 @@ export const priceListOverrides = pgTable("price_list_overrides", {
 ])
 ```
 
+> **Default price list:** a customer may be assigned a **default price list** via
+> `customers.default_price_list_id` (see §10 Customers). When creating a quotation/invoice
+> without an explicitly selected price list, the customer's default price list is used.
+> Price resolution order: selected price list → customer default price list →
+> `product_location_overrides` → `products.base_price`. Per SKU, a missing override
+> falls back to `product_location_overrides` then `products.base_price`.
+
 ---
 
 ## 3. Home Screen Tags

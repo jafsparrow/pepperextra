@@ -208,7 +208,9 @@ POST   /catalog/import/commit        → commit validated import
 
 - Named price lists with per-SKU overrides
 - Automatic fallback to base price if SKU not in selected list
-- Price list selected at quotation creation
+- Price list selected at quotation creation (explicit override)
+- **Customer default price list** (`customers.default_price_list_id`) — when a customer is selected on a quotation/invoice and no price list is chosen explicitly, the customer's default price list is used automatically
+- Price list management is a **separate web menu** from products
 
 **Tables:** `price_lists`, `price_list_overrides`
 
@@ -222,13 +224,15 @@ DELETE /price-lists/:id              → soft delete
 POST   /price-lists/:id/overrides    → add or update SKU override
 DELETE /price-lists/:id/overrides/:product_id
 GET    /price-lists/:id/resolve/:product_id → resolve price with fallback logic
+GET    /price-lists/resolve/:product_id     → resolve via customer default price list (customer_id param)
 ```
 
 **UI Screens:**
 
 ```
-[web]  Price list management — list, create, edit overrides
-[expo] Price list dropdown on quotation creation
+[web]  Price list management — list, create, edit overrides (separate menu from Products)
+[web]  Customer edit — "Default price list" selector
+[expo] Price list dropdown on quotation creation + auto-selection of customer's default
 ```
 
 ---
@@ -270,7 +274,7 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 **UI Screens:**
 
 ```
-[expo] Quotation creation — add line items, select price list, select customer
+[expo] Quotation creation — add line items, select price list (auto-selects customer default), select customer
 [expo] Alternatives view — colour-coded brands, per-alternative subtotals
 [expo] "Immediate alternative" swap button
 [expo] Confirm quotation → quotation ID assigned and displayed
@@ -296,7 +300,8 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 ```
 1. For each line item, find all products in same product_group
 2. Order by brand_priority[] on product_group
-3. Apply selected price_list (fallback to base_price if not overridden)
+3. Apply selected price_list; if none selected, auto-use customer's default price_list
+   (fallback to base_price if not overridden)
 4. Display each alternative as a colour-coded row
 5. Sum all lines per brand → per-alternative subtotal
 6. "Immediate alternative" replaces all primary SKUs with next-priority SKU in same group

@@ -79,6 +79,18 @@ import {
   updateCustomerSite,
   deleteCustomerSite,
 } from "./customer.js"
+import {
+  listPriceLists,
+  getPriceList,
+  createPriceList,
+  updatePriceList,
+  deletePriceList,
+  addPriceListOverride,
+  updatePriceListOverride,
+  removePriceListOverride,
+  resolveProductPrice,
+  resolveProductPrices,
+} from "./price-list.js"
 import { listCountries } from "./localization.js"
 
 // [NOTE] :- zod schema should be exported just like that
@@ -212,6 +224,24 @@ export type {
   CustomerCreditNote,
   CustomerWarrantyClaim,
 } from "./customer.js"
+
+export {
+  priceListSchema,
+  priceListCreateSchema,
+  priceListUpdateSchema,
+  priceListDetailSchema,
+  priceListOverrideSchema,
+  priceListOverrideCreateSchema,
+  priceListOverrideUpdateSchema,
+  priceResolvedProductSchema,
+} from "./price-list.js"
+
+export type {
+  PriceList,
+  PriceListDetail,
+  PriceListOverride,
+  PriceResolvedProduct,
+} from "./price-list.js"
 
 export { countrySchema } from "./localization.js"
 
@@ -355,6 +385,18 @@ export const contracts = populateContractRouterPaths({
     createSite: createCustomerSite,
     updateSite: updateCustomerSite,
     deleteSite: deleteCustomerSite,
+  },
+  priceList: {
+    list: listPriceLists,
+    get: getPriceList,
+    create: createPriceList,
+    update: updatePriceList,
+    delete: deletePriceList,
+    addOverride: addPriceListOverride,
+    updateOverride: updatePriceListOverride,
+    removeOverride: removePriceListOverride,
+    resolve: resolveProductPrice,
+    resolveMany: resolveProductPrices,
   },
   countries: {
     list: listCountries,

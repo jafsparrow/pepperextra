@@ -5,6 +5,7 @@ import {
   Layers,
   Truck,
   Users,
+  ListChecks,
   ArrowRight,
 } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
@@ -41,6 +42,13 @@ const sections = [
     to: "/org/admin/customers",
     icon: Users,
     accent: "bg-amber-500/10 text-amber-600",
+  },
+  {
+    title: "Price Lists",
+    description: "Manage named price schedules and customer default pricing.",
+    to: "/org/admin/price-lists",
+    icon: ListChecks,
+    accent: "bg-violet-500/10 text-violet-600",
   },
 ] as const
 

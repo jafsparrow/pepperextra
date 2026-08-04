@@ -60,6 +60,7 @@ export class CustomerService {
       shippingAddress: row.shippingAddress,
       portalLogin: row.portalLogin,
       taxExempt: row.taxExempt,
+      defaultPriceListId: row.defaultPriceListId,
       notes: row.notes,
     };
   }
@@ -159,6 +160,7 @@ export class CustomerService {
       shippingAddress?: string;
       portalLogin?: boolean;
       taxExempt?: boolean;
+      defaultPriceListId?: string;
       notes?: string;
     },
   ): Promise<Customer> {
@@ -179,6 +181,7 @@ export class CustomerService {
         shippingAddress: data.shippingAddress ?? null,
         portalLogin: data.portalLogin ?? false,
         taxExempt: data.taxExempt ?? false,
+        defaultPriceListId: data.defaultPriceListId ?? null,
         notes: data.notes ?? null,
       })
       .returning();
@@ -201,6 +204,7 @@ export class CustomerService {
       shippingAddress: string;
       portalLogin: boolean;
       taxExempt: boolean;
+      defaultPriceListId: string;
       notes: string;
     }>,
   ): Promise<Customer> {
@@ -230,6 +234,9 @@ export class CustomerService {
           portalLogin: data.portalLogin,
         }),
         ...(data.taxExempt !== undefined && { taxExempt: data.taxExempt }),
+        ...(data.defaultPriceListId !== undefined && {
+          defaultPriceListId: data.defaultPriceListId || null,
+        }),
         ...(data.notes !== undefined && { notes: data.notes }),
         updatedAt: new Date(),
       })

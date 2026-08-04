@@ -21,6 +21,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { CUSTOMER_TYPE_LABELS } from "../../constants"
 import { customerFormSchema } from "../../schema/customer-schema"
 import type { CustomerFormValues } from "../../schema/customer-schema"
+import type { PriceList } from "@repo/contracts"
 
 interface CustomerFormProps {
   onSubmit?: (data: CustomerFormValues) => void | Promise<void>
@@ -28,6 +29,7 @@ interface CustomerFormProps {
   className?: string
   defaultValues?: Partial<CustomerFormValues>
   submitLabel?: string
+  priceLists?: PriceList[]
 }
 
 export function CustomerForm({
@@ -36,6 +38,7 @@ export function CustomerForm({
   className,
   defaultValues,
   submitLabel = "Save customer",
+  priceLists = [],
 }: CustomerFormProps) {
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerFormSchema),
@@ -48,6 +51,7 @@ export function CustomerForm({
       paymentTermsDays: defaultValues?.paymentTermsDays ?? undefined,
       vatNumber: defaultValues?.vatNumber ?? "",
       billingAddress: defaultValues?.billingAddress ?? "",
+      defaultPriceListId: defaultValues?.defaultPriceListId ?? "",
       notes: defaultValues?.notes ?? "",
     },
   })
@@ -62,6 +66,7 @@ export function CustomerForm({
       paymentTermsDays: defaultValues?.paymentTermsDays ?? undefined,
       vatNumber: defaultValues?.vatNumber ?? "",
       billingAddress: defaultValues?.billingAddress ?? "",
+      defaultPriceListId: defaultValues?.defaultPriceListId ?? "",
       notes: defaultValues?.notes ?? "",
     })
   }, [defaultValues, form])
@@ -188,6 +193,36 @@ export function CustomerForm({
           <Field>
             <FieldLabel>Billing address</FieldLabel>
             <Input {...field} type="text" placeholder="PO Box 123, Muscat, Oman" />
+          </Field>
+        )}
+      />
+
+      <Controller
+        name="defaultPriceListId"
+        control={form.control}
+        render={({ field }) => (
+          <Field>
+            <FieldLabel>Default price list</FieldLabel>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sale prices (no price list)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sale prices (no price list)</SelectItem>
+                {priceLists.map((pl) => (
+                  <SelectItem key={pl.id} value={pl.id}>
+                    {pl.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldDescription>
+              Quotations and invoices for this customer use this price list by
+              default. Products without a price fall back to the sale price.
+            </FieldDescription>
           </Field>
         )}
       />

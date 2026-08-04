@@ -537,6 +537,40 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 - In both modes the DB stores the absolute public `image_url`; the binary backend is a deploy-time config, not a per-row setting.
 - Each image row also carries a `pgvector` embedding for visual search (Section 8.18).
 
+### 8.20 Price Lists & Customer Default Pricing
+
+**Purpose:** Price lists let the shop maintain multiple named price schedules (e.g. "Wholesale", "Contractor Rate", "Promotion") that override the default sale price of a product. Price lists are managed as a **first-class menu, separate from the product catalog**, so they can be maintained independently.
+
+**Model:**
+- A **price list** is a named, org-scoped set of per-SKU price overrides (`price_lists` + `price_list_overrides`). Each override stores a fixed price in minor units for one product.
+- A customer may be assigned a **default price list** (`customers.default_price_list_id`). A customer can have at most one default price list.
+- Products **not configured** in the effective price list automatically fall back to the product's **sale price** (`products.base_price`).
+- Price lists are managed by the **Location Manager** and **Owner** (see permissions matrix — "Manage price lists").
+
+**Selection while creating a quotation or invoice:**
+
+1. When a line item is added, the unit price is resolved with this precedence:
+   1. The **price list explicitly selected on the document** — if any.
+   2. Otherwise, if a **customer is selected** and that customer has a **default price list** configured, that price list's override price for the product.
+   3. Otherwise, the product's **sale price** (`products.base_price`).
+2. If the product has **no override** in the effective price list, it falls back to the product's **sale price** automatically.
+3. The resolved price is **snapshotted onto the line** (`quotation_lines.unit_price_minor` / `invoice_lines.unit_price_minor`) at confirmation — later edits to a price list never change already-issued documents.
+4. The UI surfaces when a product is priced from a **fallback (sale price)** rather than from the price list, so staff can see which SKUs still need a price configured.
+
+**Price resolution order (quotations and invoices identical):**
+```
+1. Selected price list on the document (if provided)
+2. Customer's default price list (if customer is selected and has one)
+3. products.base_price  ← sale price fallback
+```
+Per SKU within the effective price list: `price_list_overrides.price_minor` → else `products.base_price`.
+
+**Management UI (web admin):**
+- Separate **Price Lists** menu (sibling of Products) — list, create, rename, soft-delete price lists.
+- Per price list: search products, add a price override, edit or remove it; each row shows base price vs override price and the number of configured SKUs.
+- Customer edit screen includes a **Default price list** selector.
+- Quotation/invoice creation resolves the price automatically and marks fallback pricing.
+
 ---
 
 ## 9. Phased Roadmap

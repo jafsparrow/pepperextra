@@ -16,6 +16,7 @@ export const customerFormSchema = z.object({
   paymentTermsDays: z.number().int().min(0).optional(),
   vatNumber: z.string().optional(),
   billingAddress: z.string().optional(),
+  defaultPriceListId: z.string().optional(),
   notes: z.string().optional(),
 })
 
