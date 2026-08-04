@@ -67,6 +67,58 @@ export class ProductController {
     });
   }
 
+  @Implement(contracts.product.listAlternatives)
+  listAlternatives() {
+    return implement(contracts.product.listAlternatives).handler(
+      async ({ input }) => {
+        return this.productService.listAlternatives(
+          input.organizationId,
+          input.id,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.product.addAlternative)
+  addAlternative() {
+    return implement(contracts.product.addAlternative).handler(
+      async ({ input }) => {
+        return this.productService.addAlternative(
+          input.organizationId,
+          input.id,
+          input.alternativeProductId,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.product.setPrimaryAlternative)
+  setPrimaryAlternative() {
+    return implement(contracts.product.setPrimaryAlternative).handler(
+      async ({ input }) => {
+        return this.productService.setPrimaryAlternative(
+          input.organizationId,
+          input.id,
+          input.alternativeProductId,
+        );
+      },
+    );
+  }
+
+  @Implement(contracts.product.removeAlternative)
+  removeAlternative() {
+    return implement(contracts.product.removeAlternative).handler(
+      async ({ input }) => {
+        await this.productService.removeAlternative(
+          input.organizationId,
+          input.id,
+          input.alternativeProductId,
+        );
+        return { success: true };
+      },
+    );
+  }
+
   @Post('organizations/:organizationId/products/:id/image')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(

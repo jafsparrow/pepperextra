@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -7,14 +8,15 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { DRIZZLE_TOKEN } from '../db/database.module.js';
 import type { DatabaseClient } from '@repo/db';
-import { dz, products, productImages } from '@repo/db';
+import { dz, products, productImages, productAlternatives } from '@repo/db';
 import { orgMetadata, currencies } from '@repo/db';
 import type {
   Product,
   ProductDetail,
   ProductUploadReport,
+  ProductAlternative,
 } from '@repo/contracts';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 
 const asMinor = (value: bigint | string | number | null | undefined): string =>
   value === null || value === undefined ? '0' : BigInt(value).toString();
@@ -353,6 +355,197 @@ export class ProductService {
           isNull(products.deletedAt),
         ),
       );
+  }
+
+  private async ensureProductExists(
+    organizationId: string,
+    productId: string,
+  ): Promise<void> {
+    const row = await this.db.query.products.findFirst({
+      where: {
+        id: productId,
+        orgId: organizationId,
+        deletedAt: { isNull: true },
+      },
+      columns: { id: true },
+    });
+
+    if (!row) {
+      throw new NotFoundException('Product not found');
+    }
+  }
+
+  private toAlternative(
+    row: (typeof productAlternatives.$inferSelect) & {
+      alternativeProduct?: ProductRow | null;
+    },
+  ): ProductAlternative {
+    return {
+      id: row.id,
+      productId: row.productId,
+      alternativeProductId: row.alternativeProductId,
+      isPrimary: row.isPrimary,
+      alternative: {
+        id: row.alternativeProduct?.id ?? row.alternativeProductId,
+        name: row.alternativeProduct?.name ?? 'Unknown product',
+        skuCode: row.alternativeProduct?.skuCode ?? '',
+        brandTag: row.alternativeProduct?.brandTag ?? null,
+        basePriceMinor: asMinor(row.alternativeProduct?.basePriceMinor),
+      },
+    };
+  }
+
+  async listAlternatives(
+    organizationId: string,
+    productId: string,
+  ): Promise<ProductAlternative[]> {
+    const rows = await this.db.query.productAlternatives.findMany({
+      where: {
+        orgId: organizationId,
+        productId,
+      },
+      with: { alternativeProduct: true },
+      orderBy: (t, { desc, asc }) => [desc(t.isPrimary), asc(t.createdAt)],
+    });
+
+    return rows.map((row) => this.toAlternative(row));
+  }
+
+  async addAlternative(
+    organizationId: string,
+    productId: string,
+    alternativeProductId: string,
+  ): Promise<ProductAlternative> {
+    if (productId === alternativeProductId) {
+      throw new BadRequestException(
+        'A product cannot be an alternative to itself',
+      );
+    }
+
+    await this.ensureProductExists(organizationId, productId);
+    await this.ensureProductExists(organizationId, alternativeProductId);
+
+    const [countRow] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(productAlternatives)
+      .where(
+        and(
+          eq(productAlternatives.orgId, organizationId),
+          eq(productAlternatives.productId, productId),
+        ),
+      );
+
+    try {
+      const [row] = await this.db
+        .insert(productAlternatives)
+        .values({
+          orgId: organizationId,
+          productId,
+          alternativeProductId,
+          isPrimary: (countRow?.count ?? 0) === 0,
+        })
+        .returning();
+
+      const alternativeProduct = await this.db.query.products.findFirst({
+        where: {
+          id: alternativeProductId,
+          orgId: organizationId,
+          deletedAt: { isNull: true },
+        },
+      });
+
+      return this.toAlternative({ ...row, alternativeProduct });
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new ConflictException(
+          'This product is already an alternative',
+        );
+      }
+      throw error;
+    }
+  }
+
+  async setPrimaryAlternative(
+    organizationId: string,
+    productId: string,
+    alternativeProductId: string,
+  ): Promise<ProductAlternative> {
+    return this.db.transaction(async (tx) => {
+      const target = await tx.query.productAlternatives.findFirst({
+        where: {
+          orgId: organizationId,
+          productId,
+          alternativeProductId,
+        },
+        with: { alternativeProduct: true },
+      });
+
+      if (!target) {
+        throw new NotFoundException('Alternative product not found');
+      }
+
+      await tx
+        .update(productAlternatives)
+        .set({ isPrimary: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(productAlternatives.orgId, organizationId),
+            eq(productAlternatives.productId, productId),
+            eq(productAlternatives.isPrimary, true),
+          ),
+        );
+
+      await tx
+        .update(productAlternatives)
+        .set({ isPrimary: true, updatedAt: new Date() })
+        .where(eq(productAlternatives.id, target.id));
+
+      return this.toAlternative({ ...target, isPrimary: true });
+    });
+  }
+
+  async removeAlternative(
+    organizationId: string,
+    productId: string,
+    alternativeProductId: string,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .delete(productAlternatives)
+        .where(
+          and(
+            eq(productAlternatives.orgId, organizationId),
+            eq(productAlternatives.productId, productId),
+            eq(productAlternatives.alternativeProductId, alternativeProductId),
+          ),
+        )
+        .returning({
+          id: productAlternatives.id,
+          isPrimary: productAlternatives.isPrimary,
+        });
+
+      if (!row) {
+        throw new NotFoundException('Alternative product not found');
+      }
+
+      if (row.isPrimary) {
+        const next = await tx.query.productAlternatives.findFirst({
+          where: {
+            orgId: organizationId,
+            productId,
+          },
+          columns: { id: true },
+          orderBy: (t, { asc }) => [asc(t.createdAt)],
+        });
+
+        if (next) {
+          await tx
+            .update(productAlternatives)
+            .set({ isPrimary: true, updatedAt: new Date() })
+            .where(eq(productAlternatives.id, next.id));
+        }
+      }
+    });
   }
 
   async uploadImage(

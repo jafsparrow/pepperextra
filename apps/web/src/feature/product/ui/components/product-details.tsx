@@ -21,6 +21,7 @@ import {
   Clock,
   Warehouse,
   MapPin,
+  Shuffle,
 } from "lucide-react"
 import { orpc } from "@/shared/utils/orpc"
 import { useCurrency } from "@/shared/org/use-currency"
@@ -28,6 +29,7 @@ import { PRODUCT_QUERY_KEYS } from "../../constants"
 import { ProductModal } from "./product-modal"
 import { ProductLoyaltyDialog } from "./product-loyalty-dialog"
 import { ProductNotesDialog } from "./product-notes-dialog"
+import { ProductAlternativesDialog } from "./product-alternatives-dialog"
 
 interface ProductDetailsProps {
   orgId: string
@@ -42,6 +44,13 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
 
   const { data: product, isLoading } = useQuery(
     orpc.product.get.queryOptions({
+      input: { organizationId: orgId, id: productId },
+      enabled: !!orgId && !!productId,
+    })
+  )
+
+  const { data: alternatives } = useQuery(
+    orpc.product.listAlternatives.queryOptions({
       input: { organizationId: orgId, id: productId },
       enabled: !!orgId && !!productId,
     })
@@ -472,30 +481,61 @@ export function ProductDetails({ orgId, productId }: ProductDetailsProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <StickyNote className="h-5 w-5" />
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <StickyNote className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Line notes</h3>
+              <p className="text-xs text-muted-foreground">
+                {product.needsNotes
+                  ? product.notes
+                    ? `"${product.notes}" — auto-added to quotation & invoice lines.`
+                    : "Automatic notes are enabled for this product."
+                  : "No automatic notes on quotation & invoice lines."}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-bold">Line notes</h3>
-            <p className="text-xs text-muted-foreground">
-              {product.needsNotes
-                ? product.notes
-                  ? `"${product.notes}" — auto-added to quotation & invoice lines.`
-                  : "Automatic notes are enabled for this product."
-                : "No automatic notes on quotation & invoice lines."}
-            </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <ProductNotesDialog orgId={orgId} product={product}>
+              <Button size="sm" variant="outline">
+                Manage
+              </Button>
+            </ProductNotesDialog>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <ProductNotesDialog orgId={orgId} product={product}>
-            <Button size="sm" variant="outline">
-              Manage
-            </Button>
-          </ProductNotesDialog>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Shuffle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Alternative products</h3>
+              <p className="text-xs text-muted-foreground">
+                {(() => {
+                  const primary = alternatives?.find((a) => a.isPrimary)
+                  if (primary) {
+                    return `Primary default: ${primary.alternative.name} — ${alternatives?.length ?? 0} alternative${(alternatives?.length ?? 0) === 1 ? "" : "s"} configured.`
+                  }
+                  if (alternatives && alternatives.length > 0) {
+                    return `${alternatives.length} alternative${alternatives.length === 1 ? "" : "s"} configured. No primary default.`
+                  }
+                  return "Substitute products staff can offer instead of this one."
+                })()}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <ProductAlternativesDialog orgId={orgId} product={product}>
+              <Button size="sm" variant="outline">
+                Manage
+              </Button>
+            </ProductAlternativesDialog>
+          </div>
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
+

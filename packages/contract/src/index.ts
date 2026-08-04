@@ -52,6 +52,10 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  listProductAlternatives,
+  addProductAlternative,
+  setPrimaryProductAlternative,
+  removeProductAlternative,
 } from "./product.js"
 import {
   listSuppliers,
@@ -167,6 +171,8 @@ export {
   loyaltyPointsConfigSchema,
   productUploadReportSchema,
   productUploadErrorSchema,
+  productAlternativeSchema,
+  productAlternativeProductSchema,
 } from "./product.js"
 
 export type {
@@ -178,6 +184,8 @@ export type {
   LoyaltyPointsConfig,
   ProductUploadReport,
   ProductUploadError,
+  ProductAlternative,
+  ProductAlternativeProduct,
 } from "./product.js"
 
 export {
@@ -359,6 +367,10 @@ export const contracts = populateContractRouterPaths({
     create: createProduct,
     update: updateProduct,
     delete: deleteProduct,
+    listAlternatives: listProductAlternatives,
+    addAlternative: addProductAlternative,
+    setPrimaryAlternative: setPrimaryProductAlternative,
+    removeAlternative: removeProductAlternative,
   },
   supplier: {
     list: listSuppliers,

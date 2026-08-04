@@ -9,6 +9,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core"
 import type { AnyPgColumn } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
 import { generateId } from "../utils"
 import { organization, team, user } from "../auth-schema"
 import { stockModeEnum, catalogRequestStatusEnum } from "./enums"
@@ -106,6 +107,39 @@ export const products = pgTable(
     index("products_org_category_idx").on(t.orgId, t.categoryId),
     index("products_org_brand_idx").on(t.orgId, t.brandTag),
     index("products_org_spec_code_idx").on(t.orgId, t.specCode),
+  ]
+)
+
+export const productAlternatives = pgTable(
+  "product_alternatives",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    alternativeProductId: text("alternative_product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    isPrimary: boolean("is_primary").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("product_alternatives_uidx").on(
+      t.productId,
+      t.alternativeProductId
+    ),
+    index("product_alternatives_org_idx").on(t.orgId),
+    index("product_alternatives_product_idx").on(t.productId),
+    index("product_alternatives_alt_product_idx").on(t.alternativeProductId),
+    uniqueIndex("product_alternatives_primary_uidx")
+      .on(t.productId)
+      .where(sql`${t.isPrimary} = true`),
   ]
 )
 

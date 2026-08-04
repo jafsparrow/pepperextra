@@ -123,6 +123,83 @@ export const productUploadReportSchema = z.object({
 export type ProductUploadError = z.infer<typeof productUploadErrorSchema>
 export type ProductUploadReport = z.infer<typeof productUploadReportSchema>
 
+export const productAlternativeProductSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  skuCode: z.string(),
+  brandTag: z.string().nullable().optional(),
+  basePriceMinor: z.string(),
+})
+
+export type ProductAlternativeProduct = z.infer<
+  typeof productAlternativeProductSchema
+>
+
+export const productAlternativeSchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  alternativeProductId: z.string(),
+  isPrimary: z.boolean().default(false),
+  alternative: productAlternativeProductSchema,
+})
+
+export type ProductAlternative = z.infer<typeof productAlternativeSchema>
+
+export const listProductAlternatives = oc
+  .route({
+    method: "GET",
+    path: "/organizations/{organizationId}/products/{id}/alternatives",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+    })
+  )
+  .output(z.array(productAlternativeSchema))
+
+export const addProductAlternative = oc
+  .route({
+    method: "POST",
+    path: "/organizations/{organizationId}/products/{id}/alternatives",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+      alternativeProductId: z.string().min(1, "Select a product"),
+    })
+  )
+  .output(productAlternativeSchema)
+
+export const setPrimaryProductAlternative = oc
+  .route({
+    method: "POST",
+    path: "/organizations/{organizationId}/products/{id}/alternatives/{alternativeProductId}/primary",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+      alternativeProductId: z.string(),
+    })
+  )
+  .output(productAlternativeSchema)
+
+export const removeProductAlternative = oc
+  .route({
+    method: "DELETE",
+    path: "/organizations/{organizationId}/products/{id}/alternatives/{alternativeProductId}",
+  })
+  .input(
+    z.object({
+      organizationId: z.string(),
+      id: z.string(),
+      alternativeProductId: z.string(),
+    })
+  )
+  .output(z.object({ success: z.boolean() }))
+
 export const listProducts = oc
   .route({
     method: "GET",

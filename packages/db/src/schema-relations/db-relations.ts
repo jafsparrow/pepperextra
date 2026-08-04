@@ -19,6 +19,7 @@ import {
   productGroups,
   products,
   productLocationOverrides,
+  productAlternatives,
   catalogRequests,
   categories,
 } from "../schemas/catalog"
@@ -91,6 +92,7 @@ export const dbRelations = defineRelations(
     products,
     categories,
     productLocationOverrides,
+    productAlternatives,
     catalogRequests,
     priceLists,
     priceListOverrides,
@@ -166,6 +168,7 @@ export const dbRelations = defineRelations(
       products: r.many.products(),
       categories: r.many.categories(),
       productLocationOverrides: r.many.productLocationOverrides(),
+      productAlternatives: r.many.productAlternatives(),
       catalogRequests: r.many.catalogRequests(),
       priceLists: r.many.priceLists(),
       priceListOverrides: r.many.priceListOverrides(),
@@ -337,6 +340,20 @@ export const dbRelations = defineRelations(
       purchaseInvoiceLines: r.many.purchaseInvoiceLines(),
       supplierWarrantyClaims: r.many.supplierWarrantyClaims(),
       images: r.many.productImages(),
+    },
+    productAlternatives: {
+      product: r.one.products({
+        from: r.productAlternatives.productId,
+        to: r.products.id,
+      }),
+      alternativeProduct: r.one.products({
+        from: r.productAlternatives.alternativeProductId,
+        to: r.products.id,
+      }),
+      organization: r.one.organization({
+        from: r.productAlternatives.orgId,
+        to: r.organization.id,
+      }),
     },
     productImages: {
       product: r.one.products({
