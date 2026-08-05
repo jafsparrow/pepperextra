@@ -18,4 +18,10 @@
       },
     },
   },
+  "permission": {
+    "edit": {
+      "**/routeTree.gen.ts": "deny",
+      "apps/web/src/routeTree.gen.ts": "deny",
+    },
+  },
 }
