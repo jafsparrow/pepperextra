@@ -20,17 +20,20 @@ export function useLogin() {
       try {
         const { error: authError } = await signIn.email(credentials)
         if (authError) {
+          console.log("auth error", authError)
           throw new Error(authError.message || "Invalid email or password.")
         }
         return true
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Something went wrong.")
+        setError(
+          cause instanceof Error ? cause.message : "Something went wrong."
+        )
         return false
       } finally {
         setIsPending(false)
       }
     },
-    [],
+    []
   )
 
   return { login, isPending, error }

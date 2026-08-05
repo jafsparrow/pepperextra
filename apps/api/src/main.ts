@@ -12,9 +12,21 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: 'http://localhost:3001',
-    credentials: true, // Crucial for Better Auth cookies to pass through
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-orpc-*'],
+    origin: [
+      'http://localhost:3001', // TanStack Start
+      'http://localhost:8081', // if you ever use Expo web
+      // you can also add production domains later
+    ],
+    credentials: true, // still needed for cookies
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cookie',
+      'x-orpc-*',
+      'expo-origin', // useful for Better Auth Expo
+    ],
+    // optional but sometimes helpful:
+    // exposedHeaders: ['Set-Cookie'],
   });
 
   // console.log('nest js proces env', process.env);

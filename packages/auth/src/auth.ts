@@ -221,8 +221,10 @@ export const createAuthInstance = (
     trustedOrigins: [
       "http://localhost:3001",
       "http://localhost:5173",
+      "http://localhost:8081",
       "mobile://",
       "exp://",
+      "exp://**", // Expo Go with different IPs
     ],
   })
 }
