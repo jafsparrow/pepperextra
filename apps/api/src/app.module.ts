@@ -74,6 +74,12 @@ declare module '@orpc/nest' {
         const betterAuthInstance = createAuthInstance(dbClient, {
           secret,
           baseUrl,
+          // Dev stub: no email provider wired up yet. Logs the reset URL/token
+          // so password-reset flows can be exercised locally.
+          async sendResetPassword({ user, url, token }) {
+            console.log(`[auth:sendResetPassword] user=${user.email} token=${token}`);
+            console.log(`[auth:sendResetPassword] reset URL: ${url}`);
+          },
           allowUserToCreateOrganization(user) {
             // custome field typing are missing from the object.
             const typedUser = user as typeof user & {

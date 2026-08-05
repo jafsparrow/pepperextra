@@ -2,6 +2,7 @@ import { betterAuth, type BetterAuthOptions } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import * as authschema from "@repo/db/auth-schema"
 import { admin as adminPlugin, organization } from "better-auth/plugins"
+import { expo } from "@better-auth/expo"
 
 import type { OrganizationOptions } from "better-auth/plugins"
 
@@ -146,6 +147,9 @@ interface AuthConfigOptions {
   allowUserToCreateOrganization?: NonNullable<
     OrganizationOptions["allowUserToCreateOrganization"]
   >
+  sendResetPassword?: NonNullable<
+    BetterAuthOptions["emailAndPassword"]
+  >["sendResetPassword"]
 }
 
 export const createAuthInstance = (
@@ -171,11 +175,15 @@ export const createAuthInstance = (
           type: "boolean",
           required: false,
           defaultValue: true, // true on creation/admin reset
-          input: false, // staff can't set this themselves via signup/update
+          // input: true so the mobile client can clear the flag via updateUser
+          // after a forced password reset (changePassword does not fire
+          // onPasswordReset in better-auth 1.6.22).
+          input: true,
         },
       },
     },
     plugins: [
+      expo(),
       organization({
         maxOrganizationsPerUser: 1,
         ac: orgAccessControl,
@@ -206,8 +214,16 @@ export const createAuthInstance = (
     ],
     emailAndPassword: {
       enabled: true,
+      ...(options.sendResetPassword
+        ? { sendResetPassword: options.sendResetPassword }
+        : {}),
     },
-    trustedOrigins: ["http://localhost:3001", "http://localhost:5173"],
+    trustedOrigins: [
+      "http://localhost:3001",
+      "http://localhost:5173",
+      "mobile://",
+      "exp://",
+    ],
   })
 }
 

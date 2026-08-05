@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.23",
+    "@better-auth/expo": "^1.6.22",
     "@repo/db": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "better-auth": "^1.6.22",
