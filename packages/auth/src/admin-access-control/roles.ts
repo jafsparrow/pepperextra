@@ -1,4 +1,4 @@
-import { createAccessControl } from "better-auth/plugins"
+import { createAccessControl } from "better-auth/plugins/access"
 import { statement } from "./resource-permissions.js"
 
 export const ac = createAccessControl(statement)

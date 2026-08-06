@@ -17,6 +17,7 @@ import { createAuthClientPlugins } from "@repo/auth/client"
  */
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"
 
+console.log("Using baseURL for authClient:", baseURL)
 export const authClient = createAuthClient({
   baseURL,
   plugins: [

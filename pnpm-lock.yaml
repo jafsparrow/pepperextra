@@ -186,9 +186,24 @@ importers:
       '@expo/ui':
         specifier: ~57.0.9
         version: 57.0.9(@babel/core@7.29.7)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(expo@57.0.10)(react-dom@19.2.3(react@19.2.3))(react-native-worklets@0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.86.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.2(@babel/core@7.29.7))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
+      '@orpc/client':
+        specifier: ^1.14.8
+        version: 1.14.8
+      '@orpc/contract':
+        specifier: ^1.14.6
+        version: 1.14.8
+      '@orpc/openapi-client':
+        specifier: ^1.14.8
+        version: 1.14.8
+      '@orpc/tanstack-query':
+        specifier: ^1.14.8
+        version: 1.14.8(@orpc/client@1.14.8)(@tanstack/query-core@5.101.2)
       '@repo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contract
       '@tanstack/react-query':
         specifier: ^5.101.2
         version: 5.101.2(react@19.2.3)

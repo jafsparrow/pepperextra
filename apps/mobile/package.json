@@ -5,7 +5,12 @@
   "dependencies": {
     "@better-auth/expo": "1.6.22",
     "@expo/ui": "~57.0.9",
+    "@orpc/client": "^1.14.8",
+    "@orpc/contract": "^1.14.6",
+    "@orpc/openapi-client": "^1.14.8",
+    "@orpc/tanstack-query": "^1.14.8",
     "@repo/auth": "workspace:*",
+    "@repo/contracts": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "better-auth": "1.6.22",
     "expo": "~57.0.10",
