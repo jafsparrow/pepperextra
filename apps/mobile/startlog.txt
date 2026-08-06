@@ -1,0 +1,8 @@
+env: load .env
+env: export EXPO_PUBLIC_API_URL
+Starting project at E:\projects\buildextra\apps\mobile
+Using src/app as the root directory for Expo Router.
+React Compiler enabled
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+

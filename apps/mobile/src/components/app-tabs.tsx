@@ -14,26 +14,27 @@ export default function AppTabs() {
       labelStyle={{ selected: { color: colors.text } }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="quotations">
+        <NativeTabs.Trigger.Label>Quotations</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="doc.text.fill" md="receipt_long" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/settings.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="invoices">
+        <NativeTabs.Trigger.Label>Invoices</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="banknote.fill" md="payments" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="customers">
+        <NativeTabs.Trigger.Label>Customers</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.crop.circle.fill" md="group" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="qr-scan">
+        <NativeTabs.Trigger.Label>QR Scan</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="qrcode.viewfinder" md="qr_code_scanner" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

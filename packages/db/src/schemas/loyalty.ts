@@ -9,6 +9,7 @@ import {
 import { generateId } from "../utils";
 import { organization, user } from "../auth-schema";
 import { products } from "./catalog";
+import { customers } from "./customers";
 import {
   tradeTypeEnum,
   redemptionTypeEnum,
@@ -24,6 +25,7 @@ export const tradespeople = pgTable(
     orgId: text("org_id")
       .notNull()
       .references(() => organization.id),
+    customerId: text("customer_id").references(() => customers.id),
     phone: text("phone").notNull(),
     name: text("name").notNull(),
     tradeType: tradeTypeEnum("trade_type").notNull(),
@@ -33,6 +35,7 @@ export const tradespeople = pgTable(
   },
   (t) => [
     uniqueIndex("tradespeople_org_phone_uidx").on(t.orgId, t.phone),
+    uniqueIndex("tradespeople_org_customer_uidx").on(t.orgId, t.customerId),
     index("tradespeople_org_idx").on(t.orgId),
   ]
 );

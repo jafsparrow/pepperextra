@@ -805,6 +805,10 @@ export const dbRelations = defineRelations(
         from: r.tradespeople.orgId,
         to: r.organization.id,
       }),
+      customer: r.one.customers({
+        from: r.tradespeople.customerId,
+        to: r.customers.id,
+      }),
       redemptions: r.many.loyaltyRedemptions(),
       scannedQrCodes: r.many.qrCodes(),
     },

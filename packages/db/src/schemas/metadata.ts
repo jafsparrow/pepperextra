@@ -74,7 +74,7 @@ export const userMetadata = pgTable(
       .notNull()
       .references(() => organization.id),
     teamId: text("team_id").references(() => team.id),
-    pinnedSkuIds: text("pinned_sku_ids").array(),
+    pinnedTagIds: text("pinned_tag_ids").array(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

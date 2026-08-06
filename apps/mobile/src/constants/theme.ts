@@ -1,24 +1,40 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens. Single source of truth for colours and spacing.
+ * BRD palette: warm sand backgrounds, white cards, deep amber primary,
+ * steel blue secondary, green success. No dark mode.
  */
 
 import { Platform } from 'react-native';
 
+export const Tokens = {
+  background: '#f7f3e9',
+  surface: '#f7f3e9',
+  card: '#ffffff',
+  foreground: '#1c1917',
+  foregroundSecondary: '#57534e',
+  muted: '#a8a29e',
+  border: '#e7e0d6',
+  primary: '#b45309',
+  primaryForeground: '#ffffff',
+  steel: '#3d6b8e',
+  success: '#16a34a',
+  danger: '#dc2626',
+} as const;
+
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: Tokens.foreground,
+    background: Tokens.background,
+    backgroundElement: Tokens.card,
+    backgroundSelected: '#ece5d8',
+    textSecondary: Tokens.foregroundSecondary,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: Tokens.foreground,
+    background: Tokens.background,
+    backgroundElement: Tokens.card,
+    backgroundSelected: '#ece5d8',
+    textSecondary: Tokens.foregroundSecondary,
   },
 } as const;
 

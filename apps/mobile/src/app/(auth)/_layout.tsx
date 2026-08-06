@@ -25,7 +25,7 @@ export default function AuthLayout() {
       return <Redirect href="/set-password" />
     }
   } else if (session) {
-    return <Redirect href="/(home)" />
+    return <Redirect href="/" />
   }
 
   return (
