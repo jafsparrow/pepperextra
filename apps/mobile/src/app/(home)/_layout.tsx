@@ -16,6 +16,7 @@ export default function HomeLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="tag-products" options={{ presentation: 'transparentModal', headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: true, title: "Settings" }} />
       <Stack.Screen name="profile" options={{ headerShown: true, title: "Profile" }} />
       <Stack.Screen name="pos" options={{ headerShown: true, title: "New Quotation" }} />

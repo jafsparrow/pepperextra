@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ImagePlaceholder } from '@/components/ui/image-placeholder';
 import { ListItem } from '@/components/ui/list-item';
 import { Section } from '@/components/ui/section';
 import { StatusChip, type StatusTone } from '@/components/ui/status-chip';
@@ -127,7 +128,8 @@ export function CustomerDetailScreen() {
                   key={inv.id}
                   title={inv.number}
                   subtitle={`${inv.lines.length} line${inv.lines.length === 1 ? '' : 's'} · ${new Date(inv.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
-                  leading={<StatusChip tone={INVOICE_STATUS_TONES[inv.status]} label={INVOICE_STATUS_LABELS[inv.status]} />}
+                  leading={<ImagePlaceholder />}
+                  status={<StatusChip tone={INVOICE_STATUS_TONES[inv.status]} label={INVOICE_STATUS_LABELS[inv.status]} />}
                   trailing={<ThemedText>{formatMinorUnits(inv.totalMinor, DEFAULT_CURRENCY)}</ThemedText>}
                 />
               ))}

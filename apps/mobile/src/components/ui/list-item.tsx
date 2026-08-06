@@ -7,6 +7,7 @@ import { Colors, Spacing, Tokens } from '@/constants/theme';
 type ListItemProps = {
   title: string;
   subtitle?: ReactNode;
+  status?: ReactNode;
   leading?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
@@ -14,7 +15,7 @@ type ListItemProps = {
   style?: ViewStyle;
 };
 
-export function ListItem({ title, subtitle, leading, trailing, onPress, titleColor, style }: ListItemProps) {
+export function ListItem({ title, subtitle, status, leading, trailing, onPress, titleColor, style }: ListItemProps) {
   const content = (
     <>
       {leading ? <View style={styles.leading}>{leading}</View> : null}
@@ -31,6 +32,7 @@ export function ListItem({ title, subtitle, leading, trailing, onPress, titleCol
             subtitle
           )
         ) : null}
+        {status ? <View style={styles.status}>{status}</View> : null}
       </View>
       {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
     </>
@@ -70,6 +72,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: Tokens.foregroundSecondary,
+  },
+  status: {
+    alignSelf: 'flex-start',
   },
   trailing: {
     alignItems: 'flex-end',

@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ImagePlaceholder } from '@/components/ui/image-placeholder';
 import { ListItem } from '@/components/ui/list-item';
 import { SearchField } from '@/components/ui/search-field';
 import { Section } from '@/components/ui/section';
@@ -108,7 +109,8 @@ export function QuotationsScreen() {
                 key={q.id}
                 title={q.number}
                 subtitle={q.customerName}
-                leading={<StatusChip label={QUOTATION_STATUS_LABELS[q.status]} tone={STATUS_FILTER_TONES[q.status]} />}
+                leading={<ImagePlaceholder />}
+                status={<StatusChip label={QUOTATION_STATUS_LABELS[q.status]} tone={STATUS_FILTER_TONES[q.status]} />}
                 trailing={
                   <View style={styles.rowTrailing}>
                     <ThemedText type="smallBold">{formatMinorUnits(q.totalMinor)}</ThemedText>

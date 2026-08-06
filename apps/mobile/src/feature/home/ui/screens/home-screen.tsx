@@ -9,6 +9,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Fab } from '@/components/ui/fab';
+import { ImagePlaceholder } from '@/components/ui/image-placeholder';
 import { ListItem } from '@/components/ui/list-item';
 import { Section } from '@/components/ui/section';
 import { StatusChip } from '@/components/ui/status-chip';
@@ -21,11 +22,9 @@ import { QUOTATION_STATUS_TONES } from '@/feature/quotation/constants/status-ton
 import { MOCK_QUOTATIONS } from '@/feature/quotation/constants/mock-quotations';
 import { MOCK_QR_SCANS, relativeTime } from '@/feature/qr-scan/constants/mock-scans';
 import { findMockTag } from '@/feature/tags/constants/mock-tags';
-import { togglePinnedTag, usePinnedTagIds } from '@/feature/tags/store/use-pinned-tags';
-import type { ProductTag, TaggedProduct } from '@/feature/tags/types';
-import { TagProductsModal } from '@/feature/tags/ui/components/tag-products-modal';
+import { usePinnedTagIds } from '@/feature/tags/store/use-pinned-tags';
+import type { ProductTag } from '@/feature/tags/types';
 import { useNetworkStatus } from '@/hooks/use-network-status';
-import { useRole } from '@/feature/roles/hooks/use-role';
 import { formatMinorUnits } from '@/lib/money';
 
 export function HomeScreen() {
@@ -35,10 +34,7 @@ export function HomeScreen() {
   const { signOutUser } = useSignOut();
 
   const pinnedTagIds = usePinnedTagIds();
-  const [activeTag, setActiveTag] = useState<ProductTag | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
-
-  const { canSeeCosts } = useRole();
 
   const pinnedTags = pinnedTagIds
     .map((id) => findMockTag(id))
@@ -85,7 +81,7 @@ export function HomeScreen() {
               pinnedTags.map((tag) => (
                 <Pressable
                   key={tag.id}
-                  onPress={() => setActiveTag(tag)}
+                  onPress={() => router.push({ pathname: '/tag-products', params: { id: tag.id } })}
                   style={({ pressed }) => [styles.tagChip, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" style={styles.tagChipLabel}>
                     {tag.name}
@@ -102,7 +98,8 @@ export function HomeScreen() {
               key={q.id}
               title={q.number}
               subtitle={q.customerName}
-              leading={<StatusChip label={QUOTATION_STATUS_LABELS[q.status]} tone={QUOTATION_STATUS_TONES[q.status]} />}
+              leading={<ImagePlaceholder />}
+              status={<StatusChip label={QUOTATION_STATUS_LABELS[q.status]} tone={QUOTATION_STATUS_TONES[q.status]} />}
               trailing={
                 <ThemedText type="smallBold" style={styles.money}>
                   {formatMinorUnits(q.totalMinor)}
@@ -158,23 +155,8 @@ export function HomeScreen() {
       </View>
 
       <MoreMenu visible={menuVisible} onClose={() => setMenuVisible(false)} items={menuItems} />
-
-      {activeTag ? (
-        <TagProductsModal
-          tag={activeTag}
-          isPinned={pinnedTagIds.includes(activeTag.id)}
-          canSeeCosts={canSeeCosts}
-          onTogglePin={() => togglePinnedTag(activeTag.id)}
-          onAddToQuote={addToQuote}
-          onClose={() => setActiveTag(null)}
-        />
-      ) : null}
     </ThemedView>
   );
-
-  function addToQuote(_product: TaggedProduct) {
-    router.push('/pos');
-  }
 }
 
 const styles = StyleSheet.create({
