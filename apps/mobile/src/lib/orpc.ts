@@ -9,6 +9,7 @@ import { authClient } from "@/lib/auth-client"
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"
 
+console.log("base url for orpc client:", baseURL)
 const link = new OpenAPILink(contracts, {
   url: baseURL,
   fetch: (request, init) => {

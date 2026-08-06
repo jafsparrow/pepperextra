@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router"
+import { Redirect, Stack, usePathname } from "expo-router"
 
 import { authClient } from "@/lib/auth-client"
 
@@ -13,12 +13,18 @@ import { authClient } from "@/lib/auth-client"
  */
 export default function AuthLayout() {
   const { data: session, isPending } = authClient.useSession()
+  const pathname = usePathname()
 
   if (isPending) return null
   if (session && session.user.passwordResetRequired) {
-    return <Redirect href="/set-password" />
-  }
-  if (session) {
+    // Don't redirect to the screen we're already on (e.g. after the forced
+    // reset redirect already landed on /set-password). Redirecting to the
+    // current route makes expo-router re-run the replace in a loop, which
+    // crashes with "Maximum update depth exceeded".
+    if (pathname !== "/set-password") {
+      return <Redirect href="/set-password" />
+    }
+  } else if (session) {
     return <Redirect href="/(home)" />
   }
 

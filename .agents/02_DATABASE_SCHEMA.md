@@ -165,7 +165,7 @@ export const userMetadata = pgTable("user_metadata", {
     .references(() => organization.id),
   teamId: text("team_id")
     .references(() => team.id),  // NULL = owner (access to all teams)
-  pinnedSkuIds: text("pinned_sku_ids").array(),  // quick-access widget, max 10
+  pinnedTagIds: text("pinned_tag_ids").array(),  // quick-access pinned tag titles, max 10
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [
@@ -385,6 +385,10 @@ export const priceListOverrides = pgTable("price_list_overrides", {
 ---
 
 ## 3. Home Screen Tags
+
+> **Pinned quick access** on the home screen is stored on `user_metadata.pinnedTagIds` — each
+> staff member pins up to 10 tag titles (an opt-in subset of the tags created). The tag name is the
+> pinned title; tapping it opens a modal of the tag's products.
 
 ### `product_tags`
 ```typescript
@@ -1055,12 +1059,22 @@ export const purchaseReceipts = pgTable("purchase_receipts", {
 
 ## 13. Tradesperson Loyalty & QR Codes
 
+> **Tradespeople are customers.** Each `tradespeople` row may link to a `customers` record via
+> `customer_id` (points and trade type live on the tradesperson profile; identity lives on the
+> customer record).
+>
+> **Customer loyalty card QR:** the printed customer card encodes `customers.id` directly and is
+> displayed on the mobile customer detail screen. It is a lookup key — not a row in `qr_codes`.
+> The `qr_codes` table holds **per-unit product codes** used to award points.
+
 ### `tradespeople`
 ```typescript
 export const tradespeople = pgTable("tradespeople", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   orgId: text("org_id").notNull()
     .references(() => organization.id),
+  customerId: text("customer_id")
+    .references(() => customers.id),  // tradespeople are ultimately customers
   phone: text("phone").notNull(),
   name: text("name").notNull(),
   tradeType: tradeTypeEnum("trade_type").notNull(),
@@ -1069,6 +1083,7 @@ export const tradespeople = pgTable("tradespeople", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [
   uniqueIndex("tradespeople_org_phone_uidx").on(t.orgId, t.phone),
+  uniqueIndex("tradespeople_org_customer_uidx").on(t.orgId, t.customerId),
   index("tradespeople_org_idx").on(t.orgId),
 ])
 

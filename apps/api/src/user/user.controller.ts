@@ -45,6 +45,7 @@ export class UserController {
 
   @Implement(contracts.user.changeOwnPassword)
   changeOwnPassword() {
+    console.log('changeOwnPassword called');
     return implement(contracts.user.changeOwnPassword).handler(
       async ({ input }) => {
         const { currentPassword, newPassword } = input;

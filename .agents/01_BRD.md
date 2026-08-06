@@ -83,7 +83,7 @@ BuildMate is a mobile-first SaaS platform designed specifically for building mat
 | **Customer (Retail)** | At counter, no portal | Quick purchase, no account needed, phone for loyalty |
 | **Customer (Account)** | Web portal, any device | View purchase history, invoices, credit limit, request quotations |
 | **Customer (Contractor)** | Web portal, any device | Consolidated view across **all sites**, site-level history, site manager contacts, request quotations per site |
-| **Tradesperson** | At counter, no app | Earn points by returning product QR codes, redeem quarterly |
+| **Tradesperson** | At counter, no app (a customer linked to a tradesperson profile) | Earn points by returning product QR codes, redeem quarterly; staff scan their loyalty card QR to look them up |
 
 ---
 
@@ -203,7 +203,7 @@ No integration with Tally, QuickBooks, or any external ERP. Deliberate design de
 | Manage credit limits | — | — | — | — | ✓ |
 | Toggle price visibility flag | — | — | — | — | ✓ |
 | Manage subscription | — | — | — | — | ✓ |
-| Pin quick-access widget | Personal | Personal | Personal | ✓ | ✓ |
+| Pin quick-access tags | Personal | Personal | Personal | ✓ | ✓ |
 | Create / manage home screen tags | — | — | — | ✓ | ✓ |
 | View own site invoices (portal) | — | — | — | — | Contractor only |
 | Request quotation (portal) | — | — | — | — | Contractor only |
@@ -252,20 +252,15 @@ Step 8 → Go live — staff log in and start quoting
 - Owner unrestricted — can go to zero or negative margin.
 - Margin bottom sheet **never appears on customer-facing PDF**.
 
-### 8.3 Quick-Access Price Widget & Home Screen Tags
+### 8.3 Quick-Access Pinned Tags
 
-**Quick-Access Widget:**
-- Each staff member pins up to 10 products on their home screen for instant price lookup.
-- Designed for volatile products: iron rods, copper wire, cement, nails, paint.
-- Personal per staff member — not shared.
+Pinned quick access and home screen tags are the **same mechanism**: staff pin tag titles to their home screen for instant access to a subset of the catalog.
 
-**Home Screen Tags:**
-- Location Manager creates named tags (e.g. "Wires", "Pipes", "Rarely Sold").
-- Products assigned to one or more tags.
-- Home screen shows tag buttons → tap to see all associated products with price and stock.
-- Location-specific — different branches can have different tags.
+- **Tags:** Location Manager creates named tags (e.g. "Wires", "Pipes", "Rarely Sold"). Products are assigned to one or more tags (`product_tag_assignments`).
+- **Pinning:** Each staff member pins up to 10 tag titles on their home screen — personal, per staff member, not shared. Staff **opt in** to a subset of tags instead of loading every tag created. Stored in `user_metadata.pinnedTagIds`.
+- The tag **name is the pinned title**. Tapping a pinned title opens a **modal** listing the products under that tag with price and stock (sale price public; cost price manager/owner only).
 - Tags are display-only navigation shortcuts — no system logic attached.
-- Only managers create/edit tags; staff read-only.
+- Only managers create/edit tags; staff read-only but pin/unpin tags themselves.
 
 ### 8.4 Product Catalog
 
@@ -471,13 +466,14 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 
 ### 8.15 Tradesperson Loyalty & QR Points
 
+- **Tradespeople are customers.** A tradesperson is a customer record linked to a `tradespeople` loyalty profile (via `tradespeople.customer_id`). Points accumulate on the tradesperson profile; the customer record carries identity (name, phone). Phone is the unique identifier for a tradesperson.
+- **Customer loyalty card QR:** every customer issued a printed card gets a QR encoding their `customers.id`. The QR is displayed on the customer detail screen (mobile) and printable. Staff scan it from the app's QR Scan screen / home FAB to instantly pull up the customer profile and, for tradespeople, their points balance.
 - Eligible products get **per-unit unique QR codes** — one per physical unit, not per SKU.
 - QR codes pre-generated sequentially in BuildMate, sent to sticker printing agency (cheap bulk with scratch-off layer).
 - **Sequential batch registration:** staff scans first and last code on received sheet → system registers all codes in between as assigned to that SKU and purchase receipt.
 - **Duplicate validation:** on scan, system immediately checks if code was previously redeemed → rejects with who/when details.
-- Points accumulate on tradesperson profile (phone number as unique ID).
 - **Quarterly redemption** — store credit or gift voucher.
-- No separate app for tradespeople — all scanning done by staff at station.
+- No separate app for tradespeople — all scanning done by staff at the counter.
 
 ### 8.16 Customer Types, Contacts & Sites
 
@@ -494,6 +490,7 @@ Status flow: received → sent_to_supplier → repaired → ready_for_collection
 - **Site → Contacts**: Site-specific contacts (project manager, site engineer, foreman).
 - **Invoice billing**: Can bill to **Customer** (company-level) or **Site** (project-level). Site invoices show site name + company name.
 - **Phone numbers**: Not unique across customers (same phone can belong to multiple retail accounts — e.g., family sharing).
+- **Tradesperson link**: any customer may be linked to a `tradespeople` loyalty profile — tradespeople are ultimately customers (see §8.15).
 
 ### 8.17 Customer Self-Service Portal
 

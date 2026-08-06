@@ -274,7 +274,7 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 **UI Screens:**
 
 ```
-[expo] Quotation creation — add line items, select price list (auto-selects customer default), select customer
+[expo] Quotation creation — the "POS" flow (Home FAB → POS screen + cart-list screen). Add line items, select price list (auto-selects customer default), select customer
 [expo] Alternatives view — colour-coded brands, per-alternative subtotals
 [expo] "Immediate alternative" swap button
 [expo] Confirm quotation → quotation ID assigned and displayed
@@ -347,16 +347,17 @@ PATCH  /locations/:id/margin-floor   → update minimum margin floor %
 
 ---
 
-### MODULE 08 — Home Screen Tags & Quick-Access Widget
+### MODULE 08 — Home Screen Tags & Quick-Access (Pinned Tags)
 
 **Priority:** `[MUST-HAVE]` · **Tags:** `[nestjs]` `[expo]` `[web]`
 
 **Scope:**
 
 - Tags: location-scoped product shortcut groups (display only)
-- Quick-access widget: personal per-staff pinned products (max 10)
+- Pinned quick access: staff pin **tag titles** (not individual products) to their home screen — personal, opt-in subset (max 10)
+- Tag name = pinned title; tapping it opens a **modal** of the tag's products (sale price public, cost price manager-only, stock, quick add to quote)
 
-**Tables:** `product_tags`, `product_tag_assignments`
+**Tables:** `product_tags`, `product_tag_assignments`; `user_metadata.pinnedTagIds` (stores pinned tag ids)
 
 **API Routes:**
 
@@ -368,17 +369,17 @@ DELETE /tags/:id                     → soft delete
 POST   /tags/:id/products            → assign products to tag
 DELETE /tags/:id/products/:product_id
 GET    /tags/:id/products            → products under tag with current price + stock
-PATCH  /users/me/pinned-skus         → update personal pinned products
-GET    /users/me/pinned-skus         → get pinned products with current price
+PATCH  /users/me/pinned-tags         → update personal pinned tag titles (max 10)
+GET    /users/me/pinned-tags         → get pinned tags with current price + stock
 ```
 
 **UI Screens:**
 
 ```
 [web]  Tag management — create, edit, assign products
-[expo] Home screen — tag buttons grid + personal pinned widget
-[expo] Tag product list — tap tag to see products with price + stock
-[expo] Pin/unpin from product detail or search result
+[expo] Home screen — horizontal row of personal pinned tag titles
+[expo] Tag modal — tap a pinned title → products under tag with price + stock + quick add to quote
+[expo] Pin/unpin tags (opt-in to a subset — from tag modal or tag list)
 ```
 
 ---
@@ -642,6 +643,8 @@ POST   /invoices                     → create invoice with customer_id + optio
 [web]  Receivables aging dashboard — filter by type, site
 [expo] Credit limit warning shown before confirming new quotation for account/contractor
 [expo] Site selector on invoice creation (dropdown: sites + "Company HQ")
+[expo] Customer list + Customer Detail (separate route) — profile, purchase history, credit/aging, loyalty card QR
+[expo] Customer list quick filter — Tradesperson (customers with a linked tradespeople record)
 [web]  Contractor consolidated balance view (sum across all sites)
 ```
 
@@ -846,12 +849,18 @@ received → sent_to_supplier → repaired → ready_for_collection → collecte
 ### MODULE 19 — Tradesperson Loyalty & QR Points
 **Priority:** `[GROWTH]` · **Tags:** `[nestjs]` `[db]` `[expo]` `[web]`
 
-**Tables:** `tradespeople`, `qr_codes`, `loyalty_redemptions`
+**Scope:**
+
+- Tradespeople are **customers** — each tradesperson links to a `customers` record via `tradespeople.customer_id` (points + trade type live on the tradesperson profile)
+- **Customer loyalty card QR** on the customer detail screen (encodes `customers.id`) — scanned from the app's QR Scan screen / home FAB to look up the customer and, for traders, their points
+- Customer list quick filter — Tradesperson
+
+**Tables:** `tradespeople` (links to `customers` via `customer_id`), `qr_codes`, `loyalty_redemptions`
 
 **API Routes:**
 ```
 
-POST /tradespeople → register (phone + name + trade type)
+POST /tradespeople → register (phone + name + trade type) — creates or links a customer record
 GET /tradespeople/:id → profile + points balance
 GET /tradespeople → list (searchable by phone, name, trade)
 POST /qr-codes/generate-batch → pre-generate sequential QR batch
@@ -889,9 +898,11 @@ return { valid: true, points_awarded: N, new_balance: M }
 
 [web] QR batch generation + download for print agency
 [web] Range registration — scan first + last code
-[expo] QR scan screen — camera scan, instant result display
-[expo] Tradesperson registration at counter (phone + name + trade type)
+[expo] QR scan screen — camera scan, instant result display (customer loyalty card QR = customer id)
+[expo] Customer detail — loyalty card QR display + print
+[expo] Tradesperson registration at counter (phone + name + trade type) → creates/links a customer
 [expo] Points balance display after successful scan
+[expo] Customer list quick filter — Tradesperson
 [web] Tradesperson list + points balances
 [web] Quarterly redemption management
 
