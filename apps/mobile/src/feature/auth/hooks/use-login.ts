@@ -6,7 +6,7 @@ import { signIn } from "@/lib/auth-client"
  * Sign in with email + password.
  *
  * On success the root route gates re-render from the session store and route
- * to `/(tabs)` or `/set-password` (forced reset), so no manual navigation is
+ * to `/(home)` or `/set-password` (forced reset), so no manual navigation is
  * needed here.
  */
 export function useLogin() {

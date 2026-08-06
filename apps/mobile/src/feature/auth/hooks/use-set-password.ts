@@ -8,7 +8,7 @@ import { authClient } from "@/lib/auth-client"
  *
  * better-auth's `changePassword` does not clear `passwordResetRequired`, so we
  * clear it explicitly via `updateUser` after a successful change, then refresh
- * the session so the route gates send the user to `/(tabs)`.
+ * the session so the route gates send the user to `/(home)`.
  */
 export function useSetPassword() {
   const [isPending, setIsPending] = useState(false)
