@@ -19,7 +19,8 @@ export default function HomeLayout() {
       <Stack.Screen name="tag-products" options={{ presentation: 'transparentModal', headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: true, title: "Settings" }} />
       <Stack.Screen name="profile" options={{ headerShown: true, title: "Profile" }} />
-      <Stack.Screen name="pos" options={{ headerShown: true, title: "New Quotation" }} />
+      <Stack.Screen name="pos" options={{ headerShown: false }} />
+      <Stack.Screen name="pos/cart" options={{ headerShown: true, title: "Cart" }} />
       <Stack.Screen name="fulfilment" options={{ headerShown: true, title: "Fulfilment Station" }} />
       <Stack.Screen name="quotation/[id]" options={{ headerShown: true, title: "Quotation" }} />
       <Stack.Screen name="invoice/[id]" options={{ headerShown: true, title: "Invoice" }} />

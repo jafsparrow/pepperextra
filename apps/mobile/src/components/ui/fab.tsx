@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle, useWindowDimensions } from 'react-native';
 
-import { Spacing, Tokens } from '@/constants/theme';
-
-export const TabletBreakpoint = 768;
+import { Spacing, TabletBreakpoint, Tokens } from '@/constants/theme';
 
 type FabProps = {
   label: string;

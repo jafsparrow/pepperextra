@@ -1,153 +1,175 @@
-import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ListItem } from '@/components/ui/list-item';
-import { Section } from '@/components/ui/section';
-import { Spacing, Tokens } from '@/constants/theme';
-import { MOCK_TAGS } from '@/feature/tags/constants/mock-tags';
-import type { TaggedProduct } from '@/feature/tags/types';
+import { MoreMenu, type MoreMenuItem } from '@/components/more-menu';
+import { SearchField } from '@/components/ui/search-field';
+import { Spacing, TabletBreakpoint, Tokens } from '@/constants/theme';
+import type { Customer } from '@/feature/customer/types';
 import { useRole } from '@/feature/roles/hooks/use-role';
+import { fetchCatalogProducts } from '@/feature/pos/api/catalog';
+import { getRecentCustomers } from '@/feature/pos/constants/recent-customers';
+import { addToCart, useCart } from '@/feature/pos/store/cart-store';
+import { CartPanel } from '@/feature/pos/ui/components/cart-panel';
+import { CustomerSearchModal } from '@/feature/pos/ui/components/customer-search-modal';
+import { PosHeader } from '@/feature/pos/ui/components/pos-header';
+import { ProductCard } from '@/feature/pos/ui/components/product-card';
+import { QuantitySheet } from '@/feature/pos/ui/components/quantity-sheet';
+import type { PosProduct, PosViewOptions } from '@/feature/pos/types';
 import { DEFAULT_CURRENCY, formatMinorUnits } from '@/lib/money';
 
-interface CartLine {
-  product: TaggedProduct
-  quantity: number
-}
-
-const ALL_PRODUCTS = MOCK_TAGS.flatMap((tag) => tag.products)
+const MAX_RESULTS = 40;
 
 /**
- * PLACEHOLDER — POS / quotation creation. Primary differentiator (BRD §8.1).
+ * POS / quotation creation — primary differentiator (BRD §8.1).
  * Full flow: customer + price-list selection, alternative-brand pricing,
  * margin bottom sheet, multi-confirm, PDF + WhatsApp share.
  */
 export function PosScreen() {
-  const [query, setQuery] = useState('');
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const router = useRouter();
+  const { width } = useWindowDimensions();
   const { canSeeCosts } = useRole();
+  const isTablet = width >= TabletBreakpoint;
+
+  const [query, setQuery] = useState('');
+  const [products, setProducts] = useState<PosProduct[]>([]);
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customerModalVisible, setCustomerModalVisible] = useState(false);
+  const [moreMenuVisible, setMoreMenuVisible] = useState(false);
+  const [quantityProduct, setQuantityProduct] = useState<PosProduct | null>(null);
+  const [viewOptions, setViewOptions] = useState<PosViewOptions>({ hideImages: false, showStock: false });
+  const { lines, count, subtotal } = useCart();
+
+  useEffect(() => {
+    let active = true;
+    void fetchCatalogProducts().then((catalog) => {
+      if (active) setProducts(catalog);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return ALL_PRODUCTS.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q),
-    ).slice(0, 8);
-  }, [query]);
+    if (!q) return products.slice(0, MAX_RESULTS);
+    return products
+      .filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+      .slice(0, MAX_RESULTS);
+  }, [products, query]);
 
-  const subtotal = cart.reduce((sum, line) => sum + line.product.salePriceMinor * line.quantity, 0);
-  const costTotal = canSeeCosts
-    ? cart.reduce((sum, line) => sum + (line.product.costPriceMinor ?? 0) * line.quantity, 0)
-    : null;
-
-  const addToCart = (product: TaggedProduct) => {
-    setCart((lines) => {
-      const existing = lines.find((l) => l.product.id === product.id);
-      if (existing) {
-        return lines.map((l) => (l.product.id === product.id ? { ...l, quantity: l.quantity + 1 } : l));
-      }
-      return [...lines, { product, quantity: 1 }];
-    });
+  const selectCustomer = (next: Customer) => {
+    setCustomer(next);
   };
 
-  const changeQty = (id: string, delta: number) => {
-    setCart((lines) =>
-      lines
-        .map((l) => (l.product.id === id ? { ...l, quantity: Math.max(0, l.quantity + delta) } : l))
-        .filter((l) => l.quantity > 0),
-    );
+  const scanCustomer = () => {
+    // PLACEHOLDER — real camera scanner (expo-camera) resolves the loyalty card
+    // QR to a customer id. For now fall back to the most recently purchased.
+    const recent = getRecentCustomers(1)[0];
+    setCustomer(recent ?? null);
+    Alert.alert('Card scanned', recent ? `Selected ${recent.name}.` : 'No recent customer found.');
   };
 
   const confirm = () => {
-    if (cart.length === 0) return;
+    if (lines.length === 0) return;
     Alert.alert('Draft quotation ready', 'Contracts + alternative-brand pricing land here.', [{ text: 'OK' }]);
   };
 
+  const moreItems: MoreMenuItem[] = [
+    {
+      label: viewOptions.hideImages ? 'Show Images' : 'Hide Images',
+      icon: '🖼️',
+      onPress: () => setViewOptions((v) => ({ ...v, hideImages: !v.hideImages })),
+    },
+    {
+      label: viewOptions.showStock ? 'Hide Stock' : 'Show Stock',
+      icon: '📦',
+      onPress: () => setViewOptions((v) => ({ ...v, showStock: !v.showStock })),
+    },
+  ];
+
+  const productsPane = (
+    <View style={styles.productsPane}>
+      <View style={styles.searchWrap}>
+        <SearchField value={query} onChangeText={setQuery} placeholder="Search by name or SKU" />
+      </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.productsList}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+        {results.length === 0 ? (
+          <EmptyState title="No products found." message="Try a different search." />
+        ) : (
+          results.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              hideImages={viewOptions.hideImages}
+              showStock={viewOptions.showStock}
+              onAdd={(p) => addToCart(p)}
+              onOpenQuantity={setQuantityProduct}
+            />
+          ))
+        )}
+      </ScrollView>
+    </View>
+  );
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Section title="Find a product">
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search by name or SKU"
-            placeholderTextColor={Tokens.muted}
-            style={styles.search}
-            autoCorrect={false}
-          />
-          <View style={styles.results}>
-            {query.trim() === '' ? (
-              <ThemedText type="small" style={styles.hint}>
-                Start typing to search the catalog.
-              </ThemedText>
-            ) : results.length === 0 ? (
-              <EmptyState title="No products found." message="Try a different search." />
-            ) : (
-              results.map((product) => (
-                <ListItem
-                  key={product.id}
-                  title={product.name}
-                  subtitle={`${product.sku} · stock ${product.stock}`}
-                  trailing={
-                    <View style={styles.productAction}>
-                      <ThemedText type="smallBold">{formatMinorUnits(product.salePriceMinor, DEFAULT_CURRENCY)}</ThemedText>
-                      <Pressable onPress={() => addToCart(product)} style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-                        <ThemedText type="smallBold" style={styles.addButtonLabel}>Add</ThemedText>
-                      </Pressable>
-                    </View>
-                  }
-                />
-              ))
-            )}
-          </View>
-        </Section>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <PosHeader
+          customer={customer}
+          onBack={() => router.back()}
+          onSearchCustomer={() => setCustomerModalVisible(true)}
+          onScanCustomer={scanCustomer}
+          onMore={() => setMoreMenuVisible(true)}
+        />
 
-        <Section title="Cart">
-          {cart.length === 0 ? (
-            <EmptyState title="Cart is empty." message="Add products from the search above." />
-          ) : (
-            <View>
-              {cart.map((line) => (
-                <View key={line.product.id} style={styles.cartLine}>
-                  <View style={styles.cartInfo}>
-                    <ThemedText>{line.product.name}</ThemedText>
-                    <ThemedText type="small" style={styles.mutedText}>
-                      {formatMinorUnits(line.product.salePriceMinor, DEFAULT_CURRENCY)} each
-                    </ThemedText>
-                  </View>
-                  <View style={styles.qtyControl}>
-                    <Pressable onPress={() => changeQty(line.product.id, -1)} style={({ pressed }) => [styles.qtyButton, pressed && styles.pressed]}>
-                      <ThemedText type="smallBold">−</ThemedText>
-                    </Pressable>
-                    <ThemedText type="smallBold" style={styles.qtyValue}>{line.quantity}</ThemedText>
-                    <Pressable onPress={() => changeQty(line.product.id, 1)} style={({ pressed }) => [styles.qtyButton, pressed && styles.pressed]}>
-                      <ThemedText type="smallBold">+</ThemedText>
-                    </Pressable>
-                  </View>
-                  <ThemedText type="smallBold" style={styles.lineTotal}>
-                    {formatMinorUnits(line.product.salePriceMinor * line.quantity, DEFAULT_CURRENCY)}
-                  </ThemedText>
-                </View>
-              ))}
-              <View style={styles.totalRow}>
-                <ThemedText type="small" style={styles.mutedText}>Subtotal</ThemedText>
-                <ThemedText>{formatMinorUnits(subtotal, DEFAULT_CURRENCY)}</ThemedText>
-              </View>
-              {costTotal != null ? (
-                <View style={styles.totalRow}>
-                  <ThemedText type="small" style={styles.mutedText}>Cost (staff only)</ThemedText>
-                  <ThemedText>{formatMinorUnits(costTotal, DEFAULT_CURRENCY)}</ThemedText>
-                </View>
-              ) : null}
-              <Pressable onPress={confirm} style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}>
-                <ThemedText style={styles.confirmLabel}>Confirm quotation</ThemedText>
-              </Pressable>
+        {isTablet ? (
+          <View style={styles.tabletBody}>
+            {productsPane}
+            <View style={styles.cartPane}>
+              <CartPanel canSeeCosts={canSeeCosts} onConfirm={confirm} />
             </View>
-          )}
-        </Section>
-      </ScrollView>
+          </View>
+        ) : (
+          <View style={styles.phoneBody}>
+            {productsPane}
+            <Pressable
+              onPress={() => router.push('/pos/cart')}
+              accessibilityLabel="Open cart"
+              style={({ pressed }) => [styles.cartBar, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={styles.cartBarLabel}>
+                View Cart ({count})
+              </ThemedText>
+              <ThemedText type="smallBold" style={styles.cartBarLabel}>
+                {formatMinorUnits(subtotal, DEFAULT_CURRENCY)}
+              </ThemedText>
+            </Pressable>
+          </View>
+        )}
+
+        <CustomerSearchModal
+          visible={customerModalVisible}
+          onClose={() => setCustomerModalVisible(false)}
+          onSelect={selectCustomer}
+        />
+        <MoreMenu visible={moreMenuVisible} onClose={() => setMoreMenuVisible(false)} items={moreItems} />
+        <QuantitySheet
+          visible={quantityProduct != null}
+          product={quantityProduct}
+          onClose={() => setQuantityProduct(null)}
+          onConfirm={(qty) => {
+            if (quantityProduct) addToCart(quantityProduct, qty);
+          }}
+        />
+      </SafeAreaView>
     </ThemedView>
   );
 }
@@ -156,98 +178,55 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  safeArea: {
+    flex: 1,
+  },
+  tabletBody: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
+  },
+  phoneBody: {
+    flex: 1,
+  },
+  productsPane: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
   },
-  content: {
-    gap: Spacing.four,
+  searchWrap: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.three,
+  },
+  productsList: {
+    gap: Spacing.two,
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.six,
   },
-  search: {
-    backgroundColor: Tokens.background,
-    borderWidth: 1,
-    borderColor: Tokens.border,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + Spacing.one,
-    color: Tokens.foreground,
-    fontSize: 16,
-  },
-  results: {
-    marginTop: Spacing.two,
-  },
-  hint: {
-    color: Tokens.muted,
-  },
-  productAction: {
-    alignItems: 'flex-end',
-    gap: Spacing.one,
-  },
-  addButton: {
-    backgroundColor: Tokens.primary,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    borderRadius: Spacing.two,
-  },
-  addButtonLabel: {
-    color: Tokens.primaryForeground,
-  },
-  cartLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Tokens.border,
-  },
-  cartInfo: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  qtyControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  qtyButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  cartPane: {
+    width: 340,
     backgroundColor: Tokens.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qtyValue: {
-    minWidth: 24,
-    textAlign: 'center',
-  },
-  lineTotal: {
-    minWidth: 70,
-    textAlign: 'right',
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.three,
     paddingVertical: Spacing.two,
+    marginBottom: Spacing.four,
   },
-  mutedText: {
-    color: Tokens.muted,
-  },
-  confirmButton: {
-    marginHorizontal: Spacing.three,
-    marginTop: Spacing.three,
-    backgroundColor: Tokens.primary,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
+  cartBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: Spacing.four,
+    marginBottom: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.three,
+    backgroundColor: Tokens.primary,
   },
-  confirmLabel: {
+  cartBarLabel: {
     color: Tokens.primaryForeground,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.85,
   },
 });

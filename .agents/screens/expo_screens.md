@@ -146,19 +146,38 @@ never hardcode a currency symbol or `$` amounts.
 ### 3.2 POS — Quotation Creation (PLACEHOLDER)
 
 > **PLACEHOLDER — detailed design to be fleshed out.** This is the primary product differentiator
-> (BRD §8.1, MODULE 06). Structure for now:
+> (BRD §8.1, MODULE 06). Current shape:
 
-- **Two screens:** the **POS screen** (product search + add to cart, customer selection, price
-  list selection) and the **cart-list screen** where the alternative-brand pricing happens.
-- **Alternative-brand pricing:** products are grouped by specification; alternatives are shown
-  colour-coded per brand with individual line totals and a per-alternative subtotal at the bottom.
-  An **"Immediate alternative"** button swaps all applicable lines to the next-priority brand.
-  Tapping an alternative subtotal confirms → unique quotation ID. Multiple confirmations allowed
-  per session.
-- Customer + price list selection (auto-selects the customer's default price list; fallback to
-  sale price).
-- The **margin bottom sheet** lives on this screen (see 3.3).
-- After confirmation: PDF preview + WhatsApp share / print.
+- **Routes:** `/pos` (index) and `/pos/cart` (mobile-only cart screen). Both share a module-level
+  cart store (`feature/pos/store/cart-store.ts`) so the cart survives navigation.
+- **App bar (custom, `feature/pos/ui/components/pos-header.tsx`):** back button, title
+  **New Quotation**, selected **customer name underneath in primary colour** (muted
+  "Select a customer" hint when none). Trailing actions:
+  - **👤 Search customer** — opens the customer picker modal.
+  - **📷 Scan card** — placeholder: picks the most recently purchased customer (real
+    expo-camera loyalty-card scan lands later).
+  - **⋮ More** — options menu: **Hide Images / Show Images** and **Show Stock / Hide Stock**
+    (extensible for future POS options).
+- **Customer picker modal** (`customer-search-modal.tsx`): search field + list of the **15 most
+  recently purchased customers** which stays visible until a search string is entered; then
+  filters by name/phone. Selecting sets the customer on the app bar.
+- **Product search:** search input only (no "Find a product" title) to save vertical space.
+  Empty query shows the full catalog; otherwise filters by name/SKU. Product cards show an
+  image thumbnail (placeholder initials until `product_images` are wired), name, SKU, sale
+  price and two icon actions: **🔢** opens a **quantity sheet** (number keypad with quick
+  amounts 1/5/10 and a live `N × price = total` preview) and **+** adds one instantly. The
+  quantity sheet adds N more to the line. "Hide Images" removes thumbnails; "Show Stock" adds
+  an in-stock badge. (`feature/pos/ui/components/product-card.tsx`, `quantity-sheet.tsx`)
+- **Layout split (tablet, ≥768dp):** products on the left, the **cart panel on the right**
+  (`feature/pos/ui/components/cart-panel.tsx`). On phone the cart is a separate **/pos/cart**
+  screen reached from a bottom "View Cart" bar.
+- **Cart panel:** line items with qty −/+ controls, subtotal, cost total (staff/owner only via
+  `useRole`, BRD §8.2) and a Confirm button. Alternative-brand pricing, margin bottom sheet,
+  PDF + WhatsApp share still to come.
+- **Data:** `feature/pos/api/catalog.ts` is a **placeholder fetch** over mock tags — to be
+  replaced by a TanStack Query call to the product contract or a local SQLite catalog for
+  offline search (BRD §8.1). `PosProduct` mirrors the DB `products`/`product_images`/`stock`
+  schema.
 
 ---
 
