@@ -165,8 +165,8 @@ export function PosScreen() {
           visible={quantityProduct != null}
           product={quantityProduct}
           onClose={() => setQuantityProduct(null)}
-          onConfirm={(qty) => {
-            if (quantityProduct) addToCart(quantityProduct, qty);
+          onConfirm={(qty, unitPriceMinor) => {
+            if (quantityProduct) addToCart(quantityProduct, qty, unitPriceMinor);
           }}
         />
       </SafeAreaView>

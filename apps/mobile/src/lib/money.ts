@@ -34,3 +34,13 @@ export function formatMinorUnits(minor: number, currency: Currency = DEFAULT_CUR
     maximumFractionDigits: currency.decimals,
   })
 }
+
+/** Parse a user-typed major-unit amount (e.g. "45.200") into integer minor units. */
+export function parseAmountToMinorUnits(
+  input: string,
+  currency: Currency = DEFAULT_CURRENCY,
+): number {
+  const value = Number.parseFloat(input.replace(",", "."))
+  if (Number.isNaN(value) || value < 0) return 0
+  return Math.round(value * 10 ** currency.decimals)
+}

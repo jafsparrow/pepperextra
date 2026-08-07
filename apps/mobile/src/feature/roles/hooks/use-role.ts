@@ -15,5 +15,10 @@ export function useRole() {
     role,
     isOwner: role === "owner",
     canSeeCosts: role === "owner",
+    /**
+     * TODO: map to "Owner + Location Manager + salesperson (floor-limited)" per
+     * BRD §6.3 / §8.2 once org roles are wired. Owner-only for now.
+     */
+    canEditPrice: role === "owner",
   }
 }

@@ -24,13 +24,21 @@ export function getCartLines(): CartLine[] {
   return lines
 }
 
-export function addToCart(product: PosProduct, quantity = 1) {
+export function addToCart(product: PosProduct, quantity = 1, unitPriceMinor?: number) {
   const existing = lines.find((l) => l.product.id === product.id)
-  lines = existing
-    ? lines.map((l) =>
-        l.product.id === product.id ? { ...l, quantity: l.quantity + quantity } : l,
-      )
-    : [...lines, { product, quantity }]
+  if (existing) {
+    lines = lines.map((l) =>
+      l.product.id === product.id
+        ? {
+            ...l,
+            quantity: l.quantity + quantity,
+            unitPriceMinor: unitPriceMinor ?? l.unitPriceMinor,
+          }
+        : l,
+    )
+  } else {
+    lines = [...lines, { product, quantity, unitPriceMinor: unitPriceMinor ?? product.salePriceMinor }]
+  }
   emit()
 }
 

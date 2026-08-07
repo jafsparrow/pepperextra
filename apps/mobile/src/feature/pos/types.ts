@@ -29,6 +29,8 @@ export interface PosProduct {
 export interface CartLine {
   product: PosProduct
   quantity: number
+  /** Charged unit price. May be overridden by the POS price sheet; never mutates the catalog. */
+  unitPriceMinor: number
 }
 
 export interface PosViewOptions {

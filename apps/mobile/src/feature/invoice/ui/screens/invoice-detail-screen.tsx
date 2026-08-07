@@ -16,18 +16,12 @@ import {
   type Invoice,
   type PaymentMethod,
 } from '@/feature/invoice/types';
-import { DEFAULT_CURRENCY, formatMinorUnits } from '@/lib/money';
+import { DEFAULT_CURRENCY, formatMinorUnits, parseAmountToMinorUnits } from '@/lib/money';
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'bank_transfer', 'cheque', 'store_credit'];
 
 function notImplemented(action: string) {
   Alert.alert(action, 'This action is wired to the invoices API once it lands. For now it is a stub.')
-}
-
-function parseAmountToMinorUnits(input: string): number {
-  const value = Number.parseFloat(input.replace(',', '.'))
-  if (Number.isNaN(value) || value < 0) return 0
-  return Math.round(value * 10 ** DEFAULT_CURRENCY.decimals)
 }
 
 export function InvoiceDetailScreen() {

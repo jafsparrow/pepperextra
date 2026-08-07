@@ -164,10 +164,16 @@ never hardcode a currency symbol or `$` amounts.
 - **Product search:** search input only (no "Find a product" title) to save vertical space.
   Empty query shows the full catalog; otherwise filters by name/SKU. Product cards show an
   image thumbnail (placeholder initials until `product_images` are wired), name, SKU, sale
-  price and two icon actions: **🔢** opens a **quantity sheet** (number keypad with quick
-  amounts 1/5/10 and a live `N × price = total` preview) and **+** adds one instantly. The
-  quantity sheet adds N more to the line. "Hide Images" removes thumbnails; "Show Stock" adds
-  an in-stock badge. (`feature/pos/ui/components/product-card.tsx`, `quantity-sheet.tsx`)
+  price and two icon actions: **🔢** opens a **quantity sheet** and **+** adds one
+  instantly. The quantity sheet has **[Quantity | Price]** tabs: Quantity offers a number
+  keypad with quick amounts 1/5/10 and a live `N × price = total` preview; Price lets staff
+  override the unit price for the cart line only (never the catalog) via a decimal input with
+  a "Use list price" reset. An overridden line shows the list price struck through in the
+  cart. The sheet adds N at the chosen price to the line. **Price tab permission:** owner-only
+  (`canEditPrice` in `useRole`) — TODO: gate the tab once org roles are wired, mapping to
+  Owner + Location Manager + floor-limited salesperson (BRD §6.3 / §8.2). Currently shown for
+  testing. "Hide Images" removes thumbnails; "Show Stock" adds an in-stock badge.
+  (`feature/pos/ui/components/product-card.tsx`, `quantity-sheet.tsx`)
 - **Layout split (tablet, ≥768dp):** products on the left, the **cart panel on the right**
   (`feature/pos/ui/components/cart-panel.tsx`). On phone the cart is a separate **/pos/cart**
   screen reached from a bottom "View Cart" bar.

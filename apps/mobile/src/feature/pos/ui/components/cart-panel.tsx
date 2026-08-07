@@ -24,36 +24,46 @@ export function CartPanel({ canSeeCosts, onConfirm }: CartPanelProps) {
 
   return (
     <View>
-      {lines.map((line) => (
-        <View key={line.product.id} style={styles.line}>
-          <View style={styles.lineInfo}>
-            <ThemedText type="smallBold" numberOfLines={1}>
-              {line.product.name}
-            </ThemedText>
-            <ThemedText type="small" style={styles.muted}>
-              {formatMinorUnits(line.product.salePriceMinor, DEFAULT_CURRENCY)} each
+      {lines.map((line) => {
+        const overridden = line.unitPriceMinor !== line.product.salePriceMinor;
+        return (
+          <View key={line.product.id} style={styles.line}>
+            <View style={styles.lineInfo}>
+              <ThemedText type="smallBold" numberOfLines={1}>
+                {line.product.name}
+              </ThemedText>
+              <View style={styles.priceRow}>
+                <ThemedText type="small" style={styles.muted}>
+                  {formatMinorUnits(line.unitPriceMinor, DEFAULT_CURRENCY)} each
+                </ThemedText>
+                {overridden ? (
+                  <ThemedText type="small" style={styles.listPrice}>
+                    {formatMinorUnits(line.product.salePriceMinor, DEFAULT_CURRENCY)}
+                  </ThemedText>
+                ) : null}
+              </View>
+            </View>
+            <View style={styles.qtyControl}>
+              <Pressable
+                onPress={() => changeCartLineQty(line.product.id, -1)}
+                style={({ pressed }) => [styles.qtyButton, pressed && styles.pressed]}>
+                <ThemedText type="smallBold">−</ThemedText>
+              </Pressable>
+              <ThemedText type="smallBold" style={styles.qtyValue}>
+                {line.quantity}
+              </ThemedText>
+              <Pressable
+                onPress={() => changeCartLineQty(line.product.id, 1)}
+                style={({ pressed }) => [styles.qtyButton, pressed && styles.pressed]}>
+                <ThemedText type="smallBold">+</ThemedText>
+              </Pressable>
+            </View>
+            <ThemedText type="smallBold" style={styles.lineTotal}>
+              {formatMinorUnits(line.unitPriceMinor * line.quantity, DEFAULT_CURRENCY)}
             </ThemedText>
           </View>
-          <View style={styles.qtyControl}>
-            <Pressable
-              onPress={() => changeCartLineQty(line.product.id, -1)}
-              style={({ pressed }) => [styles.qtyButton, pressed && styles.pressed]}>
-              <ThemedText type="smallBold">−</ThemedText>
-            </Pressable>
-            <ThemedText type="smallBold" style={styles.qtyValue}>
-              {line.quantity}
-            </ThemedText>
-            <Pressable
-              onPress={() => changeCartLineQty(line.product.id, 1)}
-              style={({ pressed }) => [styles.qtyButton, pressed && styles.pressed]}>
-              <ThemedText type="smallBold">+</ThemedText>
-            </Pressable>
-          </View>
-          <ThemedText type="smallBold" style={styles.lineTotal}>
-            {formatMinorUnits(line.product.salePriceMinor * line.quantity, DEFAULT_CURRENCY)}
-          </ThemedText>
-        </View>
-      ))}
+        );
+      })}
 
       <View style={styles.totalRow}>
         <ThemedText type="small" style={styles.muted}>
@@ -97,6 +107,15 @@ const styles = StyleSheet.create({
   lineInfo: {
     flex: 1,
     gap: Spacing.half,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  listPrice: {
+    color: Tokens.muted,
+    textDecorationLine: 'line-through',
   },
   qtyControl: {
     flexDirection: 'row',
