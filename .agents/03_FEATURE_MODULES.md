@@ -149,29 +149,32 @@ Step 7 → Go live
 - Product groups (spec-based — drives alternative pricing logic)
 - Individual SKUs with brand tags
 - **Spec code** (e.g. "PP32UP" for 3/4" PVC Pipe) — searchable spec-level code for cross-brand filtering
-- Brand priority order per group
+- Alternative ordering per product (`product_alternatives.sort_order`) — explicit cross-brand alternatives
 - Base price on every SKU
 - Product aliases and synonyms (searchable)
-- Local device catalog sync for offline search
+- Local device catalog sync for offline search (see `.agents/mobile/features/sync-feature.md`)
 - Link product to default warranty item (auto-populates on invoice)
 - **Product images** — one or more photos per SKU (`product_images`), display image + visual search embedding
 - **CSV import** — upload formatted CSV to bulk create/update products and product groups; downloadable template with column mapping guide
 
-**Tables:** `product_groups`, `products`, `product_images`, `product_location_overrides`, `catalog_requests`
+**Tables:** `product_groups`, `products`, `product_alternatives`, `product_images`, `product_location_overrides`, `product_tags`, `product_tag_assignments`, `org_catalog_versions`, `catalog_requests`
 
 **API Routes:**
 
 ```
-GET    /catalog                      → full catalog (tenant-scoped, paginated)
-GET    /catalog/sync                 → delta sync payload for local device cache
+GET    /catalog                      → full catalog (org-scoped, paginated)
+GET    /catalog/version              → current org catalog version (mobile sync signal)
+GET    /catalog/sync                 → delta sync payload for local device cache (all local-data tables)
+GET    /catalog/stock                → full stock refresh for a team (advisory, mobile)
+POST   /catalog/revalidate           → live stock check for given SKUs at confirm time (mobile)
 POST   /catalog/groups               → create product group
-PATCH  /catalog/groups/:id           → update group or brand priority order
+PATCH  /catalog/groups/:id           → update group
 POST   /catalog/products             → create SKU
 PATCH  /catalog/products/:id         → update SKU
 DELETE /catalog/products/:id         → soft delete
 GET    /catalog/products/search      → search by name, alias, sku_code, spec_code
 GET    /catalog/products/spec/:specCode → filter products by spec code (cross-brand)
-GET    /catalog/groups/:id/alternatives → all SKUs in group ordered by brand priority
+GET    /catalog/groups/:id/alternatives → all SKUs in group ordered by sort_order
 POST   /catalog/products/:id/images  → upload image (stores file + returns image_url)
 GET    /catalog/products/:id/images  → list product images
 PATCH  /catalog/images/:id           → set is_primary, alt_text
@@ -190,7 +193,7 @@ POST   /catalog/import/commit        → commit validated import
 [web]  Product group list + create/edit
 [web]  Product list per group + create/edit
 [web]  Product image gallery + upload
-[web]  Brand priority drag-and-drop per group
+[web]  Alternative order (sort_order) per product — explicit cross-brand alternatives, no drag-drop reorder
 [web]  Catalog request review queue
 [web]  CSV import — download template, upload, preview validation errors, confirm commit
 [expo] Product search (local cache first, API fallback)
@@ -298,8 +301,8 @@ GET    /quotations/:id/progress      → fulfilment station progress (salesperso
 **Alternative Pricing Logic:**
 
 ```
-1. For each line item, find all products in same product_group
-2. Order by brand_priority[] on product_group
+1. For each line item, find all products in same product_group plus explicit `product_alternatives`
+2. Order by `product_alternatives.sort_order` ASC, then `is_primary` DESC (auto-assigned, no reorder endpoint)
 3. Apply selected price_list; if none selected, auto-use customer's default price_list
    (fallback to base_price if not overridden)
 4. Display each alternative as a colour-coded row

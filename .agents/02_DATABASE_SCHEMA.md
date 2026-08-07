@@ -188,7 +188,6 @@ export const productGroups = pgTable("product_groups", {
   orgId: text("org_id").notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
   specName: text("spec_name").notNull(),  // e.g. "3/4 inch PVC Pipe"
-  brandPriority: text("brand_priority").array(),  // ordered brand_tag values
   stockTrackingMode: stockModeEnum("stock_tracking_mode").default("sku").notNull(),
   groupReorderThreshold: integer("group_reorder_threshold"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -294,6 +293,36 @@ export const productImages = pgTable("product_images", {
 > embedding model is selected (e.g. CLIP-family models produce 512/768/1024-dim vectors).
 > Requires the `pgvector` extension: `CREATE EXTENSION IF NOT EXISTS vector;`
 
+### `product_alternatives`
+Explicit cross-brand alternatives for a SKU — supplements the automatic "same `product_group`" set used
+by the quotation alternatives screen.
+```typescript
+export const productAlternatives = pgTable("product_alternatives", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  orgId: text("org_id").notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  productId: text("product_id").notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  alternativeProductId: text("alternative_product_id").notNull()
+    .references(() => products.id, { onDelete: "cascade" }),
+  isPrimary: boolean("is_primary").default(false).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),  // manual order within the alternatives list
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+}, (t) => [
+  uniqueIndex("product_alternatives_uidx").on(t.productId, t.alternativeProductId),
+  index("product_alternatives_org_idx").on(t.orgId),
+  index("product_alternatives_product_idx").on(t.productId, t.sortOrder),  // list order for the alternatives UI
+  index("product_alternatives_alt_product_idx").on(t.alternativeProductId),
+  uniqueIndex("product_alternatives_primary_uidx").on(t.productId).where(sql`${t.isPrimary} = true`),
+])
+```
+
+> **Ordering:** the alternatives list is ordered by `sort_order ASC`, then `is_primary DESC`. `sort_order` is
+> auto-assigned (`max + 1` on add) — there is **no reorder endpoint**. **Soft delete only:** removing an
+> alternative sets `deleted_at`; re-adding the same pair restores the row instead of duplicating.
+
 ### `product_location_overrides`
 Per-team price overrides for specific SKUs.
 ```typescript
@@ -306,6 +335,9 @@ export const productLocationOverrides = pgTable("product_location_overrides", {
   orgId: text("org_id").notNull()
     .references(() => organization.id),
   priceOverrideMinor: bigint("price_override_minor", { mode: "bigint" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 }, (t) => [
   uniqueIndex("product_loc_override_uidx").on(t.productId, t.teamId),
   index("product_loc_override_org_team_idx").on(t.orgId, t.teamId),
@@ -340,6 +372,36 @@ export const catalogRequestStatusEnum = pgEnum("catalog_request_status",
 
 ---
 
+## 1a. Catalog Version Tracking (Mobile Sync)
+
+Per-org version counter that drives the mobile offline catalog sync — see
+`.agents/mobile/features/sync-feature.md`. The spec names this table `tenant_catalog_versions`;
+**BuildMate maps it to `org_catalog_versions`** per the org/tenant naming convention — never use `tenant_id`.
+
+### `org_catalog_versions`
+```typescript
+export const orgCatalogVersions = pgTable("org_catalog_versions", {
+  orgId: text("org_id").primaryKey()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  version: integer("version").default(1).notNull(),
+  lastChangedAt: timestamp("last_changed_at").defaultNow().notNull(),
+})
+```
+
+- **Bumped once per write transaction** touching any delta-synced catalog table: `products`,
+  `product_groups`, `categories`, `product_images`, `product_alternatives`, `product_tags`,
+  `product_tag_assignments`, `price_lists`, `price_list_overrides`, `product_location_overrides`.
+  A bulk CSV import wrapped in one transaction = +1, not +N — the transaction boundary is the natural debounce.
+- **Stock changes never bump it** — stock has its own independent sync stream (see sync-feature.md §6).
+- Implemented as a **PostgreSQL trigger**, not application code, so every write path (current and future)
+  is covered. One trigger function on the ten tables above upserts `org_catalog_versions` and dedupes
+  per transaction via a transaction-local GUC flag (`set_config('app.catalog_bumped', 'true', true)`),
+  so only the first catalog write in a transaction increments.
+- Exposed to clients via the `X-Catalog-Version` response header (passive signal) and `GET /catalog/version`
+  (active signal).
+
+---
+
 ## 2. Price Lists
 
 ### `price_lists`
@@ -369,6 +431,9 @@ export const priceListOverrides = pgTable("price_list_overrides", {
   orgId: text("org_id").notNull()
     .references(() => organization.id),
   priceMinor: bigint("price_minor", { mode: "bigint" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 }, (t) => [
   uniqueIndex("price_list_overrides_uidx").on(t.priceListId, t.productId),
   index("price_list_overrides_list_idx").on(t.priceListId),
@@ -417,6 +482,9 @@ export const productTagAssignments = pgTable("product_tag_assignments", {
     .references(() => productTags.id, { onDelete: "cascade" }),
   productId: text("product_id").notNull()
     .references(() => products.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 }, (t) => [
   primaryKey({ columns: [t.tagId, t.productId] }),
 ])
@@ -1254,7 +1322,8 @@ packages/db/src/
 ├── auth-schema.ts                  # Better Auth tables (DO NOT MODIFY)
 ├── schemas/
 │   ├── localization.ts             # countries, currencies, tax_types, org_tax_config
-│   ├── catalog.ts                  # product_groups, products, product_location_overrides, catalog_requests
+│   ├── catalog.ts                  # product_groups, products, product_alternatives, product_location_overrides, catalog_requests
+│   ├── catalog-versions.ts         # org_catalog_versions
 │   ├── images.ts                   # product_images (imageUrl + pgvector embedding)
 │   ├── price-lists.ts              # price_lists, price_list_overrides
 │   ├── tags.ts                     # product_tags, product_tag_assignments

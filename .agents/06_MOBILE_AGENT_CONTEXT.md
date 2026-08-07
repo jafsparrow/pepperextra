@@ -97,7 +97,7 @@ export type CreateQuotationLine = z.infer<typeof CreateQuotationLineSchema>;
 
 ## 6. Local Catalog Sync (Offline)
 
-- `expo-sqlite` holds a local mirror of: product catalog, product groups, brand priority, price lists, and stock snapshots.
+- `expo-sqlite` holds a local mirror of: product catalog, product groups, alternatives, categories, product images, price lists (+ overrides), location overrides, tags, and stock snapshots.
 - Delta sync using `updated_at`, matching the pattern already defined in `04_CODING_AGENT_CONTEXT.md` §6.1 — do not invent a second sync strategy.
 - **UUIDs are generated client-side** (UUID v4) at record-creation time for anything created offline (e.g. a draft quotation line) — this is a locked architectural decision so offline-created records never need temp-ID reconciliation on sync.
 - Search-as-you-type on the quotation screen must hit local SQLite first; API is a fallback only when the local cache is empty or stale (>1 hour), per existing rule.

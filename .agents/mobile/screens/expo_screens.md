@@ -467,9 +467,9 @@ Bottom sheet opened by the **🔢** action (`quantity-sheet.tsx`), segmented **[
 
 > **PLACEHOLDER — implementation details to be discussed later.** Direction only for now:
 >
-> - `expo-sqlite` holds a local mirror of the product catalog, product groups, brand priority,
->   price lists, tags, and stock snapshots.
-> - Delta sync using `updated_at`.
+> - `expo-sqlite` holds a local mirror of the product catalog, product groups, alternatives, categories,
+>   product images, price lists (+ overrides), location overrides, tags, and stock snapshots.
+> - Delta sync using `updated_at`. See `.agents/mobile/features/sync-feature.md` for the final spec.
 > - Search-as-you-type hits local SQLite first; API is the fallback.
 > - Draft quotations are creatable offline and queued for sync on reconnect.
 > - QR scanning and fulfilment updates stay live (network required); cost/margin data is cached

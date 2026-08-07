@@ -234,7 +234,7 @@ Step 8 → Go live — staff log in and start quoting
 **Core POC feature. Primary product differentiator.**
 
 - Products are grouped by specification (e.g. "3/4" PVC Pipe"). All products in the same group are alternatives to each other.
-- Brand priority set via brand tags on each product. Alternatives ordered by brand priority.
+- Alternatives ordering set per product via `product_alternatives.sort_order`; the quotation screen lists alternatives by order, then primary first.
 - Quotation screen shows all brand alternatives colour-coded with individual line totals and per-alternative subtotal at the bottom.
 - **"Immediate alternative" button** swaps all applicable line items to next priority brand simultaneously.
 - Salesperson taps any alternative subtotal to confirm → unique quotation ID generated.
@@ -265,8 +265,8 @@ Pinned quick access and home screen tags are the **same mechanism**: staff pin t
 ### 8.4 Product Catalog
 
 - Shared catalog per tenant. Per-location stock and optional per-location price overrides.
-- **Product groups** (spec-based) — alternatives drawn from the same group.
-- **Brand tags** on each product. Admin sets brand priority per group.
+- **Product groups** (spec-based) — alternatives drawn from the same group, plus explicit `product_alternatives` (with `sort_order`) for curated cross-brand pairs.
+- **Brand tags** on each product.
 - **Spec code** on each product (e.g. "PP32UP" for 3/4" PVC Pipe) — searchable spec-level code that enables filtering products by specification across brands (e.g. find all 1" pipes regardless of brand).
 - **Named price lists** override base price per SKU. Unmatched SKUs fall back to base price automatically.
 - **Product aliases and synonyms** — prevent duplicate entries when same product has different names at different branches.

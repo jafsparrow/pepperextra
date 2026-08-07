@@ -34,7 +34,7 @@ Product Group: "3/4 inch PVC Pipe"
 ### What it drives
 
 - **Alternative pricing on the quotation screen** — when staff adds "3/4 inch PVC Pipe" to a quotation, the system finds all other products in the same group and shows their prices colour-coded
-- **"Immediate alternative" button** — swaps all line items to the next brand in the group's `brand_priority` order
+- **"Immediate alternative" button** — swaps all line items to the next product in the alternatives list, ordered by `product_alternatives.sort_order`
 - **Stock tracking mode** — each group has `stock_tracking_mode`: `group` (total stock across all brands) or `sku` (stock per individual brand)
 
 ### Key fields
@@ -44,7 +44,6 @@ product_groups {
   id
   org_id
   spec_name        // "3/4 inch PVC Pipe" — the specification, not a brand name
-  brand_priority   // ["brand_a", "brand_b", "brand_c"] — ordered array of brand_tag values
   stock_tracking_mode  // "group" | "sku"
   group_reorder_threshold
 }
@@ -53,8 +52,28 @@ product_groups {
 ### Rules
 
 - One product belongs to **one product group only**
-- Brand priority order is set by admin — determines which brand is shown first in quotation alternatives
+- Alternative order is set per product via `product_alternatives.sort_order` (auto-assigned `max + 1`, no reorder endpoint) — determines which alternative is shown first in quotation alternatives
 - Product groups are **tenant-scoped** (`org_id`) — shared across all locations
+
+### Explicit alternatives (`product_alternatives`)
+
+Groups give automatic same-spec alternatives. For cases where the automatic set needs adjustment
+(cross-spec alternatives, curated order), admins add explicit `product_alternatives` rows:
+
+```typescript
+product_alternatives {
+  id
+  org_id
+  product_id             // the SKU being quoted
+  alternative_product_id // a suggested alternative brand/SKU
+  is_primary             // at most one primary per product
+  sort_order             // display order — auto-assigned (max + 1), no reorder endpoint
+}
+```
+
+- The alternatives list merges same-group products with explicit alternatives and is ordered
+  `sort_order ASC`, then `is_primary DESC`.
+- Soft-delete only (`deleted_at`) — re-adding the same pair restores the row.
 
 ---
 

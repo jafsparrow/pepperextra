@@ -257,8 +257,8 @@ async resolveAlternatives(
   orgId: string,
   teamId: string
 ): Promise<AlternativeGroup[]> {
-  // 1. For each line, find all products in same product_group
-  // 2. Order by product_group.brand_priority[]
+  // 1. For each line, find all products in same product_group plus explicit product_alternatives
+  // 2. Order by product_alternatives.sort_order ASC, then is_primary DESC
   // 3. Resolve price: check price_list_overrides first, fallback to products.base_price
   //    then check product_location_overrides for location-specific price
   // 4. Check stock status per SKU (for sku mode groups)
@@ -582,14 +582,20 @@ GET /invoices?page=1&limit=20&status=active&from=2026-01-01&to=2026-03-31
 
 ```typescript
 // Expo SQLite for local catalog cache
-// Sync strategy: delta sync using updated_at timestamp
+// Sync strategy: delta sync using updated_at timestamp (see .agents/mobile/features/sync-feature.md)
 
 async function syncCatalog(orgId: string, teamId: string) {
   const lastSync = await getLastSyncTimestamp();
-  const delta = await api.get(`/catalog/sync?since=${lastSync}&team_id=${teamId}`);
-  await updateLocalCatalog(delta.products, delta.groups, delta.price_lists);
+  const delta = await api.get(`/organizations/${orgId}/catalog/sync?since=${lastSync}&teamId=${teamId}`);
+  await updateLocalCatalog(delta);  // products, product_groups, categories, product_images, product_alternatives,
+                                    // price_lists, price_list_overrides, product_location_overrides, product_tags,
+                                    // product_tag_assignments
   await setLastSyncTimestamp(new Date());
 }
+
+// Passive sync signal: every API response carries X-Catalog-Version
+// If it differs from the locally stored version, queue a background delta sync (don't block the screen)
+// Active sync signal: GET /organizations/{orgId}/catalog/version on launch/foreground/login/30-min timer
 
 // All product search queries hit local SQLite first
 // API fallback only when local cache is empty or stale (>1 hour)
