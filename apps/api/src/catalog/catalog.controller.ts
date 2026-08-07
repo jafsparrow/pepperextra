@@ -10,6 +10,7 @@ export class CatalogController {
 
   @Implement(contracts.catalog.getVersion)
   getVersion() {
+    console.log('CatalogController.getVersion called');
     return implement(contracts.catalog.getVersion).handler(async ({ input }) =>
       this.catalogService.getVersion(input.organizationId),
     );
@@ -17,6 +18,7 @@ export class CatalogController {
 
   @Implement(contracts.catalog.sync)
   sync() {
+    console.log('CatalogController.sync called');
     return implement(contracts.catalog.sync).handler(async ({ input }) =>
       this.catalogService.sync(input.organizationId, input.since, input.teamId),
     );
@@ -24,6 +26,7 @@ export class CatalogController {
 
   @Implement(contracts.catalog.getStock)
   getStock() {
+    console.log('CatalogController.getStock called');
     return implement(contracts.catalog.getStock).handler(async ({ input }) =>
       this.catalogService.getStock(input.organizationId, input.teamId),
     );

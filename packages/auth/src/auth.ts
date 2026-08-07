@@ -27,6 +27,17 @@ import {
 // Re-export organization hook types for consumers
 type OrgHooks = NonNullable<OrganizationOptions["organizationHooks"]>
 export type OrganizationHooks = OrgHooks
+
+// Database hooks (session/user/account create/update/delete) for consumers
+export type DatabaseHooks = NonNullable<BetterAuthOptions["databaseHooks"]>
+export type SessionCreateBeforeData = Parameters<
+  NonNullable<
+    NonNullable<NonNullable<DatabaseHooks["session"]>["create"]>["before"]
+  >
+>[0]
+export type SessionCreateBeforeHook = NonNullable<
+  NonNullable<NonNullable<DatabaseHooks["session"]>["create"]>["before"]
+>
 export type BeforeCreateOrganizationData = Parameters<
   NonNullable<OrgHooks["beforeCreateOrganization"]>
 >[0]
@@ -142,6 +153,7 @@ type TeamHooks = Pick<
 interface AuthConfigOptions {
   secret: string
   baseUrl: string
+  databaseHooks?: BetterAuthOptions["databaseHooks"]
   organizationHooks?: NonNullable<OrganizationOptions["organizationHooks"]>
   teamHooks?: Partial<TeamHooks>
   allowUserToCreateOrganization?: NonNullable<
@@ -163,6 +175,7 @@ export const createAuthInstance = (
     }),
     secret: options.secret,
     baseURL: options.baseUrl,
+    databaseHooks: options.databaseHooks,
     user: {
       additionalFields: {
         //this is for detecting the org owner created users.

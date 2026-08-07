@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { useCallback, useState } from "react"
 
-import { signOut } from "@/lib/auth-client"
+import { forceClearLocalSession, signOut } from "@/lib/auth-client"
 
 /** Sign the current user out and return to the login screen. */
 export function useSignOut() {
@@ -17,10 +17,13 @@ export function useSignOut() {
       if (authError) {
         throw new Error(authError.message || "Could not sign out.")
       }
-      router.replace("/login")
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Something went wrong.")
     } finally {
+      // Force-logout: clear the local session even if the server call failed,
+      // then always return to the login screen.
+      await forceClearLocalSession()
+      router.replace("/login")
       setIsPending(false)
     }
   }, [router])

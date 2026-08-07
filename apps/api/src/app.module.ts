@@ -76,10 +76,41 @@ declare module '@orpc/nest' {
         const betterAuthInstance = createAuthInstance(dbClient, {
           secret,
           baseUrl,
+          // Auto-set the active org/team at session creation. Every user
+          // belongs to at most one organization (maxOrganizationsPerUser: 1)
+          // and to at most one team in practice (POS staff), so we can derive
+          // both from the user's first membership instead of requiring the
+          // client to call organization.setActive().
+          databaseHooks: {
+            session: {
+              create: {
+                async before(session) {
+                  const membership = await dbClient.query.member.findFirst({
+                    where: { userId: session.userId },
+                  });
+
+                  const teamMembership =
+                    await dbClient.query.teamMember.findFirst({
+                      where: { userId: session.userId },
+                    });
+
+                  return {
+                    data: {
+                      ...session,
+                      activeOrganizationId: membership?.organizationId ?? null,
+                      activeTeamId: teamMembership?.teamId ?? null,
+                    },
+                  };
+                },
+              },
+            },
+          },
           // Dev stub: no email provider wired up yet. Logs the reset URL/token
           // so password-reset flows can be exercised locally.
           async sendResetPassword({ user, url, token }) {
-            console.log(`[auth:sendResetPassword] user=${user.email} token=${token}`);
+            console.log(
+              `[auth:sendResetPassword] user=${user.email} token=${token}`,
+            );
             console.log(`[auth:sendResetPassword] reset URL: ${url}`);
           },
           allowUserToCreateOrganization(user) {

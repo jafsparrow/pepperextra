@@ -19,20 +19,21 @@ import type { PosProduct } from "@/feature/pos/types"
 export function useCatalogProducts() {
   const { data: session } = authClient.useSession()
   const organizationId = session?.session?.activeOrganizationId
+  console.log("useCatalogProducts: organizationId", organizationId)
   const teamId = session?.session?.activeTeamId ?? undefined
 
   const delta = useQuery(
     orpc.catalog.sync.queryOptions({
       input: { organizationId: organizationId ?? "", teamId, since: undefined },
       enabled: !!organizationId,
-    }),
+    })
   )
 
   const stock = useQuery(
     orpc.catalog.getStock.queryOptions({
       input: { organizationId: organizationId ?? "", teamId: teamId ?? "" },
       enabled: !!organizationId && !!teamId,
-    }),
+    })
   )
 
   const products = useMemo<PosProduct[]>(() => {
@@ -66,7 +67,7 @@ export function useCatalogProducts() {
             reorderThreshold: p.reorderThreshold ?? undefined,
             imageUrl: primaryImageByProduct.get(p.id),
             eligibleForLoyalty: p.eligibleForLoyalty,
-          }) satisfies PosProduct,
+          }) satisfies PosProduct
       )
   }, [delta.data, stock.data])
 
