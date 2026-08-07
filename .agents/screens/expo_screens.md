@@ -12,7 +12,7 @@
 2. [Architecture Summary](#2-architecture-summary)
 3. [Screen Specifications](#3-screen-specifications)
    - 3.1 [Home Screen](#31-home-screen)
-   - 3.2 [POS — Quotation Creation (placeholder)](#32-pos--quotation-creation-placeholder)
+   - 3.2 [POS — Quotation Creation](#32-pos--quotation-creation)
    - 3.3 [Margin Bottom Sheet (placeholder)](#33-margin-bottom-sheet-placeholder)
    - 3.4 [Quotations Screen](#34-quotations-screen)
    - 3.5 [Invoices Screen](#35-invoices-screen)
@@ -57,10 +57,13 @@ only — the API is the actual enforcement boundary.
   stack (Customer Detail, POS, Quotation/Invoice Detail, Fulfilment Station, Settings).
 - **Top app bar (More ⋮):** Settings, Profile, Logout — and **Fulfilment Station**
   (2-step navigation: More → Fulfilment Station; acceptable since it's a secondary role surface).
-- **Home FABs:** QR Scan (customer loyalty card) and **New Quotation** (opens the POS flow).
+- **Home FAB stack** (bottom-right, just above the tab bar): **Scan Card** (📷, scans a customer
+  loyalty card) and **New Quotation** (🛒, opens the POS flow). Phone → icon-only circular FABs;
+  tablet (≥768dp) → same stack with icon + label pills.
 - **Pushed route stacks:**
   - Customers → **Customer Detail** (separate route)
-  - Home FAB / Customer Detail "New Quote" → **POS** (quotation creation) → cart-list / alternatives
+  - Home FAB / Customer Detail "New Quote" → **POS** (quotation creation) → `/pos/cart` (phone) /
+    right-hand cart pane (tablet)
   - Quotations → **Quotation Detail** · Invoices → **Invoice Detail**
   - More (⋮) → **Fulfilment Station**
 
@@ -117,8 +120,9 @@ never hardcode a currency symbol or `$` amounts.
 │  RECENT QR SCANS                             │
 │  • Ahmed (Plumber) · +10 pts · 2h ago        │
 ├──────────────────────────────────────────────┤
-│                     [📷]          [🛒]       │
-│                Scan Card    New Quotation    │
+│                                   [📷]       │
+│                                   [🛒]       │
+│                          (above tab bar)     │
 └──────────────────────────────────────────────┘
 ```
 
@@ -135,55 +139,116 @@ never hardcode a currency symbol or `$` amounts.
 - **Recent quotations:** last 5 quotations with status indicators.
 - **Recent transactions:** last 5 completed invoices with amounts.
 - **Recent QR scans:** last 5 customer card scans with timestamps and points where applicable.
-- **FABs:**
-  - **QR Scan (left):** opens the QR scanner to scan a **customer loyalty card** (a QR of the
+- **FAB stack** (`feature/pos/ui/components/fab.tsx`: `Fab` + `FabGroup`): vertically stacked in
+  the bottom-right corner, just above the tab bar.
+  - **Scan Card (📷):** opens the QR scanner to scan a **customer loyalty card** (a QR of the
     customer id). Retrieves the customer profile; for tradespeople, shows points/status.
-  - **New Quotation (right):** opens the **POS** flow (quotation creation).
+  - **New Quotation (🛒):** opens the **POS** flow (quotation creation).
+  - **Responsive:** phone → two icon-only circular FABs; tablet (≥768dp, `TabletBreakpoint`) →
+    the same stack with icon + label pills.
 - **App bar (More ⋮):** Settings, Profile, Logout, **Fulfilment Station**.
 
 ---
 
-### 3.2 POS — Quotation Creation (PLACEHOLDER)
+### 3.2 POS — Quotation Creation
 
-> **PLACEHOLDER — detailed design to be fleshed out.** This is the primary product differentiator
-> (BRD §8.1, MODULE 06). Current shape:
+> Primary product differentiator (BRD §8.1, MODULE 06). Search-first POS with a customer-aware
+> app bar and a cart that is a **separate route on phone / right-hand pane on tablet**. Still to
+> come: alternative-brand pricing, margin bottom sheet, PDF + WhatsApp share.
 
-- **Routes:** `/pos` (index) and `/pos/cart` (mobile-only cart screen). Both share a module-level
-  cart store (`feature/pos/store/cart-store.ts`) so the cart survives navigation.
-- **App bar (custom, `feature/pos/ui/components/pos-header.tsx`):** back button, title
-  **New Quotation**, selected **customer name underneath in primary colour** (muted
-  "Select a customer" hint when none). Trailing actions:
+**Routes & state**
+
+- `/pos` — the POS screen (`feature/pos/ui/screens/pos-screen.tsx`); `/pos/cart` — the phone cart
+  screen (§3.2.1).
+- Both share a module-level cart store (`feature/pos/store/cart-store.ts`) so the cart survives
+  navigation. The screen is wrapped in a `SafeAreaView` (top + bottom) so the app bar clears the
+  status bar and the phone cart bar clears the system navigation bar.
+
+**Component Layout — phone**
+
+```
+┌──────────────────────────────────────────────┐
+│ ← New Quotation              [👤][📷][⋮]    │
+│     Acme Contracting (primary)               │
+├──────────────────────────────────────────────┤
+│ [🔍 Search by name or SKU...........]       │
+├──────────────────────────────────────────────┤
+│ ┌──────────────┬──────────────┬────────────┐ │
+│ │ ▤  Name / SKU│  OMR 18.000  │ [🔢]  [+] │ │
+│ └──────────────┴──────────────┴────────────┘ │
+│  … (product cards)                           │
+├──────────────────────────────────────────────┤
+│ View Cart (3)                     OMR 54.000│
+└──────────────────────────────────────────────┘
+```
+
+**Component Layout — tablet (≥768dp)**
+
+```
+┌──────────────────────────────────────────────┐
+│ ← New Quotation              [👤][📷][⋮]    │
+├──────────────────────────┬───────────────────┤
+│ [🔍 Search.............] │  CART (right pane)│
+│ ┌──────┬───────┬──────┐  │  · item  − 2 +  … │
+│ │ card │ price │ btns │  │  · item  − 1 +  … │
+│ └──────┴───────┴──────┘  │  Subtotal  OMR …   │
+│  …                       │  [Confirm quote]  │
+└──────────────────────────┴───────────────────┘
+```
+
+**Functional Requirements**
+
+- **App bar** (`pos-header.tsx`): back button, title **New Quotation**, and the selected
+  **customer name underneath in primary colour** (muted "Select a customer" hint when none).
+  Trailing actions:
   - **👤 Search customer** — opens the customer picker modal.
-  - **📷 Scan card** — placeholder: picks the most recently purchased customer (real
-    expo-camera loyalty-card scan lands later).
-  - **⋮ More** — options menu: **Hide Images / Show Images** and **Show Stock / Hide Stock**
+  - **📷 Scan card** — placeholder: selects the most recently purchased customer; real
+    expo-camera loyalty-card scan lands later.
+  - **⋮ More** — options menu: **Hide Images / Show Images**, **Show Stock / Hide Stock**
     (extensible for future POS options).
-- **Customer picker modal** (`customer-search-modal.tsx`): search field + list of the **15 most
-  recently purchased customers** which stays visible until a search string is entered; then
-  filters by name/phone. Selecting sets the customer on the app bar.
-- **Product search:** search input only (no "Find a product" title) to save vertical space.
-  Empty query shows the full catalog; otherwise filters by name/SKU. Product cards show an
-  image thumbnail (placeholder initials until `product_images` are wired), name, SKU, sale
-  price and two icon actions: **🔢** opens a **quantity sheet** and **+** adds one
-  instantly. The quantity sheet has **[Quantity | Price]** tabs: Quantity offers a number
-  keypad with quick amounts 1/5/10 and a live `N × price = total` preview; Price lets staff
-  override the unit price for the cart line only (never the catalog) via a decimal input with
-  a "Use list price" reset. An overridden line shows the list price struck through in the
-  cart. The sheet adds N at the chosen price to the line. **Price tab permission:** owner-only
-  (`canEditPrice` in `useRole`) — TODO: gate the tab once org roles are wired, mapping to
-  Owner + Location Manager + floor-limited salesperson (BRD §6.3 / §8.2). Currently shown for
-  testing. "Hide Images" removes thumbnails; "Show Stock" adds an in-stock badge.
-  (`feature/pos/ui/components/product-card.tsx`, `quantity-sheet.tsx`)
-- **Layout split (tablet, ≥768dp):** products on the left, the **cart panel on the right**
-  (`feature/pos/ui/components/cart-panel.tsx`). On phone the cart is a separate **/pos/cart**
-  screen reached from a bottom "View Cart" bar.
-- **Cart panel:** line items with qty −/+ controls, subtotal, cost total (staff/owner only via
-  `useRole`, BRD §8.2) and a Confirm button. Alternative-brand pricing, margin bottom sheet,
-  PDF + WhatsApp share still to come.
+- **Customer picker modal** (`customer-search-modal.tsx`): search field + the **15 most recently
+  purchased customers**, shown until a search string is entered, then filtered by name/phone.
+  Selecting a customer sets it on the app bar.
+- **Product search:** search input only (no section title) to save vertical space; empty query
+  shows the full catalog, otherwise filters by name/SKU.
+- **Product card** (`product-card.tsx`): image thumbnail (placeholder initials until
+  `product_images` are wired), name, SKU, sale price, and two icon actions — **+** adds one
+  instantly at the line's current price; **🔢** opens the quantity / price sheet (§3.2.2).
+  "Hide Images" removes thumbnails; "Show Stock" adds an in-stock / out-of-stock badge.
+- **Cart:** on tablet a **right-hand pane** (`cart-panel.tsx`, fixed width) beside the product
+  list; on phone the separate `/pos/cart` screen reached via a bottom **"View Cart (n) · total"**
+  bar.
+- **Confirm quotation** — placeholder alert for now.
 - **Data:** `feature/pos/api/catalog.ts` is a **placeholder fetch** over mock tags — to be
   replaced by a TanStack Query call to the product contract or a local SQLite catalog for
   offline search (BRD §8.1). `PosProduct` mirrors the DB `products`/`product_images`/`stock`
   schema.
+
+### 3.2.1 Cart Screen (`/pos/cart`)
+
+**Phone only** — on tablet the same `CartPanel` renders inline as the POS right-hand pane. Pushed
+route with a native header (native header handles the top inset); a `SafeAreaView` with the bottom
+edge keeps content above the system navigation bar.
+
+- Line items with **− / +** quantity controls, charged unit price, line total.
+- **Price override display:** when `line.unitPriceMinor !== product.salePriceMinor`, the list
+  price is shown **struck through** under the charged price.
+- **Subtotal** and **Cost (staff/owner only** via `useRole`, BRD §8.2**)** rows, plus
+  **Confirm quotation** and **Clear cart**.
+
+### 3.2.2 Quantity / Price Sheet
+
+Bottom sheet opened by the **🔢** action (`quantity-sheet.tsx`), segmented **[Quantity | Price]**:
+
+- **Quantity tab:** quick amounts **1 · 5 · 10**, number-pad input (max 999), live
+  `N × price = total` preview.
+- **Price tab:** decimal input seeded with the list price, a **"Use list price"** reset, and the
+  same live preview. The override applies to the cart line only — the catalog is never mutated.
+  Adding N at an explicit price updates an existing line of the same product to that price.
+- **Permission:** owner-only (`canEditPrice` in `useRole`) — TODO: gate the Price tab once org
+  roles are wired (Owner + Location Manager + floor-limited salesperson, BRD §6.3 / §8.2).
+  Currently shown for testing.
+- Confirming calls `addToCart(product, qty, unitPriceMinor)` and resets to 1 / list price.
 
 ---
 
@@ -434,6 +499,9 @@ Full schema in `02_DATABASE_SCHEMA.md`; request/response shapes in `packages/con
 - **Warranty lines** — linked warranty, serial numbers.
 - **QR codes** (`qr_codes`) — per-unit product codes for points; the customer loyalty card QR is
   simply the customer id, displayed on the customer detail screen.
+- **POS cart (session)** — in-memory, module-level store (`feature/pos/store/cart-store.ts`)
+  shared by `/pos` and `/pos/cart`. `CartLine` carries `unitPriceMinor`: an optional cart-session
+  price override (never mutates the catalog) that shows the list price struck through.
 
 ---
 
@@ -448,6 +516,9 @@ Full schema in `02_DATABASE_SCHEMA.md`; request/response shapes in `packages/con
 - **Money:** integer minor units; format per tenant currency — never hardcode a symbol.
 - **Auth:** Better Auth; tokens in `expo-secure-store` only.
 - **Navigation rule:** no back button on tab roots.
+- **Safe area / responsive:** `react-native-safe-area-context` `SafeAreaView` (POS: top + bottom;
+  cart screen: bottom — native header covers the top). Tablet layouts switch at
+  `TabletBreakpoint` (768dp, `constants/theme.ts`).
 
 ---
 
@@ -470,6 +541,10 @@ Maps to `03_FEATURE_MODULES.md`:
 
 - **Roles (BRD §6.3):** each role sees only their screens/actions; station staff only their
   station; salesperson blocked below margin floor; margin sheet absent for station staff.
+- **POS:** adding via `+` vs the quantity sheet; price override appears only on the cart line
+  (catalog price unchanged) with list price struck through; quick adds 1/5/10; cart survives
+  navigation between `/pos` and `/pos/cart`; phone shows the cart bar + separate screen, tablet
+  shows the right-hand pane; Price tab hidden for non-owners.
 - **Alternatives:** swap all lines to next brand; per-alternative subtotal correct; multiple
   confirmations per session.
 - **Offline:** draft quotation created offline → queues → syncs on reconnect; offline indicator
