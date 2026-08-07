@@ -13,6 +13,8 @@ export async function fetchCatalogProducts(): Promise<PosProduct[]> {
       id: p.id,
       name: p.name,
       sku: p.sku,
+      specCode: p.specCode,
+      brandTag: p.brandTag,
       unit: p.unit,
       salePriceMinor: p.salePriceMinor,
       costPriceMinor: p.costPriceMinor,

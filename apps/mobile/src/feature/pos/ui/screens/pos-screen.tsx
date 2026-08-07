@@ -26,6 +26,12 @@ import { CustomerSearchModal } from "@/feature/pos/ui/components/customer-search
 import { PosHeader } from "@/feature/pos/ui/components/pos-header"
 import { ProductCard } from "@/feature/pos/ui/components/product-card"
 import { QuantitySheet } from "@/feature/pos/ui/components/quantity-sheet"
+import { SpecCodeEditModal } from "@/feature/pos/ui/components/spec-code-edit-modal"
+import { SpecCodePanel } from "@/feature/pos/ui/components/spec-code-panel"
+import {
+  setShowSpecCapsules,
+  useShowSpecCapsules,
+} from "@/feature/pos/store/spec-code-store"
 import type { PosProduct, PosViewOptions } from "@/feature/pos/types"
 import { DEFAULT_CURRENCY, formatMinorUnits } from "@/lib/money"
 
@@ -51,7 +57,9 @@ export function PosScreen() {
     hideImages: false,
     showStock: false,
   })
+  const showSpecCapsules = useShowSpecCapsules()
   const [sheetProduct, setSheetProduct] = useState<PosProduct | null>(null)
+  const [specEditVisible, setSpecEditVisible] = useState(false)
   const { lines, count, subtotal } = useCart()
 
   useEffect(() => {
@@ -70,7 +78,10 @@ export function PosScreen() {
     return products
       .filter(
         (p) =>
-          p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          (p.specCode ?? "").toLowerCase().includes(q) ||
+          (p.brandTag ?? "").toLowerCase().includes(q)
       )
       .slice(0, MAX_RESULTS)
   }, [products, query])
@@ -111,6 +122,16 @@ export function PosScreen() {
       icon: "📦",
       onPress: () => setViewOptions((v) => ({ ...v, showStock: !v.showStock })),
     },
+    {
+      label: showSpecCapsules ? "Hide Quick Spec" : "Show Quick Spec",
+      icon: "🏷️",
+      onPress: () => setShowSpecCapsules(!showSpecCapsules),
+    },
+    {
+      label: "Edit Quick Spec",
+      icon: "✏️",
+      onPress: () => setSpecEditVisible(true),
+    },
   ]
 
   const productsPane = (
@@ -119,9 +140,15 @@ export function PosScreen() {
         <SearchField
           value={query}
           onChangeText={setQuery}
-          placeholder="Search by name or SKU"
+          onClear={() => setQuery("")}
+          placeholder="Search by name, SKU or spec code"
         />
       </View>
+      {showSpecCapsules ? (
+        <View style={styles.specWrap}>
+          <SpecCodePanel onAppend={(token) => setQuery((q) => q + token)} />
+        </View>
+      ) : null}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.productsList}
@@ -198,6 +225,10 @@ export function PosScreen() {
           onClose={() => setMoreMenuVisible(false)}
           items={moreItems}
         />
+        <SpecCodeEditModal
+          visible={specEditVisible}
+          onClose={() => setSpecEditVisible(false)}
+        />
         <QuantitySheet
           visible={sheetProduct != null}
           product={sheetProduct}
@@ -235,7 +266,11 @@ const styles = StyleSheet.create({
   },
   searchWrap: {
     paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.three,
+    paddingBottom: Spacing.half,
+  },
+  specWrap: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.half,
   },
   productsList: {
     gap: Spacing.two,

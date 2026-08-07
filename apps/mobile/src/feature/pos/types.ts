@@ -36,4 +36,6 @@ export interface CartLine {
 export interface PosViewOptions {
   hideImages: boolean
   showStock: boolean
+  /** Quick-spec capsule panel under the search bar (device-local, toggleable). */
+  showSpecCapsules?: boolean
 }
