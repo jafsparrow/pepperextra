@@ -45,6 +45,9 @@ export const productTagAssignments = pgTable(
     productId: text("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
   },
   (t) => [primaryKey({ columns: [t.tagId, t.productId] })]
 );

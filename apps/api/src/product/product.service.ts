@@ -376,7 +376,7 @@ export class ProductService {
   }
 
   private toAlternative(
-    row: (typeof productAlternatives.$inferSelect) & {
+    row: typeof productAlternatives.$inferSelect & {
       alternativeProduct?: ProductRow | null;
     },
   ): ProductAlternative {
@@ -385,6 +385,7 @@ export class ProductService {
       productId: row.productId,
       alternativeProductId: row.alternativeProductId,
       isPrimary: row.isPrimary,
+      sortOrder: row.sortOrder,
       alternative: {
         id: row.alternativeProduct?.id ?? row.alternativeProductId,
         name: row.alternativeProduct?.name ?? 'Unknown product',
@@ -403,9 +404,10 @@ export class ProductService {
       where: {
         orgId: organizationId,
         productId,
+        deletedAt: { isNull: true },
       },
       with: { alternativeProduct: true },
-      orderBy: (t, { desc, asc }) => [desc(t.isPrimary), asc(t.createdAt)],
+      orderBy: (t, { asc, desc }) => [asc(t.sortOrder), desc(t.isPrimary)],
     });
 
     return rows.map((row) => this.toAlternative(row));
@@ -425,15 +427,24 @@ export class ProductService {
     await this.ensureProductExists(organizationId, productId);
     await this.ensureProductExists(organizationId, alternativeProductId);
 
-    const [countRow] = await this.db
-      .select({ count: sql<number>`count(*)::int` })
+    const [{ count, maxSort }] = await this.db
+      .select({
+        count: sql<number>`count(*)::int`,
+        maxSort: sql<
+          number | null
+        >`coalesce(max(${productAlternatives.sortOrder}), -1)`,
+      })
       .from(productAlternatives)
       .where(
         and(
           eq(productAlternatives.orgId, organizationId),
           eq(productAlternatives.productId, productId),
+          isNull(productAlternatives.deletedAt),
         ),
       );
+
+    const isPrimary = (count ?? 0) === 0;
+    const sortOrder = (maxSort ?? -1) + 1;
 
     try {
       const [row] = await this.db
@@ -442,7 +453,20 @@ export class ProductService {
           orgId: organizationId,
           productId,
           alternativeProductId,
-          isPrimary: (countRow?.count ?? 0) === 0,
+          isPrimary,
+          sortOrder,
+        })
+        .onConflictDoUpdate({
+          target: [
+            productAlternatives.productId,
+            productAlternatives.alternativeProductId,
+          ],
+          set: {
+            deletedAt: null,
+            isPrimary,
+            sortOrder,
+            updatedAt: new Date(),
+          },
         })
         .returning();
 
@@ -457,9 +481,7 @@ export class ProductService {
       return this.toAlternative({ ...row, alternativeProduct });
     } catch (error) {
       if ((error as { code?: string }).code === '23505') {
-        throw new ConflictException(
-          'This product is already an alternative',
-        );
+        throw new ConflictException('This product is already an alternative');
       }
       throw error;
     }
@@ -476,6 +498,7 @@ export class ProductService {
           orgId: organizationId,
           productId,
           alternativeProductId,
+          deletedAt: { isNull: true },
         },
         with: { alternativeProduct: true },
       });
@@ -492,6 +515,7 @@ export class ProductService {
             eq(productAlternatives.orgId, organizationId),
             eq(productAlternatives.productId, productId),
             eq(productAlternatives.isPrimary, true),
+            isNull(productAlternatives.deletedAt),
           ),
         );
 
@@ -510,32 +534,34 @@ export class ProductService {
     alternativeProductId: string,
   ): Promise<void> {
     await this.db.transaction(async (tx) => {
-      const [row] = await tx
-        .delete(productAlternatives)
-        .where(
-          and(
-            eq(productAlternatives.orgId, organizationId),
-            eq(productAlternatives.productId, productId),
-            eq(productAlternatives.alternativeProductId, alternativeProductId),
-          ),
-        )
-        .returning({
-          id: productAlternatives.id,
-          isPrimary: productAlternatives.isPrimary,
-        });
+      const existing = await tx.query.productAlternatives.findFirst({
+        where: {
+          orgId: organizationId,
+          productId,
+          alternativeProductId,
+          deletedAt: { isNull: true },
+        },
+        columns: { id: true, isPrimary: true },
+      });
 
-      if (!row) {
+      if (!existing) {
         throw new NotFoundException('Alternative product not found');
       }
 
-      if (row.isPrimary) {
+      await tx
+        .update(productAlternatives)
+        .set({ deletedAt: new Date(), isPrimary: false, updatedAt: new Date() })
+        .where(eq(productAlternatives.id, existing.id));
+
+      if (existing.isPrimary) {
         const next = await tx.query.productAlternatives.findFirst({
           where: {
             orgId: organizationId,
             productId,
+            deletedAt: { isNull: true },
           },
           columns: { id: true },
-          orderBy: (t, { asc }) => [asc(t.createdAt)],
+          orderBy: (t, { asc, desc }) => [asc(t.sortOrder), desc(t.isPrimary)],
         });
 
         if (next) {

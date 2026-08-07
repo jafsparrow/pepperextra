@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   Alert,
   Pressable,
@@ -18,7 +18,7 @@ import { SearchField } from "@/components/ui/search-field"
 import { Spacing, TabletBreakpoint, Tokens } from "@/constants/theme"
 import type { Customer } from "@/feature/customer/types"
 import { useRole } from "@/feature/roles/hooks/use-role"
-import { fetchCatalogProducts } from "@/feature/pos/api/catalog"
+import { useCatalogProducts } from "@/feature/pos/api/catalog"
 import { getRecentCustomers } from "@/feature/pos/constants/recent-customers"
 import { addToCart, useCart } from "@/feature/pos/store/cart-store"
 import { CartPanel } from "@/feature/pos/ui/components/cart-panel"
@@ -49,7 +49,6 @@ export function PosScreen() {
   const isTablet = width >= TabletBreakpoint
 
   const [query, setQuery] = useState("")
-  const [products, setProducts] = useState<PosProduct[]>([])
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [customerModalVisible, setCustomerModalVisible] = useState(false)
   const [moreMenuVisible, setMoreMenuVisible] = useState(false)
@@ -61,16 +60,7 @@ export function PosScreen() {
   const [sheetProduct, setSheetProduct] = useState<PosProduct | null>(null)
   const [specEditVisible, setSpecEditVisible] = useState(false)
   const { lines, count, subtotal } = useCart()
-
-  useEffect(() => {
-    let active = true
-    void fetchCatalogProducts().then((catalog) => {
-      if (active) setProducts(catalog)
-    })
-    return () => {
-      active = false
-    }
-  }, [])
+  const { products, isLoading: isCatalogLoading } = useCatalogProducts()
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -155,7 +145,12 @@ export function PosScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {results.length === 0 ? (
+        {isCatalogLoading ? (
+          <EmptyState
+            title="Loading catalog…"
+            message="Syncing products for this location."
+          />
+        ) : results.length === 0 ? (
           <EmptyState
             title="No products found."
             message="Try a different search."

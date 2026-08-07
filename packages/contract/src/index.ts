@@ -96,6 +96,12 @@ import {
   resolveProductPrices,
 } from "./price-list.js"
 import { listCountries } from "./localization.js"
+import {
+  getCatalogVersion,
+  syncCatalog,
+  getCatalogStock,
+  revalidateCatalogStock,
+} from "./catalog.js"
 
 // [NOTE] :- zod schema should be exported just like that
 // not as export type {}, coz we need whole thing to be available
@@ -255,6 +261,42 @@ export { countrySchema } from "./localization.js"
 
 export type { Country } from "./localization.js"
 
+export {
+  catalogVersionSchema,
+  syncProductRowSchema,
+  syncProductGroupRowSchema,
+  syncCategoryRowSchema,
+  syncProductImageRowSchema,
+  syncProductAlternativeRowSchema,
+  syncPriceListRowSchema,
+  syncPriceListOverrideRowSchema,
+  syncProductLocationOverrideRowSchema,
+  syncProductTagRowSchema,
+  syncProductTagAssignmentRowSchema,
+  syncStockRowSchema,
+  catalogDeltaSchema,
+  catalogStockPayloadSchema,
+  revalidateStockResultSchema,
+} from "./catalog.js"
+
+export type {
+  CatalogVersion,
+  SyncProductRow,
+  SyncProductGroupRow,
+  SyncCategoryRow,
+  SyncProductImageRow,
+  SyncProductAlternativeRow,
+  SyncPriceListRow,
+  SyncPriceListOverrideRow,
+  SyncProductLocationOverrideRow,
+  SyncProductTagRow,
+  SyncProductTagAssignmentRow,
+  SyncStockRow,
+  CatalogDelta,
+  CatalogStockPayload,
+  RevalidateStockResult,
+} from "./catalog.js"
+
 export const planetSchema = z.object({
   id: z.number().int().min(1),
   name: z.string(),
@@ -412,5 +454,11 @@ export const contracts = populateContractRouterPaths({
   },
   countries: {
     list: listCountries,
+  },
+  catalog: {
+    getVersion: getCatalogVersion,
+    sync: syncCatalog,
+    getStock: getCatalogStock,
+    revalidate: revalidateCatalogStock,
   },
 })

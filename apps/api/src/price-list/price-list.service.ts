@@ -68,6 +68,9 @@ export class PriceListService {
       where: { id, orgId: organizationId, deletedAt: { isNull: true } },
       with: {
         overrides: {
+          where: {
+            deletedAt: { isNull: true },
+          },
           with: {
             product: true,
           },
@@ -201,7 +204,11 @@ export class PriceListService {
       })
       .onConflictDoUpdate({
         target: [priceListOverrides.priceListId, priceListOverrides.productId],
-        set: { priceMinor: BigInt(data.priceMinor) },
+        set: {
+          priceMinor: BigInt(data.priceMinor),
+          deletedAt: null,
+          updatedAt: new Date(),
+        },
       })
       .returning();
 
@@ -220,12 +227,13 @@ export class PriceListService {
 
     const [row] = await this.db
       .update(priceListOverrides)
-      .set({ priceMinor: BigInt(data.priceMinor) })
+      .set({ priceMinor: BigInt(data.priceMinor), updatedAt: new Date() })
       .where(
         and(
           eq(priceListOverrides.priceListId, priceListId),
           eq(priceListOverrides.productId, productId),
           eq(priceListOverrides.orgId, organizationId),
+          isNull(priceListOverrides.deletedAt),
         ),
       )
       .returning();
@@ -247,12 +255,14 @@ export class PriceListService {
     productId: string,
   ): Promise<void> {
     const [row] = await this.db
-      .delete(priceListOverrides)
+      .update(priceListOverrides)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(
         and(
           eq(priceListOverrides.priceListId, priceListId),
           eq(priceListOverrides.productId, productId),
           eq(priceListOverrides.orgId, organizationId),
+          isNull(priceListOverrides.deletedAt),
         ),
       )
       .returning({ id: priceListOverrides.id });
@@ -355,6 +365,7 @@ export class PriceListService {
           priceListId,
           orgId: organizationId,
           productId: { in: input.productIds },
+          deletedAt: { isNull: true },
         },
       });
 

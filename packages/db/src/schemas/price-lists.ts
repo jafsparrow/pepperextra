@@ -46,6 +46,9 @@ export const priceListOverrides = pgTable(
       .notNull()
       .references(() => organization.id),
     priceMinor: bigint("price_minor", { mode: "bigint" }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
   },
   (t) => [
     uniqueIndex("price_list_overrides_uidx").on(t.priceListId, t.productId),

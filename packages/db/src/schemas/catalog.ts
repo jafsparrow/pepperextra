@@ -24,7 +24,6 @@ export const productGroups = pgTable(
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
     specName: text("spec_name").notNull(),
-    brandPriority: text("brand_priority").array(),
     stockTrackingMode: stockModeEnum("stock_tracking_mode")
       .default("sku")
       .notNull(),
@@ -126,8 +125,10 @@ export const productAlternatives = pgTable(
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
     isPrimary: boolean("is_primary").default(false).notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
   },
   (t) => [
     uniqueIndex("product_alternatives_uidx").on(
@@ -135,7 +136,7 @@ export const productAlternatives = pgTable(
       t.alternativeProductId
     ),
     index("product_alternatives_org_idx").on(t.orgId),
-    index("product_alternatives_product_idx").on(t.productId),
+    index("product_alternatives_product_idx").on(t.productId, t.sortOrder),
     index("product_alternatives_alt_product_idx").on(t.alternativeProductId),
     uniqueIndex("product_alternatives_primary_uidx")
       .on(t.productId)
@@ -159,6 +160,9 @@ export const productLocationOverrides = pgTable(
       .notNull()
       .references(() => organization.id),
     priceOverrideMinor: bigint("price_override_minor", { mode: "bigint" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
   },
   (t) => [
     uniqueIndex("product_loc_override_uidx").on(t.productId, t.teamId),

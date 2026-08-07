@@ -140,6 +140,7 @@ export const productAlternativeSchema = z.object({
   productId: z.string(),
   alternativeProductId: z.string(),
   isPrimary: z.boolean().default(false),
+  sortOrder: z.number().int().default(0),
   alternative: productAlternativeProductSchema,
 })
 

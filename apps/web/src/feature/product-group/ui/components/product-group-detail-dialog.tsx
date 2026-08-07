@@ -54,9 +54,7 @@ export function ProductGroupDetailDialog({
             {group.specName}
           </DialogTitle>
           <DialogDescription>
-            {group.brandPriority && group.brandPriority.length > 0
-              ? `Brands: ${group.brandPriority.join(" · ")}`
-              : "No brand priority set"}
+            {STOCK_TRACKING_LABELS[group.stockTrackingMode]}
           </DialogDescription>
         </DialogHeader>
 

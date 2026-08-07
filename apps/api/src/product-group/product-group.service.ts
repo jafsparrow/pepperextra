@@ -33,7 +33,6 @@ export class ProductGroupService {
       id: row.id,
       organizationId: row.orgId,
       specName: row.specName,
-      brandPriority: row.brandPriority ?? [],
       stockTrackingMode: row.stockTrackingMode,
       groupReorderThreshold: row.groupReorderThreshold,
       productCount,
@@ -196,7 +195,6 @@ export class ProductGroupService {
     organizationId: string,
     data: {
       specName: string;
-      brandPriority?: string[];
       stockTrackingMode?: 'group' | 'sku';
       groupReorderThreshold?: number;
     },
@@ -207,7 +205,6 @@ export class ProductGroupService {
         .values({
           orgId: organizationId,
           specName: data.specName,
-          brandPriority: data.brandPriority ?? [],
           stockTrackingMode: data.stockTrackingMode ?? 'sku',
           groupReorderThreshold: data.groupReorderThreshold ?? null,
         })
@@ -229,7 +226,6 @@ export class ProductGroupService {
     id: string,
     data: Partial<{
       specName: string;
-      brandPriority: string[];
       stockTrackingMode: 'group' | 'sku';
       groupReorderThreshold: number;
     }>,
@@ -238,9 +234,6 @@ export class ProductGroupService {
       .update(productGroups)
       .set({
         ...(data.specName !== undefined && { specName: data.specName }),
-        ...(data.brandPriority !== undefined && {
-          brandPriority: data.brandPriority,
-        }),
         ...(data.stockTrackingMode !== undefined && {
           stockTrackingMode: data.stockTrackingMode,
         }),

@@ -15,6 +15,7 @@ import {
   taxTypes,
   orgTaxConfig,
 } from "../schemas/localization"
+import { orgCatalogVersions } from "../schemas/catalog-versions"
 import {
   productGroups,
   products,
@@ -88,6 +89,7 @@ export const dbRelations = defineRelations(
     currencies,
     taxTypes,
     orgTaxConfig,
+    orgCatalogVersions,
     productGroups,
     products,
     categories,
@@ -164,6 +166,7 @@ export const dbRelations = defineRelations(
       teamMetadata: r.many.teamMetadata(),
       userMetadata: r.many.userMetadata(),
       orgTaxConfig: r.many.orgTaxConfig(),
+      orgCatalogVersions: r.one.orgCatalogVersions(),
       productGroups: r.many.productGroups(),
       products: r.many.products(),
       categories: r.many.categories(),
@@ -296,6 +299,12 @@ export const dbRelations = defineRelations(
       taxType: r.one.taxTypes({
         from: r.orgTaxConfig.taxTypeId,
         to: r.taxTypes.id,
+      }),
+    },
+    orgCatalogVersions: {
+      organization: r.one.organization({
+        from: r.orgCatalogVersions.orgId,
+        to: r.organization.id,
       }),
     },
     productGroups: {

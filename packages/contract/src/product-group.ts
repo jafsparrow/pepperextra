@@ -6,7 +6,6 @@ export const productGroupSchema = z.object({
   id: z.string(),
   organizationId: z.string(),
   specName: z.string(),
-  brandPriority: z.array(z.string()).nullable().optional(),
   stockTrackingMode: z.enum(["group", "sku"]).default("sku"),
   groupReorderThreshold: z.number().int().nullable().optional(),
   productCount: z.number().int().default(0),
@@ -29,7 +28,6 @@ export type ProductGroupDetail = z.infer<typeof productGroupDetailSchema>
 
 export const productGroupCreateSchema = z.object({
   specName: z.string().min(1, "Spec name is required"),
-  brandPriority: z.array(z.string()).optional(),
   stockTrackingMode: z.enum(["group", "sku"]).default("sku"),
   groupReorderThreshold: z.number().int().optional(),
 })

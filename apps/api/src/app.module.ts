@@ -23,6 +23,7 @@ import { CategoryModule } from './category/category.module.js';
 import { SupplierModule } from './supplier/supplier.module.js';
 import { CustomerModule } from './customer/customer.module.js';
 import { PriceListModule } from './price-list/price-list.module.js';
+import { CatalogModule } from './catalog/catalog.module.js';
 import { APIError } from 'better-auth';
 import { CountriesModule } from './countries/countries.module.js';
 
@@ -51,6 +52,7 @@ declare module '@orpc/nest' {
     CustomerModule,
     PriceListModule,
     CountriesModule,
+    CatalogModule,
 
     // 3. Register Auth Module Asynchronously
     AuthModule.forRootAsync({

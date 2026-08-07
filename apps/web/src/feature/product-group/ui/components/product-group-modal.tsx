@@ -61,12 +61,6 @@ export function ProductGroupModal({
   const handleSubmit = (data: ProductGroupFormValues) => {
     const payload = {
       specName: data.specName,
-      brandPriority: data.brandPriority
-        ? data.brandPriority
-            .split(",")
-            .map((b) => b.trim())
-            .filter(Boolean)
-        : [],
       stockTrackingMode: data.stockTrackingMode,
       groupReorderThreshold:
         data.groupReorderThreshold === undefined
@@ -109,7 +103,6 @@ export function ProductGroupModal({
             group
               ? {
                   specName: group.specName,
-                  brandPriority: group.brandPriority?.join(", ") ?? "",
                   stockTrackingMode: group.stockTrackingMode,
                   groupReorderThreshold:
                     group.groupReorderThreshold ?? undefined,

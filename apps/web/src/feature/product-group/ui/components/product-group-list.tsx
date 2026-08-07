@@ -64,10 +64,7 @@ export function ProductGroupList({ orgId }: ProductGroupListProps) {
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase()
     return (groups ?? []).filter(
-      (g) =>
-        !q ||
-        g.specName.toLowerCase().includes(q) ||
-        g.brandPriority?.some((b) => b.toLowerCase().includes(q))
+      (g) => !q || g.specName.toLowerCase().includes(q)
     )
   }, [groups, searchQuery])
 
@@ -96,7 +93,7 @@ export function ProductGroupList({ orgId }: ProductGroupListProps) {
             Product Groups
           </CardTitle>
           <CardDescription>
-            Group products by spec name and set brand preferences.
+            Group products by spec name to organize equivalent products.
           </CardDescription>
         </div>
         {orgId && (
@@ -112,7 +109,7 @@ export function ProductGroupList({ orgId }: ProductGroupListProps) {
         <div className="relative mb-4">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search product groups or brands..."
+            placeholder="Search product groups..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value)
@@ -157,9 +154,7 @@ export function ProductGroupList({ orgId }: ProductGroupListProps) {
                         {group.specName}
                       </h4>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {group.brandPriority && group.brandPriority.length > 0
-                          ? group.brandPriority.join(" · ")
-                          : "No brand priority set"}
+                        {STOCK_TRACKING_LABELS[group.stockTrackingMode]}
                       </p>
                     </div>
                   </button>

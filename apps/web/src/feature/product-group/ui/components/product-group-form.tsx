@@ -39,7 +39,6 @@ export function ProductGroupForm({
     resolver: zodResolver(productGroupFormSchema),
     defaultValues: {
       specName: defaultValues?.specName ?? "",
-      brandPriority: defaultValues?.brandPriority ?? "",
       stockTrackingMode: defaultValues?.stockTrackingMode ?? "sku",
       groupReorderThreshold: defaultValues?.groupReorderThreshold ?? undefined,
     },
@@ -48,7 +47,6 @@ export function ProductGroupForm({
   useEffect(() => {
     form.reset({
       specName: defaultValues?.specName ?? "",
-      brandPriority: defaultValues?.brandPriority ?? "",
       stockTrackingMode: defaultValues?.stockTrackingMode ?? "sku",
       groupReorderThreshold: defaultValues?.groupReorderThreshold ?? undefined,
     })
@@ -97,25 +95,6 @@ export function ProductGroupForm({
           )}
         />
       </FieldGroup>
-
-      <Controller
-        name="brandPriority"
-        control={form.control}
-        render={({ field }) => (
-          <Field>
-            <FieldLabel>Brand priority</FieldLabel>
-            <Input
-              {...field}
-              type="text"
-              placeholder="Royal Omani, Oman Cement"
-            />
-            <FieldDescription>
-              Comma-separated brands ordered by preference for quote
-              alternatives.
-            </FieldDescription>
-          </Field>
-        )}
-      />
 
       <Controller
         name="groupReorderThreshold"
