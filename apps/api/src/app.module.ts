@@ -85,6 +85,10 @@ declare module '@orpc/nest' {
             session: {
               create: {
                 async before(session) {
+                  console.log(
+                    'before session create hook called for userId',
+                    session.userId,
+                  );
                   const membership = await dbClient.query.member.findFirst({
                     where: { userId: session.userId },
                   });
@@ -93,7 +97,7 @@ declare module '@orpc/nest' {
                     await dbClient.query.teamMember.findFirst({
                       where: { userId: session.userId },
                     });
-
+                  console.log('teamMembership', teamMembership);
                   return {
                     data: {
                       ...session,

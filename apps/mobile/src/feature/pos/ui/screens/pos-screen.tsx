@@ -59,8 +59,10 @@ export function PosScreen() {
   const showSpecCapsules = useShowSpecCapsules()
   const [sheetProduct, setSheetProduct] = useState<PosProduct | null>(null)
   const [specEditVisible, setSpecEditVisible] = useState(false)
-  const { lines, count, subtotal } = useCart()
-  const { products, isLoading: isCatalogLoading } = useCatalogProducts()
+  const { count, subtotal } = useCart()
+  const { products, isLoading: isCatalogLoading } = useCatalogProducts({
+    priceListId: customer?.defaultPriceListId ?? null,
+  })
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -88,15 +90,6 @@ export function PosScreen() {
     Alert.alert(
       "Card scanned",
       recent ? `Selected ${recent.name}.` : "No recent customer found."
-    )
-  }
-
-  const confirm = () => {
-    if (lines.length === 0) return
-    Alert.alert(
-      "Draft quotation ready",
-      "Contracts + alternative-brand pricing land here.",
-      [{ text: "OK" }]
     )
   }
 
@@ -186,7 +179,12 @@ export function PosScreen() {
           <View style={styles.tabletBody}>
             {productsPane}
             <View style={styles.cartPane}>
-              <CartPanel canSeeCosts={canSeeCosts} onConfirm={confirm} />
+              <ScrollView
+                style={styles.cartScroll}
+                contentContainerStyle={styles.cartScrollContent}
+                showsVerticalScrollIndicator={false}>
+                <CartPanel canSeeCosts={canSeeCosts} />
+              </ScrollView>
             </View>
           </View>
         ) : (
@@ -278,6 +276,12 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     paddingVertical: Spacing.two,
     marginBottom: Spacing.four,
+  },
+  cartScroll: {
+    flex: 1,
+  },
+  cartScrollContent: {
+    paddingBottom: Spacing.two,
   },
   cartBar: {
     flexDirection: "row",

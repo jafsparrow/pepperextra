@@ -1,3 +1,5 @@
+import type { AlternativeColor } from '@/feature/pos/constants/alternatives';
+
 /**
  * POS product model — mirrors the DB catalog schema
  * (`products` + `product_images` + `stock` tables, see .agents/02_DATABASE_SCHEMA.md).
@@ -24,6 +26,22 @@ export interface PosProduct {
   /** primary product_images.image_url */
   imageUrl?: string
   eligibleForLoyalty?: boolean
+  /** products.product_group_id — groups interchangeable items for alternatives */
+  productGroupId?: string
+  /** merged same-group + explicit alternatives, ordered per docs (BRD §8.1) */
+  alternatives?: PosProduct[]
+  /** id of the is_primary alternative; falls back to the first alternative */
+  defaultAlternativeId?: string
+  /** which price source won the resolution chain (BRD §8.20) */
+  priceSource?: 'priceList' | 'location' | 'base'
+}
+
+export interface CartAlternative {
+  /** assigned slot; one per colour per line */
+  color: AlternativeColor
+  product: PosProduct
+  /** Charged unit price, snapshotted when the alternative is added. */
+  unitPriceMinor: number
 }
 
 export interface CartLine {
@@ -31,7 +49,14 @@ export interface CartLine {
   quantity: number
   /** Charged unit price. May be overridden by the POS price sheet; never mutates the catalog. */
   unitPriceMinor: number
+  /** colour-coded alternative rows attached to this line */
+  alternatives: CartAlternative[]
+  /** selected alternative product id; undefined = the base (white) row */
+  selectedAlternativeId?: string
 }
+
+/** What a confirm action resolves: the radio-mixed selection or a single colour. */
+export type CartResolveMode = 'selected' | AlternativeColor
 
 export interface PosViewOptions {
   hideImages: boolean

@@ -9,6 +9,8 @@ export interface Customer {
   email?: string
   type: CustomerType
   tradeType?: TradeType
+  /** customers.default_price_list_id — drives POS price resolution (BRD §8.20) */
+  defaultPriceListId?: string
   pointsBalance?: number
   lastPurchaseAt?: string
   purchaseCount: number

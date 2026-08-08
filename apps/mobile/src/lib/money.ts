@@ -35,6 +35,17 @@ export function formatMinorUnits(minor: number, currency: Currency = DEFAULT_CUR
   })
 }
 
+/**
+ * Org-level VAT rate in percent. Per-tenant tax config (org_tax_config) is not
+ * wired on mobile yet, so this flat rate (Oman default, BRD §8.20) is used.
+ */
+export const DEFAULT_VAT_PERCENT = 5
+
+/** Compute VAT on a minor-unit amount, rounded to nearest minor unit. */
+export function applyTax(minor: number, percent: number = DEFAULT_VAT_PERCENT): number {
+  return Math.round((minor * percent) / 100)
+}
+
 /** Parse a user-typed major-unit amount (e.g. "45.200") into integer minor units. */
 export function parseAmountToMinorUnits(
   input: string,
